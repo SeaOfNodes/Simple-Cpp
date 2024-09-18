@@ -5,10 +5,13 @@
 #include <vector>
 
 class TypeTuple : public Type {
-  std::vector<Type *> types_;
-  TypeTuple(std::initializer_list<Type> types);
+public:
+    std::vector<Type *> types_;
 
-  Type *meet() override;
-  std::ostringstream print_1(std::ostringstream &builder);
+    TypeTuple(std::initializer_list<Type> types);
+
+    Type *meet();
+
+    std::ostringstream print_1(std::ostringstream &builder);
 };
 #endif
