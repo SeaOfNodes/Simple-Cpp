@@ -35,6 +35,7 @@ public:
 
 private:
   static int UNIQUE_ID;
+    Node* deadCodeElim(Node* m);
 public:
     Node() = default;
     Node(std::initializer_list<Node*> inputNodes);
@@ -48,6 +49,8 @@ public:
 
     virtual std::string label() = 0;
     virtual std::string glabel();
+    Node* keep();
+    Node* unkeep();
 
     // This is a *deep* print.  This version will fail on cycles, which we will
     // correct later when we can parse programs with loops.  We print with a

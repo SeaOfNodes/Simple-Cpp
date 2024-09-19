@@ -27,6 +27,6 @@ Type *ProjNode::compute() {
     return &Type::BOTTOM;
 }
 
-Node *Node::idealize() {
+Node *ProjNode::idealize() {
     return nullptr;
 }

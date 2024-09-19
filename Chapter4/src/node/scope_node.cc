@@ -1,6 +1,6 @@
 #include "../../Include/node/scope_node.h"
 
-ScopeNode::ScopeNode() : scopes() { type_ = &Type::BOTTOM; }
+ScopeNode::ScopeNode() { type_ = &Type::BOTTOM; }
 std::string ScopeNode::label() { return "Scope"; }
 Type *ScopeNode::compute() { return &Type::BOTTOM; }
 Node *ScopeNode::idealize() { return nullptr; }
@@ -78,5 +78,9 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder) {
     }
     builder << "]";
   }
+
   return builder;
 }
+
+std::string ScopeNode::CTRL = "$ctrl";
+std::string ScopeNode::ARG0 = "arg";

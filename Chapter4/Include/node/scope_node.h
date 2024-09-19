@@ -19,6 +19,9 @@ public:
    * You eventually end up with multiple scopes same level - but they are not
    * alive at the same time.
    * */
+  static std::string CTRL;
+  static std::string ARG0;;
+
   std::vector<std::unordered_map<std::string, int>> scopes;
   std::vector<std::string> keys;
 

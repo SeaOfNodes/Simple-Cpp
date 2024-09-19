@@ -13,25 +13,25 @@ include_directories(${PROJECT_SOURCE_DIR}/Include)
 
 # Add the executable target
 add_library(simple_lib
-                     src/parser.cc
-                     # nodes
-                     src/node/add_node.cc
-                     src/node/constant_node.cc
-                     src/node/divnode.cc
-                     src/node/minus_node.cc
-                     src/node/mul_node.cc
-                     src/node/node.cc
-                     src/node/return_node.cc
-                     src/node/start_node.cc
-                     src/node/sub_node.cc
+        src/parser.cc
+        # nodes
+        src/node/add_node.cc
+        src/node/constant_node.cc
+        src/node/divnode.cc
+        src/node/minus_node.cc
+        src/node/mul_node.cc
+        src/node/node.cc
+        src/node/return_node.cc
+        src/node/start_node.cc
+        src/node/sub_node.cc
 
-                    src/node/scope_node.cc
-                    # type
-                    src/type/integer_type.cc
-                    src/type/type.cc
+        src/node/scope_node.cc
+        # type
+        src/type/integer_type.cc
+        src/type/type.cc
 
-                    # utils
-                    src/utils.cc
+        # utils
+        src/utils.cc
         src/graphVisualizer.cc)
 
 set(CMAKE_BUILD_TYPE Debug)

@@ -35,6 +35,7 @@ public:
 
 private:
   static int UNIQUE_ID;
+
 public:
     Node() = default;
     Node(std::initializer_list<Node*> inputNodes);

@@ -58,8 +58,11 @@ class Parser {
 public:
   static StartNode *START;
   explicit Parser(std::string source, TypeInteger* arg);
+  explicit Parser(std::string source);
+
   ~Parser();
   ReturnNode *parse();
+  ReturnNode* parse(bool show);
   std::string src();
 
   bool peek(char ch);
