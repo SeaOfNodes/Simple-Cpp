@@ -9,6 +9,8 @@ std::ostringstream &Type::_print(std::ostringstream& builder) {
 }
 
 Type Type::BOTTOM = Type(TBOT);
+Type Type::TOP = Type(TTOP);
+Type Type::CONTROL = Type(TCTRL);
 
 Type::Type(unsigned int type) : type_(type){}
 

@@ -3,11 +3,11 @@
 
 StartNode *Parser::START = nullptr;
 
-Parser::Parser(std::string source) {
+Parser::Parser(std::string source, TypeInteger* arg) {
   lexer = new Lexer(source);
   Node::reset();
   scope_node = new ScopeNode();
-  START = new StartNode();
+  START = new StartNode({&Type::CONTROL, arg});
 }
 
 Parser::~Parser() {

@@ -8,7 +8,7 @@ class TypeTuple : public Type {
 public:
     std::vector<Type *> types_;
 
-    TypeTuple(std::initializer_list<Type> types);
+    TypeTuple(std::initializer_list<Type*> types);
 
     Type *meet();
 

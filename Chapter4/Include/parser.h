@@ -57,7 +57,7 @@ private:
 class Parser {
 public:
   static StartNode *START;
-  explicit Parser(std::string source);
+  explicit Parser(std::string source, TypeInteger* arg);
   ~Parser();
   ReturnNode *parse();
   std::string src();

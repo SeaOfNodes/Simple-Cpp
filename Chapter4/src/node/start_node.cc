@@ -1,7 +1,11 @@
 #include "../../Include/node/start_node.h"
-#include "../../Include/type/integer_type.h"
 
-StartNode::StartNode() {}
+
+StartNode::StartNode(std::initializer_list<Type*> args){
+  args_ = new TypeTuple({args});
+  type_ = args_;
+}
+
 bool StartNode::isCFG() const { return true; }
 std::ostringstream &StartNode::print_1(std::ostringstream &builder) {
   builder << label();

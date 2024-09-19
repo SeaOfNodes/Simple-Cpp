@@ -2,10 +2,12 @@
 #define START_NODE_H
 
 #include "../../Include/node/node.h"
-
+#include "../../Include/type/integer_type.h"
+#include "../../Include/type/tuple_type.h"
 class StartNode : public Node {
 public:
-  StartNode();
+  TypeTuple* args_;
+  StartNode(std::initializer_list<Type*> args);
   bool isCFG() const override;
   std::ostringstream &print_1(std::ostringstream &builder);
 
