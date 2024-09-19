@@ -22,21 +22,22 @@ Parser::~Parser() {
 
 ReturnNode *Parser::parse() {
     return parse(true);
-
 }
-ReturnNode * Parser::parse(bool show) {
+
+ReturnNode *Parser::parse(bool show) {
     scope_node->push();
     auto multi1 = new MultiNode({START});
     auto multi2 = new MultiNode({START});
 
-    scope_node->define(ScopeNode::CTRL, (new ProjNode(multi1, 0,ScopeNode::CTRL))->peephole());
-    scope_node->define(ScopeNode::CTRL, (new ProjNode(multi2, 1, ScopeNode::CTRL))->peephole());
+    scope_node->define(ScopeNode::CTRL, (new ProjNode(multi1, 0, ScopeNode::CTRL))->peephole());
+    scope_node->define(ScopeNode::CTRL, (new ProjNode(multi2, 1, ScopeNode::ARG0))->peephole());
     auto *ret = dynamic_cast<ReturnNode *>(parseBlock());
     if (!lexer->isEof())
         throw std::runtime_error("Syntax error, unexpected " +
                                  lexer->getAnyNextToken());
     return ret;
 }
+
 std::string Parser::src() { return lexer->get_input(); }
 
 Node *Parser::parseStatement() {
