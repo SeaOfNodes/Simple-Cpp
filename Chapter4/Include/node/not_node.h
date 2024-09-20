@@ -4,13 +4,16 @@
 
 class NotNode : public Node {
 public:
-  NotNode(Node* in);
-  std::string label() override;
-  std::string glabel() override;
+    explicit NotNode(Node *in);
 
-  std::ostringstream &print_1(std::ostringstream &builder) override;
-  Type *compute() override;
+    std::string label() override;
 
-  Node *idealize();
+    std::string glabel() override;
+
+    std::ostringstream &print_1(std::ostringstream &builder) override;
+
+    Type *compute() override;
+
+    Node *idealize() override;
 };
 #endif

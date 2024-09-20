@@ -9,6 +9,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     Node::reset();
     scope_node = new ScopeNode();
     START = new StartNode({&Type::CONTROL, arg});
+    START->peephole();
 }
 
 Parser::Parser(std::string source) : Parser(source, &TypeInteger::BOT) {
@@ -109,7 +110,7 @@ Node *Parser::parseComparison() {
 
     if (match("!=")) {
         // TODO: COME BACK TO THIS
-        return (new NotNode(new EQ(lhs, parseComparison())))->peephole()->peephole();
+        return new NotNode((new EQ(lhs, parseComparison()))->peephole());
     }
 
     if (match("<=")) {

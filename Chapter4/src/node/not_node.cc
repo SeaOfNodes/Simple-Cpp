@@ -10,14 +10,14 @@ std::string NotNode::glabel() { return "!"; }
 
 std::ostringstream &NotNode::print_1(std::ostringstream &builder) {
     builder << "(!";
-    builder << in(0)->print_1(builder).str();
+
+    builder << in(1)->print_1(builder).str();
     builder << ")";
     return builder;
 }
 
 Type *NotNode::compute() {
-    auto i = dynamic_cast<TypeInteger *>(in(1)->type_);
-    if (i) {
+    if (auto *i = dynamic_cast<TypeInteger *>(in(1)->type_)) {
         return i->isConstant() ? TypeInteger::constant(i->value() == 0 ? 1 : 0) : i;
     }
     return &Type::BOTTOM;
