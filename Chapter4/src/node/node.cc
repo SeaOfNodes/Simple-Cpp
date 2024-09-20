@@ -20,8 +20,12 @@ std::string Node::uniqueName() { return label() + std::to_string(nid); }
 std::string Node::glabel() { return label(); }
 std::size_t Node::nIns() const { return inputs.size(); }
 
-Node* Node::keep() {return addUse(nullptr);}
-Node* Node::unkeep() {delUse(nullptr); return this;}
+Node *Node::keep() { return addUse(nullptr); }
+
+Node *Node::unkeep() {
+    delUse(nullptr);
+    return this;
+}
 
 std::ostringstream &Node::print_0(std::ostringstream &builder) {
     if (isDead()) {
@@ -161,4 +165,11 @@ Node *Node::deadCodeElim(Node *m) {
         kill();
         m->unkeep();
     }
+}
+
+Node *Node::swap12() {
+    Node *tmp = in(1);
+    inputs[1] = in(2);
+    inputs[2] = tmp;
+    return this;
 }

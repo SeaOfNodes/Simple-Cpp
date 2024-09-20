@@ -14,78 +14,105 @@
 * Subtypes of Node specialize by overriding methods.
  */
 
-template <typename T>
-typename std::vector<T>::Iterator find(std::vector<T>& vec, const T& value);
+template<typename T>
+typename std::vector<T>::Iterator find(std::vector<T> &vec, const T &value);
 
-template <typename T>
-void del(std::vector<T>& vec, typename std::vector<T>::iterator::pos);
+template<typename T>
+void del(std::vector<T> &vec, typename std::vector<T>::iterator::pos);
 
 class Node {
 public:
-  int nid;
-  std::vector<Node*> inputs;
-  std::vector<Node*> outputs;
+    int nid;
+    std::vector<Node *> inputs;
+    std::vector<Node *> outputs;
 
-  /**
-   * The top of this stack represents current scope.
-   *
-   */
+    /**
+     * The top of this stack represents current scope.
+     *
+     */
 
-  Type* type_;
+    Type *type_;
 
 private:
-  static int UNIQUE_ID;
-    Node* deadCodeElim(Node* m);
+    static int UNIQUE_ID;
+
+    Node *deadCodeElim(Node *m);
+
 public:
     Node() = default;
-    Node(std::initializer_list<Node*> inputNodes);
+
+    Node(std::initializer_list<Node *> inputNodes);
+
     virtual ~Node() = default;
-    [[nodiscard ]] Node* in(std::size_t i) const;
+
+    [[nodiscard ]] Node *in(std::size_t i) const;
+
     [[nodiscard]] std::size_t nIns() const;
+
     [[nodiscard]] std::size_t nOuts() const;
 
-    [[nodiscard]]bool isUnused() const;
-    [[nodiscard]]virtual bool isCFG() const;
+    [[nodiscard]] bool isUnused() const;
+
+    [[nodiscard]] virtual bool isCFG() const;
 
     virtual std::string label() = 0;
+
     virtual std::string glabel();
-    Node* keep();
-    Node* unkeep();
+
+    Node *keep();
+
+    Node *unkeep();
 
     // This is a *deep* print.  This version will fail on cycles, which we will
     // correct later when we can parse programs with loops.  We print with a
     // tik-tok style; the common _print0 calls the per-Node _print1, which
     // calls back to _print0;
-    std::ostringstream& print();
+    std::ostringstream &print();
+
     // This is the common print: check for DEAD and print "DEAD" else call the
     // per-Node print1.
-    virtual std::ostringstream& print_0(std::ostringstream& builder);
-    static void reset();
-    // Every Node implements this.
-    virtual std::ostringstream& print_1(std::ostringstream& builder) = 0;
-    virtual std::string uniqueName();
-    Node* setDef(int idx, Node* new_def);
+    virtual std::ostringstream &print_0(std::ostringstream &builder);
 
-    virtual Type* compute();
-    virtual Node* idealize();
+    static void reset();
+
+    // Every Node implements this.
+    virtual std::ostringstream &print_1(std::ostringstream &builder) = 0;
+
+    virtual std::string uniqueName();
+
+    Node *setDef(int idx, Node *new_def);
+
+    virtual Type *compute();
+
+    virtual Node *idealize();
 
     void popN(int n);
 
-    Node* peephole();
+    Node *peephole();
+
     /*
      * Find a node by index.
      * */
 
-    Node* find(std::vector<bool> visit, int nid_);
-    Node* addDef(Node* new_def);
+    Node *find(std::vector<bool> visit, int nid_);
+
+    Node *addDef(Node *new_def);
+
 
     void kill();
+
     bool isDead();
 
     static bool disablePeephole;
+
 protected:
-  Node* addUse(Node* n);
-  bool delUse(Node* use);
+    Node *addUse(Node *n);
+
+    bool delUse(Node *use);
+
+public:
+    // Peephole utilities
+    Node *swap12();
 };
 
 #endif
