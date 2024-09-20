@@ -165,6 +165,7 @@ Node *Node::deadCodeElim(Node *m) {
         kill();
         m->unkeep();
     }
+    return m;
 }
 
 Node *Node::swap12() {
