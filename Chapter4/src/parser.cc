@@ -5,8 +5,8 @@
 StartNode *Parser::START = nullptr;
 
 Parser::Parser(std::string source, TypeInteger *arg) {
-    lexer = new Lexer(source);
     Node::reset();
+    lexer = new Lexer(source);
     scope_node = new ScopeNode();
     START = new StartNode({&Type::CONTROL, arg});
     START->peephole();
@@ -33,6 +33,7 @@ ReturnNode *Parser::parse(bool show) {
     scope_node->define(ScopeNode::CTRL, (new ProjNode(multi1, 0, ScopeNode::CTRL))->peephole());
     scope_node->define(ScopeNode::ARG0, (new ProjNode(multi2, 1, ScopeNode::ARG0))->peephole());
     auto *ret = dynamic_cast<ReturnNode *>(parseBlock());
+    scope_node->pop();
     if (!lexer->isEof())
         throw std::runtime_error("Syntax error, unexpected " +
                                  lexer->getAnyNextToken());

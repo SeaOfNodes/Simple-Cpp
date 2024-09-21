@@ -15,7 +15,7 @@ TEST(SimpleTest, Peephole) {
 }
 
 TEST(SimpleTest, Peephole2) {
-    auto *parser = new Parser("return 1+arg+2;");
+    auto *parser = new Parser("return (1+arg)+2;");
     ReturnNode *ret = parser->parse();
     std::ostringstream builder;
     EXPECT_EQ("return (arg+3);", ret->print_1(builder).str());
@@ -56,7 +56,7 @@ TEST(SimpleTest, VarArg) {
     EXPECT_EQ("return arg;", ret->print_1(builder).str());
 }
 
-//
+// Todo: Fix this
 // TEST(SimpleTest, ConstantArg) {
 //     auto *parser = new Parser("return arg;", TypeInteger::constant(2));
 //     ReturnNode *ret = parser->parse();
