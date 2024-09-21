@@ -8,8 +8,9 @@ BoolNode::BoolNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {
 std::string BoolNode::label() { return "Bool Node"; }
 std::string BoolNode::glabel() { return op(); }
 
-std::string BoolNode::op() {return "BoolNode";}
-bool BoolNode::doOp(long lhs, long rhs) const {return false;}
+std::string BoolNode::op() { return "BoolNode"; }
+bool BoolNode::doOp(long lhs, long rhs) const { return false; }
+
 std::ostringstream &BoolNode::print_1(std::ostringstream &builder) {
     builder << "(";
     in(1)->print_1(builder);
@@ -18,7 +19,6 @@ std::ostringstream &BoolNode::print_1(std::ostringstream &builder) {
     builder << ")";
     return builder;
 }
-
 
 
 Type *BoolNode::compute() {

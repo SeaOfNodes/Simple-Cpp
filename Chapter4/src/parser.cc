@@ -78,7 +78,17 @@ Node *Parser::parseExpressionStatement() {
 
 Node *Parser::parseReturn() {
     Node *expr = require(parseExpression(), ";");
-    return new ReturnNode(START, expr);
+    auto *ret = (new ReturnNode(ctrl(), expr))->peephole();
+    ctrl(nullptr);
+    return ret;
+}
+
+Node *Parser::ctrl() {
+    return scope_node->ctrl();
+}
+
+Node *Parser::ctrl(Node *n) {
+    return scope_node->ctrl(n);
 }
 
 Node *Parser::parseIntegerLiteral() {
@@ -110,7 +120,7 @@ Node *Parser::parseComparison() {
 
     if (match("!=")) {
         // TODO: COME BACK TO THIS
-        return new NotNode((new EQ(lhs, parseComparison()))->peephole());
+        return (new NotNode((new EQ(lhs, parseComparison()))->peephole()))->peephole();
     }
 
     if (match("<=")) {

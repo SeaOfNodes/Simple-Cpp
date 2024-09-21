@@ -11,98 +11,133 @@
 #include "../Include/node/sub_node.h"
 #include "../Include/node/bool_node.h"
 #include "../Include/node/not_node.h"
-
 #include "../Include/type/integer_type.h"
-
 #include "../Include/node/node.h"
 #include "../Include/node/scope_node.h"
+
 #include <iostream>
 #include <unordered_set>
 
 class Lexer {
 public:
-  Lexer() = default;
-  Lexer(std::string &source);
-  bool isEof();
-  std::string getAnyNextToken();
-  bool matchx(std::string syntax);
-  bool match(std::string syntax);
-  bool isNumber();
-  bool isNumber(char ch);
-  bool isPunctuation(char ch);
+    Lexer() = default;
 
-  std::string parseId();
-  std::string parseNumberString();
+    Lexer(std::string &source);
 
-  Type *parseNumber();
-  void skipWhiteSpace();
-  std::string get_input();
+    bool isEof();
 
-  bool peek(char ch);
+    std::string getAnyNextToken();
 
-  std::string matchId();
+    bool matchx(std::string syntax);
+
+    bool match(std::string syntax);
+
+    bool isNumber();
+
+    bool isNumber(char ch);
+
+    bool isPunctuation(char ch);
+
+    std::string parseId();
+
+    std::string parseNumberString();
+
+    Type *parseNumber();
+
+    void skipWhiteSpace();
+
+    std::string get_input();
+
+    bool peek(char ch);
+
+    std::string matchId();
 
 private:
-  std::string input;
-  std::size_t position = 0;
-  bool isIdStart(char ch);
-  bool isIdLetter(char ch);
-  char peek();
-  char nextChar();
-  bool isWhiteSpace();
+    std::string input;
+    std::size_t position = 0;
 
-  std::string parsePunctuation();
+    bool isIdStart(char ch);
+
+    bool isIdLetter(char ch);
+
+    char peek();
+
+    char nextChar();
+
+    bool isWhiteSpace();
+
+    std::string parsePunctuation();
 };
 
 class Parser {
 public:
-  static StartNode *START;
-  explicit Parser(std::string source, TypeInteger* arg);
-  explicit Parser(std::string source);
+    static StartNode *START;
 
-  ~Parser();
-  ReturnNode *parse();
-  ReturnNode* parse(bool show);
-  std::string src();
+    explicit Parser(std::string source, TypeInteger *arg);
 
-  bool peek(char ch);
+    explicit Parser(std::string source);
+
+    ~Parser();
+
+    ReturnNode *parse();
+
+    ReturnNode *parse(bool show);
+
+    std::string src();
+
+    Node *ctrl();
+
+    Node *ctrl(Node *n);
+
+    bool peek(char ch);
 
 private:
-  /**
-   LIst of keywords disallowed as identifiers
-   */
-  const std::unordered_set<std::string> KEYWORDS = {"int", "return"};
-  Node *parseStatement();
-  Node *parseReturn();
-  Node *parseExpression();
-  Node *parseAddition();
-  Node *parseMultiplication();
-  Node *parseUnary();
+    /**
+     LIst of keywords disallowed as identifiers
+     */
+    const std::unordered_set<std::string> KEYWORDS = {"int", "return"};
 
-  Node* parseComparison();
+    Node *parseStatement();
 
-  Node *parseDecl();
-  Node *parsePrimary();
+    Node *parseReturn();
 
-  Node *parseIntegerLiteral();
+    Node *parseExpression();
 
-  Node *parseBlock();
-  void require(std::string syntax);
+    Node *parseAddition();
 
-  Node *require(Node *n, std::string syntax);
-  // Require and return an identifier
-  std::string requireId();
+    Node *parseMultiplication();
 
-  Node *parseExpressionStatement();
+    Node *parseUnary();
 
-  void errorSyntax(std::string syntax);
-  void error(std::string errorMessage);
+    Node *parseComparison();
 
-  bool match(std::string syntax);
-  bool matchx(std::string syntax);
+    Node *parseDecl();
 
-  Lexer *lexer;
-  ScopeNode *scope_node;
+    Node *parsePrimary();
+
+    Node *parseIntegerLiteral();
+
+    Node *parseBlock();
+
+    void require(std::string syntax);
+
+    Node *require(Node *n, std::string syntax);
+
+    // Require and return an identifier
+    std::string requireId();
+
+    Node *parseExpressionStatement();
+
+    void errorSyntax(std::string syntax);
+
+    void error(std::string errorMessage);
+
+    bool match(std::string syntax);
+
+    bool matchx(std::string syntax);
+
+    Lexer *lexer;
+    ScopeNode *scope_node;
 };
 
 #endif
