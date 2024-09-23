@@ -1,5 +1,6 @@
 #include "../Include/parser.h"
 #include <cctype>
+#include <graph_visualizer.h>
 #include <node/proj_node.h>
 
 StartNode *Parser::START = nullptr;
@@ -27,11 +28,8 @@ ReturnNode *Parser::parse() {
 
 ReturnNode *Parser::parse(bool show) {
     scope_node->push();
-    auto multi1 = new MultiNode({START});
-    auto multi2 = new MultiNode({START});
-
-    scope_node->define(ScopeNode::CTRL, (new ProjNode(multi1, 0, ScopeNode::CTRL))->peephole());
-    scope_node->define(ScopeNode::ARG0, (new ProjNode(multi2, 1, ScopeNode::ARG0))->peephole());
+    scope_node->define(ScopeNode::CTRL, (new ProjNode(START, 0, ScopeNode::CTRL))->peephole());
+    scope_node->define(ScopeNode::ARG0, (new ProjNode(START, 1, ScopeNode::ARG0))->peephole());
     auto *ret = dynamic_cast<ReturnNode *>(parseBlock());
     scope_node->pop();
     if (!lexer->isEof())
@@ -49,10 +47,17 @@ Node *Parser::parseStatement() {
         return parseDecl();
     else if (match("{"))
         return require(parseBlock(), "}");
+    else if (matchx("#showGraph"))
+        return require(showGraph(), ";");
     else if (match(";"))
         return nullptr;
     else
         return parseExpressionStatement();
+}
+
+Node *Parser::showGraph() {
+    std::cout << GraphVisualizer().generateDotOutput(*this);
+    return nullptr;
 }
 
 Node *Parser::parseBlock() {

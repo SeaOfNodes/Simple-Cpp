@@ -1,5 +1,7 @@
 #include "../../Include/node/return_node.h"
 
+#include <type/tuple_type.h>
+
 ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {
 }
 
@@ -17,7 +19,7 @@ std::ostringstream &ReturnNode::print_1(std::ostringstream &builder) {
 }
 
 Type *ReturnNode::compute() {
-    return &Type::BOTTOM;
+    return new TypeTuple({ctrl()->type_, expr()->type_});
 }
 
 std::string ReturnNode::label() {

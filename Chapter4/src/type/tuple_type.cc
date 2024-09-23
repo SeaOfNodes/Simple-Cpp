@@ -1,7 +1,7 @@
 #include "../../Include/type/tuple_type.h"
 
-TypeTuple::TypeTuple(std::initializer_list<Type*> types) : Type(TTUPLE) {
-    for (auto type: types_) {
+TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
+    for (auto type: types) {
         types_.push_back(type);
     }
 }

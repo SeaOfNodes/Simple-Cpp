@@ -8,7 +8,7 @@ TypeInteger *TypeInteger::constant(long con) {
     return new TypeInteger(true, con);
 }
 
-bool TypeInteger::isConstant() { return true; }
+bool TypeInteger::isConstant() { return is_con_; }
 std::string TypeInteger::toString() { return _print(builder).str(); }
 
 std::ostringstream &TypeInteger::_print(std::ostringstream &builder) {
@@ -16,8 +16,9 @@ std::ostringstream &TypeInteger::_print(std::ostringstream &builder) {
     return builder;
 }
 
-TypeInteger TypeInteger::BOT = TypeInteger(false, 0);
-TypeInteger TypeInteger::TOP = TypeInteger(false, 1);
+// Why the values the way they are is this because idealise optimisatiom
+TypeInteger TypeInteger::BOT = TypeInteger(false, 1);
+TypeInteger TypeInteger::TOP = TypeInteger(false, 0);
 TypeInteger TypeInteger::ZERO = TypeInteger(true, 0);
 
 bool TypeInteger::equals(TypeInteger *o) {

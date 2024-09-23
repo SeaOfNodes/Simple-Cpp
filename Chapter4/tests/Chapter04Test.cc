@@ -56,13 +56,12 @@ TEST(SimpleTest, VarArg) {
     EXPECT_EQ("return arg;", ret->print_1(builder).str());
 }
 
-// Todo: Fix this
-// TEST(SimpleTest, ConstantArg) {
-//     auto *parser = new Parser("return arg;", TypeInteger::constant(2));
-//     ReturnNode *ret = parser->parse();
-//     std::ostringstream builder;
-//     EXPECT_EQ("return 2;", ret->print_1(builder).str());
-// }
+TEST(SimpleTest, ConstantArg) {
+    auto *parser = new Parser("return arg; #showGraph;", TypeInteger::constant(2));
+    ReturnNode *ret = parser->parse();
+    std::ostringstream builder;
+    EXPECT_EQ("return 2;", ret->print_1(builder).str());
+}
 
 TEST(SimpleTest, CompEQ2) {
     auto *parser = new Parser("return 3==4;");

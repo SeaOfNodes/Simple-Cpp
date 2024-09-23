@@ -79,9 +79,12 @@ Node *Node::peephole() {
 
     if (disablePeephole)
         return this;
-
+    auto *is_addnode = dynamic_cast<AddNode *>(this);
+    if (is_addnode) {
+        int smt = 1;
+    }
     auto *a = dynamic_cast<ConstantNode *>(this);
-    // If type is constant replace it with a constant node
+    // If type is constant replace it with a constant nodex
     if (!(a) && type_->isConstant()) {
         // Create the ConstantNode object and call peephole() on it
         auto peepholedNode = (new ConstantNode(type, Parser::START))->peephole();

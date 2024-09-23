@@ -117,6 +117,8 @@ private:
 
     Node *parseIntegerLiteral();
 
+    Node *showGraph();
+
     Node *parseBlock();
 
     void require(std::string syntax);
