@@ -125,7 +125,6 @@ Node *Parser::parseComparison() {
     }
 
     if (match("!=")) {
-        // TODO: COME BACK TO THIS
         return (new NotNode((new EQ(lhs, parseComparison()))->peephole()))->peephole();
     }
 
