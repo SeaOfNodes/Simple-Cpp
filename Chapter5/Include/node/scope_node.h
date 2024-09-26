@@ -20,7 +20,8 @@ public:
    * alive at the same time.
    * */
   static std::string CTRL;
-  static std::string ARG0;;
+  static std::string ARG0;
+  ;
 
   std::vector<std::unordered_map<std::string, int>> scopes;
   std::vector<std::string> keys;
@@ -74,6 +75,32 @@ public:
    *
    * @return Node that was bound
    */
+
+  /**
+   * Duplicate a ScopeNode; including all levels, up to Nodes.  So this is
+   * neither shallow (would dup the Scope but not the internal HashMap
+   * tables), nor deep (would dup the Scope, the HashMap tables, but then
+   * also the program Nodes).
+   * <p>
+   * The new Scope is a full-fledged Node with proper use<->def edges.
+   */
+  ScopeNode *dup() {
+    ScopeNode *dup = new ScopeNode();
+    // Our goals are:
+    // 1) duplicate the name bindings of the ScopeNode across all stack levels
+    // 2) Make the new ScopeNode a user of all the nodes bound
+    // 3) Ensure that the order of defs is the same to allow easy merging
+    for (auto syms : scopes) {
+      dup->scopes.push_back(syms);
+    }
+    // Control comes first
+    dup->addDef(ctrl());
+    // now, all the inputs
+    for (int i = 1; i < nIns(); i++) {
+      dup->addDef(in(i));
+    }
+    return dup;
+  }
   Node *ctrl(Node *n);
   void push();
   void pop();

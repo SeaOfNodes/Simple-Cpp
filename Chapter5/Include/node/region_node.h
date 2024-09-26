@@ -1,19 +1,15 @@
-#ifndef IF_NODE_H
-#define IF_NODE_H
-#include "../type/tuple_type.h"
-#include "multi_node.h"
-#include "node.h"
+#ifndef REGION_NODE_H
+#define REGION_NODE_H
 
-class IfNode : public MultiNode {
+#include "node.h"
+#include <initializer_list>
+
+class RegionNode : public Node {
 public:
-  IfNode(Node *ctrl, Node *parent);
+  RegionNode(std::initializer_list<Node *> nodes);
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder) override;
-
   bool isCFG() const override;
-  Node *ctrl();
-
-  Node *pred();
 
   Type *compute() override;
   Node *idealize() override;

@@ -30,6 +30,8 @@ add_library(simple_lib
                      src/node/not_node.cc
                      src/node/multi_node.cc
                      src/node/scope_node.cc
+                     src/node/region_node.cc
+
                     # type
                     src/type/integer_type.cc
                     src/type/type.cc
