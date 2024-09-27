@@ -1,7 +1,7 @@
 #include "../../Include/node/stop_node.h"
 
 StopNode::StopNode(std::initializer_list<Node *> inputs) : Node(inputs) {}
-std::string label() { return "Stop"; }
+std::string StopNode::label() { return "Stop"; }
 std::ostringstream &StopNode::print_1(std::ostringstream &builder) {
   if (ret() != nullptr)
     return ret()->print_1(builder);

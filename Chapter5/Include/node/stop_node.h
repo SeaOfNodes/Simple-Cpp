@@ -4,9 +4,11 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/return_node.h"
 
+#include <initializer_list>
 class StopNode : public Node {
 public:
-  StopNode(std::initializer_list<Node*> inputs);
+  StopNode(std::initializer_list<Node *> inputs);
+
   std::string label() override;
 
   bool isCFG() const override;
@@ -14,10 +16,10 @@ public:
 
   // If a single Return, return it.
   // Otherwise, null because ambiguous.
-  ReturnNode* ret();
-  Type* compute();
-  Node* idealize();
+  ReturnNode *ret();
+  Type *compute() override;
+  Node *idealize() override;
 
-  Node* addReturn(Node* node);
+  Node *addReturn(Node *node);
 };
 #endif
