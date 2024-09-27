@@ -12,5 +12,4 @@ std::ostringstream &RegionNode::print_1(std::ostringstream &builder) {
 bool RegionNode::isCFG() const { return true; }
 
 Type *RegionNode::compute() { return &Type::CONTROL; }
-
-Node *idealize() { return nullptr; }
+Node *RegionNode::idealize() { return nullptr; }

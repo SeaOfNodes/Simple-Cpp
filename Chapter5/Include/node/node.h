@@ -42,6 +42,7 @@ public:
   Node() = default;
 
   Node(std::initializer_list<Node *> inputNodes);
+  Node(std::vector<Node *> inputs);
 
   virtual ~Node() = default;
 
@@ -56,6 +57,8 @@ public:
   [[nodiscard]] virtual bool isCFG() const;
 
   virtual std::string label() = 0;
+
+  virtual Node *copy(Node *lhs, Node *rhs);
 
   virtual std::string glabel();
 

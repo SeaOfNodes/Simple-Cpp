@@ -4,29 +4,30 @@
 #include <iostream>
 #include <memory>
 
-
 class AddNode : public Node {
 public:
-    /*
-     * First input is usually a control Node.
-     * Node({nullptr, lhs, rhs})
-     * */
-    AddNode(Node *lhs, Node *rhs);
+  /*
+   * First input is usually a control Node.
+   * Node({nullptr, lhs, rhs})
+   * */
+  AddNode(Node *lhs, Node *rhs);
 
-    std::string label() override;
+  std::string label() override;
 
-    std::string glabel() override;
+  std::string glabel() override;
 
-    std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder) override;
 
-    /*
-     * Computes a new type from the type_ field of its inputs.
-     * */
-    Type *compute() override;
+  /*
+   * Computes a new type from the type_ field of its inputs.
+   * */
+  Type *compute() override;
 
-    Node *idealize() override;
+  Node *idealize() override;
 
-    static bool spline_cmp(Node *hi, Node *lo);
+  Node *copy(Node *lhs, Node *rhs) override;
+
+  static bool spline_cmp(Node *hi, Node *lo);
 };
 
 #endif

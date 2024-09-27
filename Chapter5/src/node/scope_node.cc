@@ -18,7 +18,7 @@ void ScopeNode::pop() {
 // add it here
 Node *ScopeNode::define(std::string name, Node *n) {
   if (!scopes.empty()) {
-    auto& sysm = scopes.back();
+    auto &sysm = scopes.back();
 
     if (sysm.find(name) != sysm.end())
       return nullptr; // double define
@@ -82,5 +82,29 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
+Node *ScopeNode::mergeScopes(ScopeNode *that) {
+  RegionNode *r = (RegionNode *)ctrl(
+      (new RegionNode({nullptr, ctrl(), that->ctrl()}))->peephole());
+  std::vector<std::string> ns = reverseNames();
+  // Note that we skip i==0, which is bound to '$ctrl'
+  for (int i = 1; i < nIns(); i++) {
+    if (in(i) != that->in(i)) { // No need for redundant Phis
+      Node *phi = new PhiNode(ns[i], {r, in(i), that->in(i)});
+      phi->peephole();
+    }
+  }
+  that->kill();
+  return r;
+}
+
+std::vector<std::string> ScopeNode::reverseNames() {
+  std::vector<std::string> names(nIns());
+  for (const auto &syms : scopes) {
+    for (const auto &pair : syms) {
+      names[pair.second] = pair.first;
+    }
+  }
+  return names;
+}
 std::string ScopeNode::CTRL = "$ctrl";
 std::string ScopeNode::ARG0 = "arg";

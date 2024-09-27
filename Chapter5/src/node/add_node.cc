@@ -107,3 +107,7 @@ bool AddNode::spline_cmp(Node *hi, Node *lo) {
     if (hi->type_->isConstant()) return true;
     return lo->nid > hi->nid;
 }
+
+Node* AddNode::copy(Node *lhs, Node *rhs) {
+    return new AddNode(lhs, rhs);
+}

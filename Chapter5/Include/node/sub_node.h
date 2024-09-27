@@ -3,15 +3,17 @@
 
 #include "../../Include/node/node.h"
 
-class SubNode: public Node {
+class SubNode : public Node {
 public:
-SubNode(Node*lhs, Node*rhs);
-std::string label();
-std::string glabel();
+  SubNode(Node *lhs, Node *rhs);
+  std::string label();
+  std::string glabel();
 
-std::ostringstream& print_1(std::ostringstream&);
+  std::ostringstream &print_1(std::ostringstream &);
 
-Type*compute();
-Node* idealize();
+  Type *compute();
+  Node *idealize();
+
+  Node *copy(Node *lhs, Node *rhs) override;
 };
 #endif
