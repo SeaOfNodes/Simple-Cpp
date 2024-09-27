@@ -10,6 +10,8 @@ Parser::Parser(std::string source, TypeInteger *arg) {
   lexer = new Lexer(source);
   scope_node = new ScopeNode();
   START = new StartNode({&Type::CONTROL, arg});
+  STOP = new StopNode({});
+
   START->peephole();
 }
 
@@ -21,9 +23,9 @@ Parser::~Parser() {
   delete START;
 }
 
-ReturnNode *Parser::parse() { return parse(true); }
+StopNode *Parser::parse() { return parse(true); }
 
-ReturnNode *Parser::parse(bool show) {
+StopNode *Parser::parse(bool show) {
   scope_node->push();
   scope_node->define(ScopeNode::CTRL,
                      (new ProjNode(START, 0, ScopeNode::CTRL))->peephole());
@@ -34,7 +36,11 @@ ReturnNode *Parser::parse(bool show) {
   if (!lexer->isEof())
     throw std::runtime_error("Syntax error, unexpected " +
                              lexer->getAnyNextToken());
-  return ret;
+  STOP->peephole();
+  if (show)
+    showGraph();
+
+  return STOP;
 }
 
 std::string Parser::src() { return lexer->get_input(); }
@@ -121,7 +127,7 @@ Node *Parser::parseExpressionStatement() {
 
 Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
-  auto *ret = (new ReturnNode(ctrl(), expr))->peephole();
+  auto *ret = STOP->addReturn(new ReturnNode(ctrl(), expr))->peephole();
   ctrl(nullptr);
   return ret;
 }

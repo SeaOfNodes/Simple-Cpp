@@ -14,6 +14,7 @@
 #include "../Include/node/return_node.h"
 #include "../Include/node/scope_node.h"
 #include "../Include/node/start_node.h"
+#include "../Include/node/stop_node.h"
 #include "../Include/node/sub_node.h"
 #include "../Include/type/integer_type.h"
 
@@ -74,6 +75,7 @@ private:
 class Parser {
 public:
   static StartNode *START;
+  StopNode *STOP;
 
   explicit Parser(std::string source, TypeInteger *arg);
 
@@ -81,9 +83,9 @@ public:
 
   ~Parser();
 
-  ReturnNode *parse();
+  StopNode *parse();
 
-  ReturnNode *parse(bool show);
+  StopNode *parse(bool show);
 
   std::string src();
 

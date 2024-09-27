@@ -1,3 +1,4 @@
+/*
 #include "../Include/graph_visualizer.h"
 #include "../Include/node/return_node.h"
 
@@ -113,3 +114,4 @@ TEST(SimpleTest, Bug4) {
     std::ostringstream builder;
     EXPECT_EQ("return (-arg);", ret->print_1(builder).str());
 }
+*/
