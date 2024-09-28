@@ -70,13 +70,13 @@ Node *Parser::parseIf() {
   // Parse predicate
   Node *pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  IfNode *ifNode = (IfNode *)(new IfNode(ctrl(), pred))->keep()->peephole();
+  auto *ifNode = (IfNode *)(new IfNode(ctrl(), pred))->keep()->peephole();
   // Setup projection nodes
   Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
   Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
-  int ndefs = scope_node->nIns();
+  std::size_t ndefs = scope_node->nIns();
   ScopeNode *fScope = scope_node->dup(); // Duplicate current scope
   xScopes.push_back(fScope); // For graph visualisation we need all scopes
 

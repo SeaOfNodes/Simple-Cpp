@@ -12,9 +12,9 @@ std::string AddNode::glabel() { return "+"; }
 
 std::ostringstream &AddNode::print_1(std::ostringstream &builder) {
   builder << "(";
-  in(1)->print_0(builder);
+  in(1)->print_1(builder);
   builder << "+";
-  in(2)->print_0(builder);
+  in(2)->print_1(builder);
   builder << ")";
   return builder;
 }
