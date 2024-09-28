@@ -26,6 +26,7 @@ Parser::~Parser() {
 StopNode *Parser::parse() { return parse(true); }
 
 StopNode *Parser::parse(bool show) {
+  xScopes.push_back(scope_node);
   scope_node->push();
   scope_node->define(ScopeNode::CTRL,
                      (new ProjNode(START, 0, ScopeNode::CTRL))->peephole());
@@ -33,6 +34,8 @@ StopNode *Parser::parse(bool show) {
                      (new ProjNode(START, 1, ScopeNode::ARG0))->peephole());
   auto *ret = dynamic_cast<ReturnNode *>(parseBlock());
   scope_node->pop();
+  xScopes.pop_back();
+
   if (!lexer->isEof())
     throw std::runtime_error("Syntax error, unexpected " +
                              lexer->getAnyNextToken());
@@ -93,10 +96,10 @@ Node *Parser::parseIf() {
     throw std::runtime_error("Cannot define a new name on one arm of an if");
   }
   scope_node = tScope;
-  xScopes.pop_back();
+  xScopes.pop_back(); // Discard pushed from graph display
 
   // Merge scope here
-  return ctrl(tScope);
+  return ctrl(tScope->mergeScopes(fScope));
 }
 Node *Parser::showGraph() {
   std::cout << GraphVisualizer().generateDotOutput(*this);

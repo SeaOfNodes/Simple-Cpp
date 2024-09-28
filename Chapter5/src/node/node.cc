@@ -111,7 +111,6 @@ void Node::popN(int n) {
       ;
   }
 }
-
 Node *Node::copy(Node *lhs, Node *rhs) {
   throw std::runtime_error("Binary ops need to implement copy!");
 }

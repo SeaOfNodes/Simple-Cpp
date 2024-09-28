@@ -1,9 +1,9 @@
 #ifndef SCOPE_NODE_H
 #define SCOPE_NODE_H
 #include "../../Include/node/node.h"
+#include "../../Include/node/phi_node.h"
 #include "../../Include/node/region_node.h"
 #include "../../Include/type/type.h"
-#include "../../Include/node/phi_node.h"
 
 #include <stack>
 #include <unordered_map>
@@ -66,11 +66,11 @@ public:
   Node *update(std::string name, Node *n, int nestingLevel);
 
   /**
-     * Recover the names for all variable bindings.
-     * The result is an array of names that is aligned with the
-     * inputs to the Node.
-     *
-     * This is an expensive operation.
+   * Recover the names for all variable bindings.
+   * The result is an array of names that is aligned with the
+   * inputs to the Node.
+   *
+   * This is an expensive operation.
    */
   std::vector<std::string> reverseNames();
   Node *ctrl();

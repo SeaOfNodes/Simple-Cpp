@@ -14,9 +14,7 @@ TEST(SimpleTest, testIfStmt) {
      a = arg + 2;
   } else {
     a = arg - 3;
-   // showGraph;
 }
-// showGraph;
 return a;
 )";
 
