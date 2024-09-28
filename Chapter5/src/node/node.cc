@@ -12,7 +12,15 @@ Node::Node(std::initializer_list<Node *> inputNodes) {
   }
 }
 
-Node::Node(std::vector<Node *> inputs_) : inputs(inputs_) {}
+Node::Node(std::vector<Node *> inputs_) {
+  nid = ++UNIQUE_ID;
+  for (Node *n : inputs_) {
+    inputs.push_back(n);
+    if (n != nullptr) {
+      n->outputs.push_back(this);
+    }
+  }
+}
 Node *Node::in(std::size_t i) const {
   return (i < inputs.size()) ? inputs[i] : nullptr;
 }
@@ -80,10 +88,7 @@ Node *Node::peephole() {
 
   if (disablePeephole)
     return this;
-  auto *is_addnode = dynamic_cast<AddNode *>(this);
-  if (is_addnode) {
-    int smt = 1;
-  }
+
   auto *a = dynamic_cast<ConstantNode *>(this);
   // If type is constant replace it with a constant nodex
   if (!(a) && type_->isConstant()) {
@@ -103,7 +108,7 @@ Node *Node::peephole() {
  * If the scope gets popped, then delete
  * each of the individual elements.
  * */
-void Node::popN(int n) {
+void Node::popN(std::size_t n) {
   for (int i = 0; i < n; i++) {
     Node *old_def = inputs.back();
     inputs.pop_back();

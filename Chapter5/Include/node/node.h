@@ -89,7 +89,7 @@ public:
 
   virtual Node *idealize();
 
-  void popN(int n);
+  void popN(std::size_t n);
 
   Node *peephole();
 

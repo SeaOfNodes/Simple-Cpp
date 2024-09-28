@@ -76,6 +76,7 @@ class Parser {
 public:
   static StartNode *START;
   StopNode *STOP;
+  std::vector<ScopeNode *> xScopes;
 
   explicit Parser(std::string source, TypeInteger *arg);
 
@@ -145,7 +146,6 @@ private:
 
   Lexer *lexer;
   ScopeNode *scope_node;
-  std::vector<ScopeNode *> xScopes;
 };
 
 #endif

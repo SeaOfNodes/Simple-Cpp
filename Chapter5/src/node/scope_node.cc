@@ -90,7 +90,8 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
   for (int i = 1; i < nIns(); i++) {
     if (in(i) != that->in(i)) { // No need for redundant Phis
       Node *phi = new PhiNode(ns[i], {r, in(i), that->in(i)});
-      phi->peephole();
+      phi = phi->peephole();
+      setDef(i, phi);
     }
   }
   that->kill();

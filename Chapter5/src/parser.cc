@@ -32,7 +32,7 @@ StopNode *Parser::parse(bool show) {
                      (new ProjNode(START, 0, ScopeNode::CTRL))->peephole());
   scope_node->define(ScopeNode::ARG0,
                      (new ProjNode(START, 1, ScopeNode::ARG0))->peephole());
-  auto *ret = dynamic_cast<ReturnNode *>(parseBlock());
+  parseBlock();
   scope_node->pop();
   xScopes.pop_back();
 
