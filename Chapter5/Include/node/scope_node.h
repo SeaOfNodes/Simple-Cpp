@@ -1,11 +1,13 @@
 #ifndef SCOPE_NODE_H
 #define SCOPE_NODE_H
 #include "../../Include/node/node.h"
+#include "../../Include/node/phi_node.h"
+#include "../../Include/node/region_node.h"
 #include "../../Include/type/type.h"
 
 #include <stack>
 #include <unordered_map>
-
+#include <vector>
 class ScopeNode : public Node {
 public:
   /**
@@ -20,7 +22,7 @@ public:
    * alive at the same time.
    * */
   static std::string CTRL;
-  static std::string ARG0;;
+  static std::string ARG0;
 
   std::vector<std::unordered_map<std::string, int>> scopes;
   std::vector<std::string> keys;
@@ -63,6 +65,14 @@ public:
    */
   Node *update(std::string name, Node *n, int nestingLevel);
 
+  /**
+   * Recover the names for all variable bindings.
+   * The result is an array of names that is aligned with the
+   * inputs to the Node.
+   *
+   * This is an expensive operation.
+   */
+  std::vector<std::string> reverseNames();
   Node *ctrl();
   /**
    * The ctrl of a ScopeNode is always bound to the currently active
@@ -74,6 +84,43 @@ public:
    *
    * @return Node that was bound
    */
+
+  /**
+   * Duplicate a ScopeNode; including all levels, up to Nodes.  So this is
+   * neither shallow (would dup the Scope but not the internal HashMap
+   * tables), nor deep (would dup the Scope, the HashMap tables, but then
+   * also the program Nodes).
+   * <p>
+   * The new Scope is a full-fledged Node with proper use<->def edges.
+   */
+  ScopeNode *dup() {
+    ScopeNode *dup = new ScopeNode();
+    // Our goals are:
+    // 1) duplicate the name bindings of the ScopeNode across all stack levels
+    // 2) Make the new ScopeNode a user of all the nodes bound
+    // 3) Ensure that the order of defs is the same to allow easy merging
+    for (auto syms : scopes) {
+      dup->scopes.push_back(syms);
+    }
+    // Control comes first
+    dup->addDef(ctrl());
+    // now, all the inputs
+    for (int i = 1; i < nIns(); i++) {
+      dup->addDef(in(i));
+    }
+    return dup;
+  }
+
+  /**
+   * Merges the names whose node bindings differ, by creating Phi node for such
+   * names The names could occur at all stack levels, but a given name can only
+   * differ in the innermost stack level where the name is bound.
+   *
+   * @param that The ScopeNode to be merged into this
+   * @return A new node representing the merge point
+   */
+  Node *mergeScopes(ScopeNode *that);
+
   Node *ctrl(Node *n);
   void push();
   void pop();

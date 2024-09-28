@@ -23,7 +23,7 @@ public:
   static Type TOP;
   static Type CONTROL;
 
-  virtual bool isConstant(  );
+  virtual bool isConstant();
 
   const char *STRS[3] = {"Bot", "Top", "Ctrl"};
   virtual std::ostringstream &_print(std::ostringstream &builder);

@@ -5,53 +5,59 @@
 
 class BoolNode : public Node {
 public:
-    virtual std::string op();
+  virtual std::string op();
 
-    [[nodiscard]] virtual bool doOp(long lhs, long rhs) const;
+  [[nodiscard]] virtual bool doOp(long lhs, long rhs) const;
 
-    BoolNode(Node *lhs, Node *rhs);
+  BoolNode(Node *lhs, Node *rhs);
 
-    std::string label() override;
+  std::string label() override;
 
-    std::string glabel() override;
+  std::string glabel() override;
 
-    std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder) override;
 
-    Type *compute() override;
+  Type *compute() override;
 
-    Node *idealize() override;
+  Node *idealize() override;
 };
 
 class EQ : public BoolNode {
 public:
-    EQ(Node *lhs, Node *rhs);
+  EQ(Node *lhs, Node *rhs);
 
-    std::string op() override;
+  Node *copy(Node *rhs, Node *lhs) override;
 
-    std::string label() override;
+  std::string op() override;
 
-    bool doOp(long lhs, long rhs) const override;
+  std::string label() override;
+
+  bool doOp(long lhs, long rhs) const override;
 };
 
 class LT : public BoolNode {
 public:
-    LT(Node *lhs, Node *rhs);
+  LT(Node *lhs, Node *rhs);
 
-    std::string label() override;
+  Node *copy(Node *rhs, Node *lhs) override;
 
-    std::string op() override;
+  std::string label() override;
 
-    bool doOp(long lhs, long rhs) const override;
+  std::string op() override;
+
+  bool doOp(long lhs, long rhs) const override;
 };
 
 class LE : public BoolNode {
 public:
-    LE(Node *lhs, Node *rhs);
+  LE(Node *lhs, Node *rhs);
 
-    std::string op() override;
+  Node *copy(Node *rhs, Node *lhs) override;
 
-    std::string label() override;
+  std::string op() override;
 
-    bool doOp(long lhs, long rhs) const override;
+  std::string label() override;
+
+  bool doOp(long lhs, long rhs) const override;
 };
 #endif

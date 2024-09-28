@@ -1,118 +1,120 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <vector>
-#include <algorithm>
-#include <iostream>
 #include "../../Include/type/type.h"
+#include <algorithm>
 #include <cassert>
-#include<sstream>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 /**
-* All Nodes in the Sea of Nodes IR inherit from the Node class.
-* The Node class provides common functionality used by all subtypes.
-* Subtypes of Node specialize by overriding methods.
+ * All Nodes in the Sea of Nodes IR inherit from the Node class.
+ * The Node class provides common functionality used by all subtypes.
+ * Subtypes of Node specialize by overriding methods.
  */
 
-template<typename T>
+template <typename T>
 typename std::vector<T>::Iterator find(std::vector<T> &vec, const T &value);
 
-template<typename T>
+template <typename T>
 void del(std::vector<T> &vec, typename std::vector<T>::iterator::pos);
 
 class Node {
 public:
-    int nid;
-    std::vector<Node *> inputs;
-    std::vector<Node *> outputs;
+  int nid;
+  std::vector<Node *> inputs;
+  std::vector<Node *> outputs;
 
-    /**
-     * The top of this stack represents current scope.
-     *
-     */
+  /**
+   * The top of this stack represents current scope.
+   *
+   */
 
-    Type *type_;
+  Type *type_;
 
 private:
-    static int UNIQUE_ID;
+  static int UNIQUE_ID;
 
-    Node *deadCodeElim(Node *m);
+  Node *deadCodeElim(Node *m);
 
 public:
-    Node() = default;
+  Node() = default;
 
-    Node(std::initializer_list<Node *> inputNodes);
+  Node(std::initializer_list<Node *> inputNodes);
+  Node(std::vector<Node *> inputs);
 
-    virtual ~Node() = default;
+  virtual ~Node() = default;
 
-    [[nodiscard ]] Node *in(std::size_t i) const;
+  [[nodiscard]] Node *in(std::size_t i) const;
 
-    [[nodiscard]] std::size_t nIns() const;
+  [[nodiscard]] std::size_t nIns() const;
 
-    [[nodiscard]] std::size_t nOuts() const;
+  [[nodiscard]] std::size_t nOuts() const;
 
-    [[nodiscard]] bool isUnused() const;
+  [[nodiscard]] bool isUnused() const;
 
-    [[nodiscard]] virtual bool isCFG() const;
+  [[nodiscard]] virtual bool isCFG() const;
 
-    virtual std::string label() = 0;
+  virtual std::string label() = 0;
 
-    virtual std::string glabel();
+  virtual Node *copy(Node *lhs, Node *rhs);
 
-    Node *keep();
+  virtual std::string glabel();
 
-    Node *unkeep();
+  Node *keep();
 
-    // This is a *deep* print.  This version will fail on cycles, which we will
-    // correct later when we can parse programs with loops.  We print with a
-    // tik-tok style; the common _print0 calls the per-Node _print1, which
-    // calls back to _print0;
-    std::ostringstream &print();
+  Node *unkeep();
 
-    // This is the common print: check for DEAD and print "DEAD" else call the
-    // per-Node print1.
-    virtual std::ostringstream &print_0(std::ostringstream &builder);
+  // This is a *deep* print.  This version will fail on cycles, which we will
+  // correct later when we can parse programs with loops.  We print with a
+  // tik-tok style; the common _print0 calls the per-Node _print1, which
+  // calls back to _print0;
+  std::ostringstream &print();
 
-    static void reset();
+  // This is the common print: check for DEAD and print "DEAD" else call the
+  // per-Node print1.
+  virtual std::ostringstream &print_0(std::ostringstream &builder);
 
-    // Every Node implements this.
-    virtual std::ostringstream &print_1(std::ostringstream &builder) = 0;
+  static void reset();
 
-    virtual std::string uniqueName();
+  // Every Node implements this.
+  virtual std::ostringstream &print_1(std::ostringstream &builder) = 0;
 
-    Node *setDef(int idx, Node *new_def);
+  virtual std::string uniqueName();
 
-    virtual Type *compute();
+  Node *setDef(int idx, Node *new_def);
 
-    virtual Node *idealize();
+  virtual Type *compute();
 
-    void popN(int n);
+  virtual Node *idealize();
 
-    Node *peephole();
+  void popN(std::size_t n);
 
-    /*
-     * Find a node by index.
-     * */
+  Node *peephole();
 
-    Node *find(std::vector<bool> visit, int nid_);
+  /*
+   * Find a node by index.
+   * */
 
-    Node *addDef(Node *new_def);
+  Node *find(std::vector<bool> visit, int nid_);
 
+  Node *addDef(Node *new_def);
 
-    void kill();
+  void kill();
 
-    bool isDead();
+  bool isDead();
 
-    static bool disablePeephole;
+  static bool disablePeephole;
 
 protected:
-    Node *addUse(Node *n);
+  Node *addUse(Node *n);
 
-    bool delUse(Node *use);
+  bool delUse(Node *use);
 
 public:
-    // Peephole utilities
-    Node *swap12();
+  // Peephole utilities
+  Node *swap12();
 };
 
 #endif

@@ -15,10 +15,7 @@ std::ostringstream &SubNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-Type *SubNode::compute() {
-
-  return &Type::BOTTOM;
-
-}
+Type *SubNode::compute() { return &Type::BOTTOM; }
 
 Node *SubNode::idealize() { return nullptr; }
+Node *SubNode::copy(Node *lhs, Node *rhs) { return new SubNode(lhs, rhs); }
