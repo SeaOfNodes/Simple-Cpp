@@ -121,10 +121,7 @@ bool Node::isCFG() const { return false; }
 
 void Node::kill() {
   assert(isUnused()); // has no uses so it is dead
-  for (int i = 0; i < nIns(); i++) {
-    setDef(i,
-           nullptr); // Set all inputs to null, recursively killing unused Nodes
-  }
+  popn(nIns());
   inputs.clear(); // flag as dead
   type_ = nullptr;
   assert(isDead()); // Really dead now
