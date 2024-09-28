@@ -121,7 +121,7 @@ bool Node::isCFG() const { return false; }
 
 void Node::kill() {
   assert(isUnused()); // has no uses so it is dead
-  popn(nIns());
+  popN(nIns());
   inputs.clear(); // flag as dead
   type_ = nullptr;
   assert(isDead()); // Really dead now
