@@ -6,4 +6,4 @@ C++ implementation of https://github.com/SeaOfNodes/Simple
 
 This is still a **work in progress** and the code is not very readable.
 
-The code is currently equivalent to chapter4 of the main implementation.
+The code is currently equivalent to chapter5 of the main implementation.
