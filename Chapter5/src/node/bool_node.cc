@@ -41,7 +41,7 @@ Node *BoolNode::idealize() {
 // EQ
 EQ::EQ(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *EQ::copy(Node *rhs, Node *lhs) { return new EQ(lhs, rhs); }
+Node *EQ::copy(Node *lhs, Node *rhs) { return new EQ(lhs, rhs); }
 
 std::string EQ::label() { return "EQ"; }
 std::string EQ::op() { return "=="; }
@@ -50,7 +50,7 @@ bool EQ::doOp(long lhs, long rhs) const { return lhs == rhs; }
 // LT
 LT::LT(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *LT::copy(Node *rhs, Node *lhs) { return new LT(lhs, rhs); }
+Node *LT::copy(Node *lhs, Node *rhs) { return new LT(lhs, rhs); }
 
 std::string LT::label() { return "LT"; }
 
@@ -60,7 +60,7 @@ bool LT::doOp(long lhs, long rhs) const { return lhs < rhs; }
 // LE
 LE::LE(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *LE::copy(Node *rhs, Node *lhs) { return new LE(lhs, rhs); }
+Node *LE::copy(Node *lhs, Node *rhs) { return new LE(lhs, rhs); }
 
 std::string LE::label() { return "LE"; }
 

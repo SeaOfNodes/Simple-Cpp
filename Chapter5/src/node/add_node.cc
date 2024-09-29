@@ -82,6 +82,7 @@ Node *AddNode::idealize() {
   }
 
   // Now we only see (add add non)
+
   // Do we have (x + con1) + con2?
   // Replace with (x + (con1+con2) which then fold the constants
   if (lhs->in(2)->type_->isConstant() && t2->isConstant()) {
@@ -90,7 +91,33 @@ Node *AddNode::idealize() {
     auto innerNode = (new AddNode(lhsSecond, rhs))->peephole();
     return new AddNode(lhsFirst, innerNode);
   }
+  if (PhiNode *phi = dynamic_cast<PhiNode *>(lhs->in(2));
+      phi && phi->allCons() &&
+      // Do we have ((x + (phi cons)) + con) ?
+      // Do we have ((x + (phi cons)) + (phi cons)) ?
+      // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
 
+      // Note that this is the exact reverse of Phi pulling a common op
+      // down to reduce total op-count.  We don't get in an endless push-
+      // up push-down peephole cycle because the constants all fold first
+      // .
+      (t2->isConstant() || (dynamic_cast<PhiNode *>(rhs) &&
+                            phi->in(0) == rhs->in(0) && rhs->allCons()))) {
+    std::vector<Node *> ns(phi->nIns());
+    ns[0] = phi->in(0);
+    // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
+    for (int il = 1; il < ns.size(); il++) {
+      ns[il] = (new AddNode(phi->in(il), t2->isConstant() ? rhs : rhs->in(il)))
+                   ->peephole();
+    }
+    std::string label;
+    if (auto *rhi = dynamic_cast<PhiNode *>(rhs)) {
+      label = phi->label_ + rhi->label_;
+    } else {
+      label = phi->label_; // Only phi->label_ if dynamic_cast fails
+    }
+    return new AddNode(lhs->in(1), ((new PhiNode(label, ns))->peephole()));
+  }
   // Now we sort along the spline via rotates, to gather similar things
   // together.
 
@@ -107,14 +134,23 @@ Node *AddNode::idealize() {
 
 // Compare two off-spline nodes and decide what order they should be in.
 // Do we rotate ((x + hi) + lo) into ((x + lo) + hi) ?
-// Generally constants always go right, then others.
-// Ties with in a category sort by node ID.
-// TRUE if swapping hi and lo.
+// Generally constants always go right, then Phi-of-constants, then muls, then
+// others. Ties with in a category sort by node ID. TRUE if swapping hi and lo.
 bool AddNode::spline_cmp(Node *hi, Node *lo) {
   if (lo->type_->isConstant())
     return false;
   if (hi->type_->isConstant())
     return true;
+  if (dynamic_cast<PhiNode *>(lo) && lo->allCons())
+    return false;
+  if (dynamic_cast<PhiNode *>(hi) && hi->allCons())
+    return true;
+
+  if (dynamic_cast<PhiNode *>(lo) && !(dynamic_cast<PhiNode *>(hi)))
+    return true;
+  if (dynamic_cast<PhiNode *>(hi) && !(dynamic_cast<PhiNode *>(lo)))
+    return false;
+
   return lo->nid > hi->nid;
 }
 

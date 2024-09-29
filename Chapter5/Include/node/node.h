@@ -90,6 +90,9 @@ public:
   virtual Node *idealize();
 
   void popN(std::size_t n);
+  // does this node contain all constants
+  // Ignores i(0), as is usually control.
+  bool allCons();
 
   Node *peephole();
 

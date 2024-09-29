@@ -100,7 +100,8 @@ private:
   /**
    LIst of keywords disallowed as identifiers
    */
-  const std::unordered_set<std::string> KEYWORDS = {"int", "return"};
+  const std::unordered_set<std::string> KEYWORDS = {"else", "false",  "if",
+                                                    "int",  "return", "true"};
 
   Node *parseStatement();
 

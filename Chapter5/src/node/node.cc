@@ -116,6 +116,14 @@ void Node::popN(std::size_t n) {
       ;
   }
 }
+
+bool Node::allCons() {
+  for (int i = 1; i < nIns(); i++) {
+    if (!((in(i))->type_->isConstant()))
+      return false;
+  }
+  return true;
+}
 Node *Node::copy(Node *lhs, Node *rhs) {
   throw std::runtime_error("Binary ops need to implement copy!");
 }
