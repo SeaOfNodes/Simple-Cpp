@@ -220,6 +220,10 @@ Node *Parser::parsePrimary() {
     return parseIntegerLiteral();
   if (match("("))
     return require(parseExpression(), ")");
+  if (matchx("true"))
+    return (new ConstantNode(TypeInteger::constant(1), START))->peephole();
+  if (matchx("true"))
+    return (new ConstantNode(TypeInteger::constant(0), START))->peephole();
   std::string name = lexer->matchId();
   if (name == "")
     errorSyntax("an identifier or expression");
