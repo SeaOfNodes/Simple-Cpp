@@ -107,14 +107,23 @@ Node *AddNode::idealize() {
 
 // Compare two off-spline nodes and decide what order they should be in.
 // Do we rotate ((x + hi) + lo) into ((x + lo) + hi) ?
-// Generally constants always go right, then others.
-// Ties with in a category sort by node ID.
-// TRUE if swapping hi and lo.
+// Generally constants always go right, then Phi-of-constants, then muls, then
+// others. Ties with in a category sort by node ID. TRUE if swapping hi and lo.
 bool AddNode::spline_cmp(Node *hi, Node *lo) {
   if (lo->type_->isConstant())
     return false;
   if (hi->type_->isConstant())
     return true;
+  if (dynamic_cast<PhiNode *>(lo) && lo->allCons())
+    return false;
+  if (dynamic_cast<PhiNode *>(hi) && hi->allCons())
+    return true;
+
+  if (dynamic_cast<PhiNode *>(lo) && !(dynamic_cast<PhiNode *>(hi)))
+    return false;
+  if (dynamic_cast<PhiNode *>(hi) && !(dynamic_cast<PhiNode *>(lo)))
+    return false;
+
   return lo->nid > hi->nid;
 }
 
