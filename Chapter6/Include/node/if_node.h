@@ -2,6 +2,8 @@
 #define IF_NODE_H
 #include "../type/tuple_type.h"
 #include "../Include/type/integer_type.h"
+#include "../../Include/node/proj_node.h"
+
 #include "multi_node.h"
 #include "node.h"
 

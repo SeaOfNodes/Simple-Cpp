@@ -73,9 +73,11 @@ Node *Parser::parseIf() {
   auto *ifNode = (IfNode *)(new IfNode(ctrl(), pred))->keep()->peephole();
   // Setup projection nodes
   Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
+  ifNode->unkeep();
   Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
+
   std::size_t ndefs = scope_node->nIns();
   ScopeNode *fScope = scope_node->dup(); // Duplicate current scope
   xScopes.push_back(fScope); // For graph visualisation we need all scopes

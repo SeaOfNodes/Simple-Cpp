@@ -95,7 +95,7 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
     }
   }
   that->kill();
-  return r;
+  return r->unkeep()->peephole();
 }
 
 std::vector<std::string> ScopeNode::reverseNames() {

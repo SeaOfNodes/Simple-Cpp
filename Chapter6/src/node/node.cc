@@ -132,6 +132,15 @@ Node *Node::idom() {
     i_depth = idom->i_depth + 1;
   return idom;
 }
+
+void Node::delDef(int idx) {
+  Node *old_def = in(idx);
+  if (old_def != nullptr && // If the old def exists, remove a def->use edge
+      old_def->delUse(
+          this))     // If we removed the last use, the old def is now dead
+    old_def->kill(); // Kill old def
+  inputs.erase(std::next(inputs.begin(), idx));
+}
 Node *Node::copy(Node *lhs, Node *rhs) {
   throw std::runtime_error("Binary ops need to implement copy!");
 }

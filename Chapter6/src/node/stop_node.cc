@@ -21,6 +21,16 @@ ReturnNode *StopNode::ret() {
 
 Type *StopNode::compute() { return &Type::BOTTOM; }
 
-Node *StopNode::idealize() { return nullptr; }
+Node *StopNode::idealize() {
+  int len = nIns();
+  for (int i = 0; i < nIns(); i++) {
+    if (in(i)->type_ == &Type::XCONTROL) {
+      delDef(i--);
+    }
+  }
+  if (len != nIns())
+    return this;
+  return nullptr;
+}
 
 Node *StopNode::addReturn(Node *node) { return addDef(node); }

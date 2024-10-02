@@ -13,5 +13,9 @@ public:
 
   Type *compute() override;
   Node *idealize() override;
+  Node* idom_; // Immediate dominator cache
+  // Immediate dominator of Region is a little more complicated.
+  Node* idom() override;
+
 };
 #endif

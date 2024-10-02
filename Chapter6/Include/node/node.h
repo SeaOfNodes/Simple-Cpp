@@ -104,8 +104,12 @@ public:
   bool allCons();
 
   // Return the immediate dominator of this Node and compute dom tree depth.
-  Node* idom();
+  virtual Node* idom();
 
+  // Remove the numbered input, compressing the inputs in-place. This
+  // shuffles the order deterministically - which is suitable for Region and
+  // Phi, but not for every Node.
+  void delDef(int idx);
   Node *peephole();
 
   /*
