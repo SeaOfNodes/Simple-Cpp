@@ -13,7 +13,7 @@ public:
 
     StartNode(std::initializer_list<Type *> args);
 
-    bool isCFG() const override;
+    bool isCFG() override;
 
     std::ostringstream &print_1(std::ostringstream &builder);
 

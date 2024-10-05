@@ -2,25 +2,20 @@
 
 #include <complex>
 
-
-StartNode::StartNode(std::initializer_list<Type *> args) {
-    args_ = new TypeTuple({args});
-    type_ = args_;
+StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
+  args_ = new TypeTuple({args});
+  type_ = args_;
 }
 
-bool StartNode::isCFG() const { return true; }
+bool StartNode::isCFG() { return true; }
 
 std::ostringstream &StartNode::print_1(std::ostringstream &builder) {
-    builder << label();
-    return builder;
+  builder << label();
+  return builder;
 }
 
-Type *StartNode::compute() {
-    return args_;
-}
+Type *StartNode::compute() { return args_; }
 
-std::string StartNode::label() {
-    return "Start";
-}
+std::string StartNode::label() { return "Start"; }
 
 Node *StartNode::idealize() { return nullptr; }

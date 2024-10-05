@@ -9,7 +9,7 @@ std::ostringstream &RegionNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-bool RegionNode::isCFG() const { return true; }
+bool RegionNode::isCFG() { return true; }
 
 Type *RegionNode::compute() { return &Type::CONTROL; }
 Node *RegionNode::idealize() { return nullptr; }

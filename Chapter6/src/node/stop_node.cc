@@ -14,7 +14,7 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-bool StopNode::isCFG() const { return true; }
+bool StopNode::isCFG() { return true; }
 ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
 }

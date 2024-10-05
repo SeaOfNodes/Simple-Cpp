@@ -12,7 +12,7 @@ std::ostringstream &ProjNode::print_1(std::ostringstream &builder) {
 }
 
 bool ProjNode::isCFG() {
-    return idx_ == 0;
+    return idx_ == 0 || dynamic_cast<IfNode*>(ctrl());
 }
 
 MultiNode *ProjNode::ctrl() {
