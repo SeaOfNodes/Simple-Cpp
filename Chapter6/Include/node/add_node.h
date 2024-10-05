@@ -1,6 +1,11 @@
 #ifndef ADD_NODE_H
 #define ADD_NODE_H
+#include "../../Include/node/phi_node.h"
+#include "../../Include/type/integer_type.h"
 #include "../Include/node/node.h"
+#include "node/constant_node.h"
+#include "node/mul_node.h"
+
 #include <iostream>
 #include <memory>
 
@@ -26,6 +31,15 @@ public:
   Node *idealize() override;
 
   Node *copy(Node *lhs, Node *rhs) override;
+  /*
+   *
+   * Rotation is only valid for associative ops, e.g. Add, Mul, And, Or.
+   * Do we have ((phi cons)|(x + (phi cons)) + con|(phi cons)) ?
+   * Push constant up through the phi: x + (phi con0+con0 con1+con1...)
+   *
+   * */
+  static Node *phiCon(Node *op, bool rotate);
+  static PhiNode *pcon(Node *op);
 
   static bool spline_cmp(Node *hi, Node *lo);
 };

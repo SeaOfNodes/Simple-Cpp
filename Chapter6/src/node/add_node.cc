@@ -1,10 +1,5 @@
 #include "../../Include/node/add_node.h"
 
-#include <node/constant_node.h>
-#include <node/mul_node.h>
-
-#include "../../Include/type/integer_type.h"
-
 AddNode::AddNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 
 std::string AddNode::label() { return "Add"; }
@@ -19,6 +14,52 @@ std::ostringstream &AddNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
+Node *AddNode::phiCon(Node *op, bool rotate) {
+  Node *lhs = op->in(1);
+  Node *rhs = op->in(2);
+
+  // LHS is either a Phi of constants, or another op with Phi of constants
+  PhiNode *lphi = pcon(lhs);
+  if (rotate && (lphi == nullptr) && lhs->nIns() > 2) {
+    // Only valid to rotate constants if both are same associative ops
+    if (typeid(*lhs) != typeid(*op))
+      return nullptr;
+    lphi = pcon(lhs->in(2));
+  }
+  if (lphi == nullptr)
+    return nullptr;
+  // RHS is a constant or a Phi of constants
+  if (auto *con = dynamic_cast<ConstantNode *>(rhs);
+      !con && pcon(rhs) == nullptr)
+    return nullptr;
+  // If both are Phis, must be same Region
+
+  if (dynamic_cast<PhiNode *>(rhs) && lphi->in(0) != rhs->in(0))
+    return nullptr;
+
+  // Note that this is the exact reverse of Phi pulling a common op down
+  // to reduce total op-count.  We don't get in an endless push-up
+  // push-down peephole cycle because the constants all fold first.
+  std::vector<Node *> ns(lphi->nIns());
+  ns[0] = lphi->in(0);
+  // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
+  for (int i = 1; i < ns.size(); i++) {
+    auto result = op->copy(lphi->in(i),
+                           typeid(*rhs) == typeid(PhiNode) ? rhs->in(i) : rhs);
+    ns[i] = result->peephole();
+  }
+  std::string label = lphi->label_ + (dynamic_cast<PhiNode *>(rhs)
+                                          ? dynamic_cast<PhiNode *>(rhs)->label_
+                                          : "");
+  Node *phi = (new PhiNode(label, ns))->peephole();
+  // Rotate needs another op, otherwise just the phi
+  return lhs == lphi ? phi : op->copy(lhs->in(1), phi);
+}
+
+PhiNode *AddNode::pcon(Node *op) {
+  PhiNode *phi = dynamic_cast<PhiNode *>(op);
+  return (phi && phi->allCons()) ? phi : nullptr;
+}
 Type *AddNode::compute() {
   auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
   auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);

@@ -74,6 +74,7 @@ private:
 
 class Parser {
 public:
+  ScopeNode *scope_node;
   static StartNode *START;
   StopNode *STOP;
   std::vector<ScopeNode *> xScopes;
@@ -146,7 +147,6 @@ private:
   bool matchx(std::string syntax);
 
   Lexer *lexer;
-  ScopeNode *scope_node;
 };
 
 #endif

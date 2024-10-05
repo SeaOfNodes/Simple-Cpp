@@ -194,7 +194,10 @@ std::string GraphVisualizer::makePortName(std::string ScopeName,
 std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
   StartNode *start = Parser::START;
   std::unordered_map<int, Node *> all;
-  for (Node *n : start->outputs) {
+  for (Node *n : Parser::START->outputs) {
+    walk(all, n);
+  }
+  for (auto n : parser.scope_node->inputs) {
     walk(all, n);
   }
   std::vector<Node *> result;

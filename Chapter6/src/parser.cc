@@ -133,7 +133,7 @@ Node *Parser::parseExpressionStatement() {
 Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
   auto *ret = STOP->addReturn(new ReturnNode(ctrl(), expr))->peephole();
-  ctrl(nullptr);
+  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole());
   return ret;
 }
 
