@@ -54,7 +54,7 @@ public:
 
   [[nodiscard]] bool isUnused() const;
 
-  [[nodiscard]] virtual bool isCFG() const;
+  [[nodiscard]] virtual bool isCFG();
 
   virtual std::string label() = 0;
 

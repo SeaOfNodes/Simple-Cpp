@@ -129,7 +129,7 @@ Node *Node::copy(Node *lhs, Node *rhs) {
 }
 
 bool Node::isUnused() const { return outputs.empty(); }
-bool Node::isCFG() const { return false; }
+bool Node::isCFG() { return false; }
 
 void Node::kill() {
   assert(isUnused()); // has no uses so it is dead
