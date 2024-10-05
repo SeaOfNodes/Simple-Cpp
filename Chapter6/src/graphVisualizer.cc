@@ -4,7 +4,7 @@
 std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   std::vector<Node *> all = findAll(parser);
   std::ostringstream sb;
-  sb << "digraph chapter02 {\n";
+  sb << "digraph chapter06 {\n";
   sb << "/*\n";
   sb << parser.src();
   sb << "\n*/\n";
