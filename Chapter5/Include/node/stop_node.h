@@ -11,7 +11,7 @@ public:
 
   std::string label() override;
 
-  bool isCFG() const override;
+  bool isCFG() const;
   std::ostringstream &print_1(std::ostringstream &builder) override;
 
   // If a single Return, return it.

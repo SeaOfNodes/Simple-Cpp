@@ -10,7 +10,7 @@ public:
   Node* ctrl();
   Node* expr();
   std::ostringstream& print_1(std::ostringstream& builder) override;
-  [[nodiscard]] bool isCFG() const override;
+  [[nodiscard]] bool isCFG() override;
 
   std::string label() override;
   Type*compute() override;

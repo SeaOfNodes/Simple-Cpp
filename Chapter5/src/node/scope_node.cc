@@ -1,6 +1,6 @@
 #include "../../Include/node/scope_node.h"
 
-ScopeNode::ScopeNode() { type_ = &Type::BOTTOM; }
+ScopeNode::ScopeNode() : Node({}){ type_ = &Type::BOTTOM; }
 std::string ScopeNode::label() { return "Scope"; }
 Type *ScopeNode::compute() { return &Type::BOTTOM; }
 Node *ScopeNode::idealize() { return nullptr; }

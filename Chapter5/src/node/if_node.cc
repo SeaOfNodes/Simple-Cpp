@@ -9,7 +9,7 @@ std::ostringstream &IfNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-bool IfNode::isCFG() const { return true; }
+bool IfNode::isCFG() { return true; }
 Node *IfNode::ctrl() { return in(0); }
 Node *IfNode::pred() { return in(1); }
 

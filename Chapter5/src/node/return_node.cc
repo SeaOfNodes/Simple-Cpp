@@ -8,7 +8,7 @@ ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {
 [[nodiscard ]] Node *ReturnNode::ctrl() { return in(0); }
 [[nodiscard ]] Node *ReturnNode::expr() { return in(1); }
 
-bool ReturnNode::isCFG() const { return true; }
+bool ReturnNode::isCFG() { return true; }
 
 std::ostringstream &ReturnNode::print_1(std::ostringstream &builder) {
     builder << "return ";
