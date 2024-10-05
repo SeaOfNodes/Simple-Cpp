@@ -8,10 +8,10 @@
 #include <sstream>
 TEST(SimpleTest, testIfStmt) {
   std::string source = R"(
-  int a = 1;
-  if (arg == 1)
-     a = arg + 2;
-   else {
+int a = 1;
+if (arg == 1)
+    a = arg + 2;
+else {
     a = arg - 3;
 }
 return a;
@@ -20,7 +20,7 @@ return a;
   auto *parser = new Parser(source);
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return Phi(Region16,(arg+2),(arg-3));",
+  EXPECT_EQ("return Phi(Region17,(arg+2),(arg-3));",
             ret->print_1(builder).str());
 }
 
@@ -38,7 +38,7 @@ return c;
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
   // id off by one
-  EXPECT_EQ("return Phi(Region15,4,3);", ret->print_1(builder).str());
+  EXPECT_EQ("return Phi(Region16,4,3);", ret->print_1(builder).str());
 }
 
 TEST(SimpleTest, testReturn2) {
@@ -78,7 +78,7 @@ TEST(SimpleTest, testX) {
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
   // id off by one
-  EXPECT_EQ("return (arg+Phi(Region13,2,1));", ret->print_1(builder).str());
+  EXPECT_EQ("return (arg+Phi(Region14,2,1));", ret->print_1(builder).str());
 }
 // Todo: still not correct
 /*
@@ -122,7 +122,7 @@ return a+b;
   auto *parser = new Parser(source);
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return ((Phi(Region30,(arg*2),arg)+arg)+Phi(Region30,4,5));",
+  EXPECT_EQ("return ((Phi(Region31,(arg*2),arg)+arg)+Phi(Region31,4,5));",
             ret->print_1(builder).str());
 }
 
@@ -144,7 +144,7 @@ return a;
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
 
-  EXPECT_EQ("return Phi(Region30,Phi(Region19,2,3),Phi(Region28,4,5));",
+  EXPECT_EQ("return Phi(Region33,Phi(Region21,2,3),Phi(Region31,4,5));",
             ret->print_1(builder).str());
 }
 TEST(SimpleTest, testIfMerge4) {
@@ -160,7 +160,7 @@ return arg+a+b;
   auto *parser = new Parser(source, &TypeInteger::BOT);
   StopNode *stop = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return ((arg+Phi(Region12,1,0))+Phi(Region20,2,0));",
+  EXPECT_EQ("return ((arg+Phi(Region13,1,0))+Phi(Region22,2,0));",
             stop->print_1(builder).str());
 }
 TEST(SimpleTest, testIfMerge5) {
@@ -176,7 +176,7 @@ return a;
 
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return (arg==Phi(Region15,3,2));", ret->print_1(builder).str());
+  EXPECT_EQ("return (arg==Phi(Region16,3,2));", ret->print_1(builder).str());
 }
 
 TEST(SimpleTest, testIfTrue) {
