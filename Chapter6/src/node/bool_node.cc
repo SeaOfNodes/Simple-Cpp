@@ -1,6 +1,4 @@
 #include "../../Include/node/bool_node.h"
-#include "../../Include/node/constant_node.h"
-#include "../../Include/type/integer_type.h"
 
 BoolNode::BoolNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 
@@ -35,6 +33,13 @@ Node *BoolNode::idealize() {
   if (in(1) == in(2))
     return new ConstantNode(TypeInteger::constant(doOp(3, 3) ? 1 : 0),
                             Parser::START);
+  // Do we have ((x * (phi cons)) * con) ?
+  // Do we have ((x * (phi cons)) * (phi cons)) ?
+  // Push constant up through the phi: x * (phi con0*con0 con1*con1...)
+
+  Node *phicon = AddNode::phiCon(this, false);
+  if (phicon != nullptr)
+    return phicon;
   return nullptr;
 }
 

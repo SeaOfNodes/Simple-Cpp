@@ -1,7 +1,9 @@
 #ifndef MUL_NODE_H
 #define MUL_NODE_H
 
+#include "../../Include/node/add_node.h"
 #include "../../Include/node/node.h"
+
 class MulNode : public Node {
 public:
   MulNode(Node *lhs, Node *rhs);

@@ -1,7 +1,4 @@
 #include "../../Include/node/start_node.h"
-
-#include <complex>
-
 StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
   args_ = new TypeTuple({args});
   type_ = args_;

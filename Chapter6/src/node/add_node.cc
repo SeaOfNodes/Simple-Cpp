@@ -119,7 +119,7 @@ Node *AddNode::idealize() {
   // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
   if (!i1) {
-    return spline_cmp(lhs, rhs) ? swap12() : nullptr;
+    return spline_cmp(lhs, rhs) ? swap12() : phiCon(this, true);
   }
 
   // Now we only see (add add non)
@@ -132,44 +132,22 @@ Node *AddNode::idealize() {
     auto innerNode = (new AddNode(lhsSecond, rhs))->peephole();
     return new AddNode(lhsFirst, innerNode);
   }
-  if (PhiNode *phi = dynamic_cast<PhiNode *>(lhs->in(2));
-      phi && phi->allCons() &&
-      // Do we have ((x + (phi cons)) + con) ?
-      // Do we have ((x + (phi cons)) + (phi cons)) ?
-      // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
 
-      // Note that this is the exact reverse of Phi pulling a common op
-      // down to reduce total op-count.  We don't get in an endless push-
-      // up push-down peephole cycle because the constants all fold first
-      // .
-      (t2->isConstant() || (dynamic_cast<PhiNode *>(rhs) &&
-                            phi->in(0) == rhs->in(0) && rhs->allCons()))) {
-    std::vector<Node *> ns(phi->nIns());
-    ns[0] = phi->in(0);
-    // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
-    for (int il = 1; il < ns.size(); il++) {
-      ns[il] = (new AddNode(phi->in(il), t2->isConstant() ? rhs : rhs->in(il)))
-                   ->peephole();
-    }
-    std::string label;
-    if (auto *rhi = dynamic_cast<PhiNode *>(rhs)) {
-      label = phi->label_ + rhi->label_;
-    } else {
-      label = phi->label_; // Only phi->label_ if dynamic_cast fails
-    }
-    return new AddNode(lhs->in(1), ((new PhiNode(label, ns))->peephole()));
-  }
+  // Do we have ((x + (phi cons)) + con) ?
+  // Do we have ((x + (phi cons)) + (phi cons)) ?
+  // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
+  Node *phicon = phiCon(this, true);
+  if (phicon != nullptr)
+    return phicon;
+
   // Now we sort along the spline via rotates, to gather similar things
   // together.
 
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
-  if (spline_cmp(lhs->in(2), rhs)) {
-    Node *firstInput = lhs->in(1);
-    Node *secondInput = lhs->in(2);
-    Node *innerNode = (new AddNode(firstInput, rhs))->peephole();
-    return new AddNode(innerNode, secondInput);
-  }
+  if (spline_cmp(lhs->in(2), rhs))
+    return new AddNode(((new AddNode(lhs->in(1), rhs))->peephole()),
+                       lhs->in(2));
   return nullptr;
 }
 
