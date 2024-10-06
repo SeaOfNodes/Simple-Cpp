@@ -18,6 +18,7 @@ std::ostringstream& TypeTuple::print_1(std::ostringstream &builder) {
     builder << ",";
   }
   builder << "]";
+  return builder;
 }
 
 TypeTuple TypeTuple::IF_BOTH = TypeTuple({&Type::CONTROL, &Type::CONTROL});

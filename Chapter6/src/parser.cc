@@ -21,6 +21,7 @@ Parser::~Parser() {
   delete lexer;
   delete scope_node;
   delete START;
+  delete STOP;
 }
 
 StopNode *Parser::parse() { return parse(true); }
@@ -39,6 +40,7 @@ StopNode *Parser::parse(bool show) {
   if (!lexer->isEof())
     throw std::runtime_error("Syntax error, unexpected " +
                              lexer->getAnyNextToken());
+  // type is not set for the second one here, for some reasons it disappears
   STOP = (StopNode*)STOP->peephole();
   if (show)
     showGraph();
@@ -70,12 +72,10 @@ Node *Parser::parseIf() {
   // Parse predicate
   Node *pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  auto *ifNode = (IfNode *)(new IfNode(ctrl(), pred))->keep()->peephole();
+  auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
   Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
   // should be the if statement itself
-  std::ostringstream b;
-
   ifNode->unkeep();
   Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
@@ -137,9 +137,8 @@ Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
   Node* bpeep = (new ReturnNode(ctrl(), expr))->peephole();
   std::ostringstream b;
-  std::cout << (bpeep->print_1(b)).str();
   auto* ret = STOP->addReturn(bpeep);
-  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole());
+  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole()); // kill control
   return ret;
 }
 

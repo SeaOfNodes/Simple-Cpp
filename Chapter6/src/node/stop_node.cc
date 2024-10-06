@@ -25,6 +25,8 @@ Node *StopNode::idealize() {
   int len = nIns();
   // never got here
   for (int i = 0; i < nIns(); i++) {
+    std::ostringstream b;
+    if(!in(i)->type_) std::cout << "Type is not set";
     if (in(i)->type_ == &Type::XCONTROL) {
       std::cout << "Finally here";
       delDef(i--);

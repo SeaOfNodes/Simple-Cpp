@@ -83,8 +83,9 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder) {
 }
 
 Node *ScopeNode::mergeScopes(ScopeNode *that) {
+  // not called with keep here
   RegionNode *r = (RegionNode *)ctrl(
-      (new RegionNode({nullptr, ctrl(), that->ctrl()}))->peephole());
+      (new RegionNode({nullptr, ctrl(), that->ctrl()})));
   std::vector<std::string> ns = reverseNames();
   // Note that we skip i==0, which is bound to '$ctrl'
   for (int i = 1; i < nIns(); i++) {
