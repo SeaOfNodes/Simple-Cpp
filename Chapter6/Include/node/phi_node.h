@@ -20,8 +20,9 @@ public:
   Type *compute() override;
   Node *idealize() override;
 
+  Node *singleUniqueInput();
+
 private:
   bool same_op();
-  bool same_inputs();
 };
 #endif

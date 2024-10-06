@@ -16,18 +16,38 @@ std::ostringstream &PhiNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 Node *PhiNode::region() { return in(0); }
-Type *PhiNode::compute() { return &Type::BOTTOM; }
+Type *PhiNode::compute() {
+  Type *t = &Type::TOP;
+  for (int i = 1; i < nIns(); i++) {
+    t = t->meet(in(i)->type_);
+  }
+  return t;
+}
+
+Node *PhiNode::singleUniqueInput() {
+  Node *live = nullptr;
+  for (int i = 1; i < nIns(); i++)
+    if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this) {
+      if (live == nullptr || live == in(i)) {
+        live = in(i);
+      } else {
+        return nullptr;
+      }
+    }
+
+  return live;
+}
 Node *PhiNode::idealize() {
   // Remove a "junk" Phi: Phi(x,x) is just x
-  if (same_inputs()) {
-    return in(1);
-  }
+  Node *live = singleUniqueInput();
+  if (live != nullptr)
+    return live;
 
-/*  Node *op = in(1); // (arg+2)
-  std::ostringstream b;
-  std::cout << op->print_1(b).str() << "\n";
-  std::cout << op->nIns() << "\n";
-  std::cout << same_op() << "\n";*/
+  /*  Node *op = in(1); // (arg+2)
+    std::ostringstream b;
+    std::cout << op->print_1(b).str() << "\n";
+    std::cout << op->nIns() << "\n";
+    std::cout << same_op() << "\n";*/
 
   // Pull "down" a common data op.  One less op in the world.  One more
   // Phi, but Phis do not make code.
@@ -55,7 +75,7 @@ Node *PhiNode::idealize() {
     phi_lhs = phi_lhs->peephole();
     phi_rhs = phi_rhs->peephole();
     // add(arg, Phi(1, 2))
-    Node* addition = op->copy(phi_lhs, phi_rhs);
+    Node *addition = op->copy(phi_lhs, phi_rhs);
     std::ostringstream sb;
     std::string a = addition->print_1(sb).str();
     return op->copy(phi_lhs, phi_rhs);
@@ -71,12 +91,5 @@ bool PhiNode::same_op() {
       return false;
   }
 
-  return true;
-}
-bool PhiNode::same_inputs() {
-  for (int i = 2; i < nIns(); i++) {
-    if (in(1) != in(i))
-      return false;
-  }
   return true;
 }

@@ -13,7 +13,7 @@ public:
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder) override;
 
-  bool isCFG() const override;
+  bool isCFG() override;
   Node *ctrl();
   Node *pred();
 

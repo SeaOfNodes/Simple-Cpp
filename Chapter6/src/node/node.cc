@@ -1,9 +1,8 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/constant_node.h"
-#include <sstream>
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
-  nid = ++UNIQUE_ID;
+  nid = UNIQUE_ID++;
   for (Node *n : inputNodes) {
     inputs.push_back(n);
     if (n != nullptr) {
@@ -13,7 +12,7 @@ Node::Node(std::initializer_list<Node *> inputNodes) {
 }
 
 Node::Node(std::vector<Node *> inputs_) {
-  nid = ++UNIQUE_ID;
+  nid = UNIQUE_ID++;
   for (Node *n : inputs_) {
     inputs.push_back(n);
     if (n != nullptr) {
@@ -146,7 +145,7 @@ Node *Node::copy(Node *lhs, Node *rhs) {
 }
 
 bool Node::isUnused() const { return outputs.empty(); }
-bool Node::isCFG() const { return false; }
+bool Node::isCFG() { return false; }
 
 void Node::kill() {
   assert(isUnused()); // has no uses so it is dead

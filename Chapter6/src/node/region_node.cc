@@ -9,10 +9,45 @@ std::ostringstream &RegionNode::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-bool RegionNode::isCFG() const { return true; }
+bool RegionNode::isCFG() { return true; }
 
-Type *RegionNode::compute() { return &Type::CONTROL; }
-Node *RegionNode::idealize() { return nullptr; }
+Type *RegionNode::compute() {
+  Type *t = &Type::XCONTROL;
+  for (int i = 1; i < nIns(); i++) {
+    t = t->meet(in(i)->type_);
+  }
+  return t;
+}
+Node *RegionNode::idealize() {
+  int path = findDeadInput();
+  if (path != 0) {
+    for (Node *phi : outputs) {
+      if (dynamic_cast<PhiNode *>(phi))
+        phi->delDef(path);
+    }
+    delDef(path);
+    // If down to a single input, become that input - but also make all
+    // Phis an identity on *their* single input.
+    if (nIns() == 2) {
+      for (Node *phi : outputs) {
+        if (dynamic_cast<PhiNode *>(phi))
+          // Currently does not happen, because no loops
+          throw std::runtime_error("Todo");
+        return in(1);
+      }
+      return this;
+    }
+    return nullptr;
+  }
+}
+int RegionNode::findDeadInput() {
+  for (int i = 1; i < nIns(); i++) {
+    if (in(i)->type_ == &Type::XCONTROL) {
+      return i;
+    }
+  }
+  return 0; // All inputs are alive
+}
 Node *RegionNode::idom() {
   if (idom_ != nullptr)
     return idom_; // Return cached copy

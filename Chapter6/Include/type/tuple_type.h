@@ -10,9 +10,9 @@ public:
 
   TypeTuple(std::initializer_list<Type *> types);
 
-  Type *meet();
+  Type *xmeet(Type *other);
 
-  std::ostringstream print_1(std::ostringstream &builder);
+  std::ostringstream& print_1(std::ostringstream &builder) override;
 
   static TypeTuple IF_BOTH;
   static TypeTuple IF_NEITHER;

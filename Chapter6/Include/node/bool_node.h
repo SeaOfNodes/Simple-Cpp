@@ -1,5 +1,9 @@
 #include "../../Include/node/node.h"
 
+#include "../../Include/node/add_node.h"
+#include "../../Include/node/constant_node.h"
+#include "../../Include/type/integer_type.h"
+
 #ifndef BOOL_NODE_H
 #define BOOL_NODE_H
 

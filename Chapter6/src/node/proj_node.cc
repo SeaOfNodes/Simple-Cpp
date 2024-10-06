@@ -12,7 +12,7 @@ std::ostringstream &ProjNode::print_1(std::ostringstream &builder) {
 }
 
 bool ProjNode::isCFG() {
-    return idx_ == 0;
+    return idx_ == 0 || dynamic_cast<IfNode*>(ctrl());
 }
 
 MultiNode *ProjNode::ctrl() {
@@ -28,5 +28,8 @@ Type *ProjNode::compute() {
 }
 
 Node *ProjNode::idealize() {
+    if (auto* tt = dynamic_cast<TypeTuple*>(ctrl()->type_);  tt && tt->types_[1 - idx_] == &Type::XCONTROL) {
+        return ctrl()->in(0);  // We become our input control
+    }
     return nullptr;
 }
