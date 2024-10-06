@@ -6,7 +6,7 @@ TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
   }
 }
 
-Type *TypeTuple::meet() {
+Type *TypeTuple::xmeet(Type *other) {
   throw std::runtime_error("Meet on Tuple type not yet implemented!");
 }
 

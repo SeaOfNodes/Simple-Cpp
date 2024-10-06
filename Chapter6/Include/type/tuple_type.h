@@ -10,7 +10,7 @@ public:
 
   TypeTuple(std::initializer_list<Type *> types);
 
-  Type *meet();
+  Type *xmeet(Type *other);
 
   std::ostringstream print_1(std::ostringstream &builder);
 

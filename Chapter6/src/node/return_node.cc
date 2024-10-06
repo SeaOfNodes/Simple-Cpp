@@ -23,4 +23,8 @@ Type *ReturnNode::compute() {
 
 std::string ReturnNode::label() { return "Return"; }
 
-Node *ReturnNode::idealize() { return nullptr; }
+Node *ReturnNode::idealize() {
+  if (ctrl()->type_ == &Type::XCONTROL)
+    return ctrl();
+  return nullptr;
+}

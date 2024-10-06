@@ -19,6 +19,7 @@ public:
   Type *compute() override;
 
   Node *idealize() override;
+  Node *idom() override;
 
   std::string label() override;
 };

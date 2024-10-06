@@ -21,7 +21,7 @@ public:
   bool isConstant() override;
   std::ostringstream &_print(std::ostringstream &builder) override;
   std::string toString();
-  Type *meet(Type *other) override;
+  Type *xmeet(Type *other) override;
   long value();
   bool equals(TypeInteger *);
 

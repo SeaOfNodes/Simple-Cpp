@@ -4,6 +4,8 @@
 #include "../../Include/node/multi_node.h"
 #include "../Include/type/tuple_type.h"
 #include "../Include/node/if_node.h"
+#include "../type/tuple_type.h"
+
 
 class ProjNode : public Node {
 public:

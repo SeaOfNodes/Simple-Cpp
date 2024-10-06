@@ -1,8 +1,8 @@
 #ifndef TYPE_H
 #define TYPE_H
+#include <cassert>
 #include <iostream>
 #include <sstream>
-#include <cassert>
 
 class Type {
 public:
@@ -33,10 +33,11 @@ public:
 
   bool isSimple();
   std::string toString();
+
   virtual Type *meet(Type *other);
+  virtual Type *xmeet(Type *other);
 
 protected:
-  Type* xmeet(Type* t);
   explicit Type(unsigned int type);
 };
 #endif

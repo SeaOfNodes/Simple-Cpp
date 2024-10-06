@@ -16,3 +16,6 @@ Type *StartNode::compute() { return args_; }
 std::string StartNode::label() { return "Start"; }
 
 Node *StartNode::idealize() { return nullptr; }
+
+// No immediate dominator, and idepth==0
+Node *StartNode::idom() { return nullptr; }
