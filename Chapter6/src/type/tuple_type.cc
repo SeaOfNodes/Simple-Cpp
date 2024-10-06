@@ -10,11 +10,11 @@ Type *TypeTuple::xmeet(Type *other) {
   throw std::runtime_error("Meet on Tuple type not yet implemented!");
 }
 
-std::ostringstream TypeTuple::print_1(std::ostringstream &builder) {
+std::ostringstream& TypeTuple::print_1(std::ostringstream &builder) {
   builder << "[";
   // fence-post problem here
   for (auto t : types_) {
-    t->_print(builder);
+    t->print_1(builder);
     builder << ",";
   }
   builder << "]";

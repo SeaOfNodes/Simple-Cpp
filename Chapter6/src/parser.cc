@@ -39,7 +39,7 @@ StopNode *Parser::parse(bool show) {
   if (!lexer->isEof())
     throw std::runtime_error("Syntax error, unexpected " +
                              lexer->getAnyNextToken());
-  STOP->peephole();
+  STOP = (StopNode*)STOP->peephole();
   if (show)
     showGraph();
 
@@ -73,6 +73,9 @@ Node *Parser::parseIf() {
   auto *ifNode = (IfNode *)(new IfNode(ctrl(), pred))->keep()->peephole();
   // Setup projection nodes
   Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
+  // should be the if statement itself
+  std::ostringstream b;
+
   ifNode->unkeep();
   Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
@@ -132,7 +135,10 @@ Node *Parser::parseExpressionStatement() {
 
 Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
-  auto *ret = STOP->addReturn(new ReturnNode(ctrl(), expr))->peephole();
+  Node* bpeep = (new ReturnNode(ctrl(), expr))->peephole();
+  std::ostringstream b;
+  std::cout << (bpeep->print_1(b)).str();
+  auto* ret = STOP->addReturn(bpeep);
   ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole());
   return ret;
 }

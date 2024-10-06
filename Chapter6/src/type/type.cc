@@ -1,9 +1,9 @@
 #include "../../Include/type/type.h"
 
-bool Type::isConstant() { return type_ == TTOP || type_ == TCXTRL; }
+bool Type::isConstant() { return type_ == TTOP || type_ == TXCTRL; }
 
 bool Type::isSimple() { return type_ < TSIMPLE; }
-std::ostringstream &Type::_print(std::ostringstream &builder) {
+std::ostringstream &Type::print_1(std::ostringstream &builder) {
   if (isSimple())
     builder << STRS[type_];
   return builder;
@@ -12,7 +12,7 @@ std::ostringstream &Type::_print(std::ostringstream &builder) {
 Type Type::BOTTOM = Type(TBOT);
 Type Type::TOP = Type(TTOP);
 Type Type::CONTROL = Type(TCTRL);
-Type Type::XCONTROL = Type(TCXTRL);
+Type Type::XCONTROL = Type(TXCTRL);
 
 Type::Type(unsigned int type) : type_(type) {}
 
@@ -30,7 +30,7 @@ Type *Type::meet(Type *other) {
     return other->xmeet(this);
   return &BOTTOM;
 }
-std::string Type::toString() { return _print(builder).str(); }
+std::string Type::toString() { return print_1(builder).str(); }
 
 Type *Type::xmeet(Type *t) {
   assert(isSimple());

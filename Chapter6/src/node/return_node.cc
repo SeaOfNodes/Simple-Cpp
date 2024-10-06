@@ -23,8 +23,12 @@ Type *ReturnNode::compute() {
 
 std::string ReturnNode::label() { return "Return"; }
 
+// for some reasons instead of getting ~ctrl im getting #
 Node *ReturnNode::idealize() {
-  if (ctrl()->type_ == &Type::XCONTROL)
+  if (ctrl()->type_ == &Type::XCONTROL) {
+    std::cout << "xctrl: " << ctrl()->label();
     return ctrl();
+  }
+
   return nullptr;
 }

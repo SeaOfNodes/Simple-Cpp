@@ -8,9 +8,9 @@ TypeInteger *TypeInteger::constant(long con) {
 }
 
 bool TypeInteger::isConstant() { return is_con_; }
-std::string TypeInteger::toString() { return _print(builder).str(); }
+std::string TypeInteger::toString() { return print_1(builder).str(); }
 
-std::ostringstream &TypeInteger::_print(std::ostringstream &builder) {
+std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
   builder << con_;
   return builder;
 }

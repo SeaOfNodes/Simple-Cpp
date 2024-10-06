@@ -2,9 +2,9 @@
 #define ADD_NODE_H
 #include "../../Include/node/phi_node.h"
 #include "../../Include/type/integer_type.h"
-#include "../Include/node/node.h"
-#include "node/constant_node.h"
-#include "node/mul_node.h"
+#include "constant_node.h"
+#include "mul_node.h"
+#include "node.h"
 
 #include <iostream>
 #include <memory>

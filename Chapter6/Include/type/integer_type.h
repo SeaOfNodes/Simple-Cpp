@@ -19,7 +19,7 @@ public:
   bool isBot();
   explicit TypeInteger(bool is_con, long con);
   bool isConstant() override;
-  std::ostringstream &_print(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder) override;
   std::string toString();
   Type *xmeet(Type *other) override;
   long value();

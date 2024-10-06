@@ -27,12 +27,13 @@ Type *PhiNode::compute() {
 Node *PhiNode::singleUniqueInput() {
   Node *live = nullptr;
   for (int i = 1; i < nIns(); i++)
-    if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this)
+    if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this) {
       if (live == nullptr || live == in(i)) {
         live = in(i);
       } else {
         return nullptr;
       }
+    }
 
   return live;
 }

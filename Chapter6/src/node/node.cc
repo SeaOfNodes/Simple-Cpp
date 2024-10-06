@@ -1,6 +1,5 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/constant_node.h"
-#include <sstream>
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
   nid = UNIQUE_ID++;

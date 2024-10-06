@@ -21,9 +21,10 @@ Type *RegionNode::compute() {
 Node *RegionNode::idealize() {
   int path = findDeadInput();
   if (path != 0) {
-    for (Node *phi : outputs)
+    for (Node *phi : outputs) {
       if (dynamic_cast<PhiNode *>(phi))
         phi->delDef(path);
+    }
     delDef(path);
     // If down to a single input, become that input - but also make all
     // Phis an identity on *their* single input.
