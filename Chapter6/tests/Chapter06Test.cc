@@ -229,12 +229,14 @@ TEST(SimpleTest, testDemo2NonConst) {
   std::string source = R"(
 int a = 0;
 int b = 1;
+int c = 0;
 if( arg ) {
-    a = 2;
+    a = 1;
+    if( arg==2 ) { c=2; } else { c=3; }
     if( arg ) { b = 2; }
     else b = 3;
 }
-return a+b;
+return a+b+c;
 )";
   Parser *parser = new Parser(source);
   StopNode *ret = parser->parse(false);
@@ -278,5 +280,5 @@ return a+b+c;
   Parser *parser = new Parser(source, TypeInteger::constant(2));
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return 5", ret->print_1(builder).str());
+  EXPECT_EQ("return 5;", ret->print_1(builder).str());
 }
