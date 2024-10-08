@@ -72,12 +72,12 @@ Node *Parser::parseIf() {
   // Parse predicate
   Node *pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
+  auto *ifNode = ((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
+  Node *ifT = (new ProjNode((IfNode*)ifNode, 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
-  Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
+  Node *ifF = (new ProjNode((IfNode*)ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
 
