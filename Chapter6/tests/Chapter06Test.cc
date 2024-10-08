@@ -117,7 +117,7 @@ TEST(SimpleTest, testMerge3Peephole) {
   std::string source = R"(
 int a=1;
 if( arg==1 )
-    if( arg==2 )
+    if(1==2 )
         a=2;
     else
         a=3;
