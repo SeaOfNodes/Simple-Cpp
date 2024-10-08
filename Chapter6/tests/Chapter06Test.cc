@@ -171,7 +171,7 @@ return a;
   Parser *parser = new Parser(source, TypeInteger::constant(3));
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return Phi(Region36,3,Phi(Region34,4,5));", ret->print_1(builder).str());
+  EXPECT_EQ("return 4;", ret->print_1(builder).str());
 }
 
 TEST(SimpleTest, testDemo1NonConst) {
