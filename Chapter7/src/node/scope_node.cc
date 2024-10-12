@@ -1,4 +1,5 @@
 #include "../../Include/node/scope_node.h"
+#include <cassert>
 
 ScopeNode::ScopeNode() : Node({}){ type_ = &Type::BOTTOM; }
 std::string ScopeNode::label() { return "Scope"; }
@@ -99,17 +100,24 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
   that->kill();
   return r->unkeep()->peephole();
 }
-
-std::vector<std::string> ScopeNode::reverseNames() {
-  std::vector<std::string> names(nIns());
-  for (const auto &syms : scopes) {
-    for (const auto &pair : syms) {
-      names[pair.second] = pair.first;
-    }
+void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
+  Node* ctrl1 = ctrl();
+  auto* loop = dynamic_cast<LoopNode*>(ctrl1);
+  assert(loop && loop->inProgress());
+  for(int i = 1; i<nIns(); i++) {
+    PhiNode*phi = (PhiNode*)in(i);
+    assert(phi->region() == ctrl1 && phi->in(2)==nullptr);
+    phi->setDef(2, back->in(i));
+    // Do an eager useless-phi removal
+    Node* in = phi->peephole();
+    if(in!= phi) phi->subsume(in);
   }
-  return names;
+  back->kill();   // Loop backedge is dead
 }
-ScopeNode *ScopeNode::dup() {
+ScopeNode* ScopeNode::dup() {
+  return dup(false);
+}
+ScopeNode* ScopeNode::dup(bool loop) {
   ScopeNode *dup = new ScopeNode();
   // Our goals are:
   // 1) duplicate the name bindings of the ScopeNode across all stack levels
@@ -122,9 +130,26 @@ ScopeNode *ScopeNode::dup() {
   dup->addDef(ctrl());
   // now, all the inputs
   for (int i = 1; i < nIns(); i++) {
-    dup->addDef(in(i));
+    if(!loop) {dup->addDef(in(i));}
+    else {
+      auto names = reverseNames();  // Get the variable names
+       // Create a phi node with second input as null - to be filled in
+       // by endLoop() below
+      dup->addDef((new PhiNode(names[i], {ctrl(), in(i), nullptr}))->peephole());
+      setDef(i, dup->in(i));
+    }
   }
   return dup;
 }
+std::vector<std::string> ScopeNode::reverseNames() {
+  std::vector<std::string> names(nIns());
+  for (const auto &syms : scopes) {
+    for (const auto &pair : syms) {
+      names[pair.second] = pair.first;
+    }
+  }
+  return names;
+}
+
 std::string ScopeNode::CTRL = "$ctrl";
 std::string ScopeNode::ARG0 = "arg";

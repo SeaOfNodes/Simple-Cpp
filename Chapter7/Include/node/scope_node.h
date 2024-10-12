@@ -4,6 +4,7 @@
 #include "../../Include/node/phi_node.h"
 #include "../../Include/node/region_node.h"
 #include "../../Include/type/type.h"
+#include "../../Include/node/loop_node.h"
 
 #include <stack>
 #include <unordered_map>
@@ -94,6 +95,7 @@ public:
    * The new Scope is a full-fledged Node with proper use<->def edges.
    */
   ScopeNode *dup();
+  ScopeNode *dup(bool loop);
 
   /**
    * Merges the names whose node bindings differ, by creating Phi node for such
@@ -104,6 +106,9 @@ public:
    * @return A new node representing the merge point
    */
   Node *mergeScopes(ScopeNode *that);
+  // Merge the backedge scope into this loop head scope
+  // We set the second input to the phi from the back edge (i.e. loop body)
+  void endLoop(ScopeNode* back, ScopeNode* exit);
 
   Node *ctrl(Node *n);
   void push();
