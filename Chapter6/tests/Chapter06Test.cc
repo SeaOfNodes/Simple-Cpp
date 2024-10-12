@@ -6,47 +6,46 @@
 
 #include <iostream>
 #include <sstream>
-//TEST(SimpleTest, testPeepholeReturn) {
-//  std::string source = R"(
-//  if(true) return 2;
-//  return 1;
-//)";
-//
-//  auto *parser = new Parser(source);
-//  StopNode *ret = parser->parse(false);
-//  std::ostringstream builder;
-//  std::cout << "just the one i got back";
-//  EXPECT_EQ("return 2;", ret->print_1(builder).str());
-//}
-//
-//TEST(SimpleTest, testPeepholeRotate) {
-//  std::string source = R"(
-//int a = 1;
-//if (arg)
-//a = 2;
-//return (arg < a) < 3;
-//)";
-//  auto *parser = new Parser(source, &TypeInteger::BOT);
-//  StopNode *ret = parser->parse(false);
-//  std::ostringstream builder;
-//  // id off by one
-//  EXPECT_EQ("return ((arg<Phi(Region12,2,1))<3);", ret->print_1(builder).str());
-//}
-//
-//TEST(SimpleTest, testPeepholeCFG) {
-//  std::string source = R"(
-//int a=1;
-//if( true )
-//  a=2;
-//else
-//  a=3;
-//return a;
-//)";
-//  auto *parser = new Parser(source, &TypeInteger::BOT);
-//  StopNode *ret = parser->parse(false);
-//  std::ostringstream builder;
-//  EXPECT_EQ("return 2;", ret->print_1(builder).str());
-//}
+
+TEST(SimpleTest, testPeepholeReturn) {
+  std::string source = R"(
+  if(true) return 2;
+  return 1;
+)";
+
+  auto *parser = new Parser(source);
+  StopNode *ret = parser->parse(false);
+  std::ostringstream builder;
+  EXPECT_EQ("return 2;", ret->print_1(builder).str());
+}
+
+TEST(SimpleTest, testPeepholeRotate) {
+  std::string source = R"(
+int a = 1;
+if (arg)
+a = 2;
+return (arg < a) < 3;
+)";
+  auto *parser = new Parser(source, &TypeInteger::BOT);
+  StopNode *ret = parser->parse(false);
+  std::ostringstream builder;
+  EXPECT_EQ("return ((arg<Phi(Region12,2,1))<3);", ret->print_1(builder).str());
+}
+
+TEST(SimpleTest, testPeepholeCFG) {
+  std::string source = R"(
+int a=1;
+if( true )
+  a=2;
+else
+  a=3;
+return a;
+)";
+  auto *parser = new Parser(source, &TypeInteger::BOT);
+  StopNode *ret = parser->parse(false);
+  std::ostringstream builder;
+  EXPECT_EQ("return 2;", ret->print_1(builder).str());
+}
 
 TEST(SimpleTest, testIfIf) {
   std::string source = R"(
@@ -185,7 +184,7 @@ if( arg ) {
 }
 return a+b;
 )";
-  Parser *parser = new Parser(source, TypeInteger::constant(3));
+  Parser *parser = new Parser(source);
   StopNode *ret = parser->parse(false);
   std::ostringstream builder;
   EXPECT_EQ("return Phi(Region22,4,1);", ret->print_1(builder).str());
