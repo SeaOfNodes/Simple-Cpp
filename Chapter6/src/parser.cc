@@ -1,7 +1,6 @@
 #include "../Include/parser.h"
-#include <cctype>
-#include <graph_visualizer.h>
-#include <node/proj_node.h>
+#include "../Include/graph_visualizer.h"
+#include "../Include/node/proj_node.h"
 
 StartNode *Parser::START = nullptr;
 
@@ -41,7 +40,7 @@ StopNode *Parser::parse(bool show) {
     throw std::runtime_error("Syntax error, unexpected " +
                              lexer->getAnyNextToken());
   // type is not set for the second one here, for some reasons it disappears
-  STOP = (StopNode*)STOP->peephole();
+  STOP = (StopNode *)STOP->peephole();
   if (show)
     showGraph();
 
@@ -74,10 +73,10 @@ Node *Parser::parseIf() {
   // IfNode takes current control and predicate
   auto *ifNode = ((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode((IfNode*)ifNode, 0, "True"))->peephole();
+  Node *ifT = (new ProjNode((IfNode *)ifNode, 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
-  Node *ifF = (new ProjNode((IfNode*)ifNode, 1, "False"))->peephole();
+  Node *ifF = (new ProjNode((IfNode *)ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
 
@@ -135,10 +134,10 @@ Node *Parser::parseExpressionStatement() {
 
 Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
-  Node* bpeep = (new ReturnNode(ctrl(), expr))->peephole();
-  std::ostringstream b;
-  auto* ret = STOP->addReturn(bpeep);
-  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole()); // kill control
+  Node *bpeep = (new ReturnNode(ctrl(), expr))->peephole();
+  auto *ret = STOP->addReturn(bpeep);
+  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))
+           ->peephole()); // kill control
   return ret;
 }
 
@@ -235,6 +234,8 @@ Node *Parser::parsePrimary() {
   if (name == "")
     errorSyntax("an identifier or expression");
   Node *n = scope_node->lookup(name);
+  std::ostringstream b;
+  std::string arg_type = n->type_->print_1(b).str();
   if (n != nullptr)
     return n;
   throw std::runtime_error("Undefined name: '" + name + "'");

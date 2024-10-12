@@ -28,7 +28,6 @@ Node *StopNode::idealize() {
     std::ostringstream b;
     if(!in(i)->type_) std::cout << "Type is not set";
     if (in(i)->type_ == &Type::XCONTROL) {
-      std::cout << "Finally here";
       delDef(i--);
     }
   }
