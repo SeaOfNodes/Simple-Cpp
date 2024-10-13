@@ -7,6 +7,27 @@
 #include <iostream>
 #include <sstream>
 
+TEST(SimpleTest, testMyOwnSake) {
+  std::string source = R"(
+  int a = 12;
+  int b = 12;
+  #showGraph;
+ return a + b;
+)";
+  auto*parser = new Parser(source);
+  parser->parse(false);
+}
+
+TEST(SimpleTest, testAssignmentSema) {
+std::string source = R"(
+  int a = 1;
+  #showGraph;
+  return a;
+)";
+    auto*parser = new Parser(source);
+    parser->parse(false);
+}
+
 TEST(SimpleTest, testExample) {
   std::string source = R"(
   while(arg < 10) {
@@ -15,7 +36,7 @@ TEST(SimpleTest, testExample) {
   }
   return arg;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   Node::disablePeephole = true;
   StopNode*ret = parser->parse(true);
   std::ostringstream builder;
@@ -34,7 +55,7 @@ TEST(SimpleTest, testRegression) {
 }
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Region23,1,Phi(Loop11,1,(Phi_a+1)));", ret->print_1(builder).str());
@@ -54,7 +75,7 @@ while(i < arg) {
 }
 return sum;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop8,0,Phi(Loop21,Phi_sum,(Phi(Loop,0,(Phi_j+1))+Phi_sum)));", ret->print_1(builder).str());
@@ -71,7 +92,7 @@ while(a < 10) {
 }
 return b;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   Node::disablePeephole = true;
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
@@ -92,7 +113,7 @@ while(a < 10) {
 }
 return b;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop8,2,(Phi(Region27,Phi_b,4)+1));", ret->print_1(builder).str());
@@ -108,7 +129,7 @@ while(a < 10) {
 }
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   Node::disablePeephole = true;
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
@@ -126,7 +147,7 @@ while(a < 10) {
 }
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop7,1,(Phi_a+3));", ret->print_1(builder).str());
@@ -139,7 +160,7 @@ int a = 1;
 while(arg) a = 2;
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   Node::disablePeephole = true;
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
@@ -154,7 +175,7 @@ int a = 1;
 while(arg) a = 2;
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop7,1,2);", ret->print_1(builder).str());
@@ -171,7 +192,7 @@ while(a < 10) {
 return a;
 )";
   Node::disablePeephole = true;
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   Node::disablePeephole = false;
@@ -188,7 +209,7 @@ while(a < 10) {
 }
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop7,1,(Phi_a+3));", ret->print_1(builder).str());
@@ -206,7 +227,7 @@ while(a < 10) {
 return a;
 )";
   Node::disablePeephole = true;
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop8,1,((Phi_a+1)+2));", ret->print_1(builder).str());
@@ -223,7 +244,7 @@ while(a < 10) {
 }
 return a;
 )";
-  Parser *parser = new Parser(source);
+  auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   EXPECT_EQ("return Phi(Loop8,1,(Phi_a+3));", ret->print_1(builder).str());

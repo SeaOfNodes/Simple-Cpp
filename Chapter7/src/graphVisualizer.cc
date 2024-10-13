@@ -1,16 +1,20 @@
 #include "../Include/graph_visualizer.h"
 
-// Function implementations
+GraphVisualizer::GraphVisualizer(bool separateControlCluster)
+    : separateControlCluster(separateControlCluster) {}
+GraphVisualizer::GraphVisualizer() : GraphVisualizer(false) {}
+
 std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   std::vector<Node *> all = findAll(parser);
   std::ostringstream sb;
-  sb << "digraph chapter06 {\n";
+  sb << "digraph chapter07 {\n";
   sb << "/*\n";
   sb << parser.src();
   sb << "\n*/\n";
   sb << "\trankdir=BT;\n";
   sb << "\tordering=\"in\";\n";
   sb << "\tconcentrate=\"true\";\n";
+  sb << "\tcompound=\"true\";\n";
   // Just the Nodes first, in a cluster no edges
   nodes(sb, all);
 
@@ -28,13 +32,20 @@ std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   return sb.str();
 }
 
-void GraphVisualizer::nodes(std::ostringstream &sb,
-                            const std::vector<Node *> &all) {
+void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
+                                     const std::vector<Node *> &all) {
+  if (!separateControlCluster && doCtrl)
+    return; // all nodes in 1 cluster
+  sb << (doCtrl ? "\tsubgraph cluster_Controls {\n"
+                : "\tsubgraph cluster_Nodes {\n");
   sb << "\tsubgraph cluster_Nodes {\n";
   for (Node *n : all) {
     if (dynamic_cast<ProjNode *>(n) || dynamic_cast<ScopeNode *>(n))
       continue; // Do not emit, rolled into MultiNode or Scope cluster already
-
+    if (separateControlCluster && doCtrl && !n->isCFG())
+      continue;
+    if (separateControlCluster && !doCtrl && n->isCFG())
+      continue;
     sb << "\t\t" << n->uniqueName() << " [ ";
     std::string lab = n->glabel();
     if (dynamic_cast<MultiNode *>(n)) {
@@ -81,22 +92,27 @@ void GraphVisualizer::nodes(std::ostringstream &sb,
     sb << "];\n";
   }
   // Force Region & Phis to line up
-  for (auto n : all) {
-    if (auto *proj = dynamic_cast<RegionNode *>(n)) {
-      sb << "\t\t{ rank=same; ";
-      sb << proj->print_1(sb).str();
-      sb << ";";
-      for (auto phi : proj->outputs) {
-        if (auto *proj = dynamic_cast<PhiNode *>(phi)) {
-          sb << phi->uniqueName() << ";";
+  if (!separateControlCluster) {
+    for (auto n : all) {
+      if (auto *proj = dynamic_cast<RegionNode *>(n)) {
+        sb << "\t\t{ rank=same; ";
+        sb << proj->print_1(sb).str();
+        sb << ";";
+        for (auto phi : proj->outputs) {
+          if (auto *proj = dynamic_cast<PhiNode *>(phi)) {
+            sb << phi->uniqueName() << ";";
+          }
+          sb << "}\n";
         }
-        sb << "}\n";
       }
     }
   }
   sb << "\t}\n";
 }
-
+void GraphVisualizer::nodes(std::ostringstream &sb, const std::vector<Node *> &all) {
+  nodesByCluster(sb, true, all);
+  nodesByCluster(sb, false, all);
+}
 void GraphVisualizer::nodeEdges(std::ostringstream &sb,
                                 const std::vector<Node *> &all) {
   sb << "\tedge [ fontname=Helvetica, fontsize=8 ];\n";
@@ -192,34 +208,37 @@ std::string GraphVisualizer::makePortName(std::string ScopeName,
 }
 
 std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
-  StartNode *start = Parser::START;
   std::unordered_map<int, Node *> all;
   for (Node *n : Parser::START->outputs) {
     walk(all, n);
   }
   for (auto n : parser.scope_node->inputs) {
+    //std::cout << n->uniqueName() << "\n";
     walk(all, n);
   }
   std::vector<Node *> result;
   for (auto &entry : all) {
     result.push_back(entry.second);
   }
+  // is the order going to be different here?
+/*  for(const auto& pair: all) {
+    Node*node = pair.second;
+    std::cout << node->uniqueName() << "\n";
+  }*/
   return result;
 }
 
 void GraphVisualizer::walk(std::unordered_map<int, Node *> &all, Node *n) {
+  if(!n) return;
   if (all.find(n->nid) != all.end())
     return;
+
   all[n->nid] = n;
 
   for (Node *c : n->inputs) {
-    if (c != nullptr) {
       walk(all, c);
-    }
   }
   for (Node *c : n->outputs) {
-    if (c != nullptr) {
       walk(all, c);
-    }
   }
 }

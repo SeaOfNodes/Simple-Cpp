@@ -7,7 +7,7 @@ std::ostringstream &ConstantNode::print_1(std::ostringstream &builder) {
 }
 
 std::string ConstantNode::label() {
-  return "#" + (con_->print_1(builder).str());
+  return con_->print_1(builder).str();
 }
 
 Type *ConstantNode::compute() { return con_; }

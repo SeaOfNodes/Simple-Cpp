@@ -17,7 +17,7 @@ bool IfNode::isMultiHead() {return true;}
 
 Type *IfNode::compute() {
   // If the If node is not reachable then neither is any following Proj
-  if (ctrl()->type_ != &Type::CONTROL)
+  if (ctrl()->type_ != &Type::CONTROL && ctrl()->type_ != &Type::BOTTOM)
     return &TypeTuple::IF_NEITHER;
   // If constant is 0 then false branch is reachable
   // Else true branch is reachable

@@ -1,6 +1,8 @@
 #ifndef GRAPH_VISUALIZER_H
 #define GRAPH_VISUALIZER_H
 
+// if not true then DEF_USE
+#define USE_DEF true
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -12,9 +14,18 @@
 
 class GraphVisualizer {
 public:
-    std::string generateDotOutput(Parser &parser); // Generate the dot file as a string
-
+  /**
+     * If set to true we put the control nodes in a separate cluster from
+     * data nodes.
+   */
+  bool separateControlCluster = false;
+  std::string generateDotOutput(Parser &parser); // Generate the dot file as a string
+  GraphVisualizer();
+  GraphVisualizer(bool separateControlCluster);
 private:
+
+    void nodesByCluster(std::ostringstream& sb, bool doCtrl, const std::vector<Node*> &all);
+
     void nodes(std::ostringstream &sb, const std::vector<Node *> &all); // Add nodes to dot format
     void nodeEdges(std::ostringstream &sb, const std::vector<Node *> &all); // Define node edges
     std::vector<Node *> findAll(Parser &parser); // Find all nodes in the graph

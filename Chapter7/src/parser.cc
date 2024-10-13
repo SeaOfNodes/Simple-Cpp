@@ -83,7 +83,7 @@ Node* Parser::parseWhile() {
   // We create phis eagerly for all the names we find, see dup().
 
   // Save the current scope as the loop head
-  ScopeNode*head = (ScopeNode*)scope_node->keep();
+  auto*head = (ScopeNode*)scope_node->keep();
   // Clone the head Scope to create a new Scope for the body.
   // Create phis eagerly as part of cloning
   xScopes.push_back(scope_node = scope_node->dup(true)); // The true argument triggers creating phis
@@ -91,7 +91,7 @@ Node* Parser::parseWhile() {
   // Parse predicate
   auto pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  IfNode* ifNode = (IfNode*)((new IfNode(ctrl(), pred))->keep())->peephole();
+  auto* ifNode = (IfNode*)((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
   Node* ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
   ifNode->unkeep();
