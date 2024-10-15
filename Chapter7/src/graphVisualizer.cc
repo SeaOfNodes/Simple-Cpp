@@ -149,7 +149,7 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
 
 void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
   sb << "\tnode [shape=plaintext];\n";
-  int level = 0;
+  int level = 1;
   for (auto &scope : n->scopes) {
     std::string scopeName = makeScopeName(n, level);
     sb << "\tsubgraph cluster_" << scopeName << " {\n";
