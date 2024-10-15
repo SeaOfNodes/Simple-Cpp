@@ -1,5 +1,68 @@
 #include "../Include/graph_visualizer.h"
 
+/*
+ * DOT notes:
+ * directed vs undirected:
+ * diagraph specifies the graph is directed: meaning that the arrows(edges) must
+point
+ * towards a direction.
+ * e.g
+ * digraph directedGraph {
+  A -> B;
+  A -> C;
+  C -> B;
+  C -> D;
+  }
+  VS
+
+graph undirectedGraph {
+A -- B;
+A -- C;
+B -- C;
+C -- D;
+}
+//
+vs
+
+Comments same way as cpp or java.
+
+SubGraphs play 3 roles:
+subgraph can be used to represent a graph structure, indicating the certain
+nodes and edges should be grouped together. Can provide context for setting
+attributes.
+
+If the name of the subgraph begins with cluster, Graphviz notes the subgraph as
+a special cluster subgraph. e.g it surrounds it with a rectangle
+
+Nodes can be created inside a sub-graph and then modified with attributes.
+e.g: Con_7 [ label="12" ];
+
+
+}
+Child-Parent relationship between the graphs(nested)
+
+ subgraph cluster_Scope1_1 {
+        Scope1_1 [label=<
+                <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+                <TR><TD BGCOLOR="cyan">1</TD><TD PORT="Scope1_1_a">a</TD><TD
+PORT="Scope1_1_b">b</TD></TR>
+                </TABLE>>];
+subgraph cluster_Scope1_2 {
+        Scope1_2 [label=<
+                <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+                <TR><TD BGCOLOR="cyan">0</TD><TD
+PORT="Scope1_2_$ctrl">$ctrl</TD><TD PORT="Scope1_2_arg">arg</TD></TR>
+                </TABLE>>];
+}
+}
+
+Edges:
+node -> node2
+In our case we are drawing an arrow from
+ Scope1_1:"Scope1_1_a" -> Con_6; where Scope1_1 is the subgraph and "Scope1_1_a"
+is the specific port while Con_6 is another node.
+ * */
+
 GraphVisualizer::GraphVisualizer(bool separateControlCluster)
     : separateControlCluster(separateControlCluster) {}
 GraphVisualizer::GraphVisualizer() : GraphVisualizer(false) {}
@@ -19,14 +82,16 @@ std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   nodes(sb, all);
 
   // Now the scopes, in a cluster no edges
-  for (auto sn : parser.xScopes)
+  for (auto sn : parser.xScopes) {
     scopes(sb, sn);
+  }
   // Walk the node edges
   nodeEdges(sb, all);
 
   // Walk the scope edges
-  for (auto sn : parser.xScopes)
+  for (auto sn : parser.xScopes) {
     scopeEdges(sb, sn);
+  }
 
   sb << "}\n";
   return sb.str();
@@ -38,7 +103,6 @@ void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
     return; // all nodes in 1 cluster
   sb << (doCtrl ? "\tsubgraph cluster_Controls {\n"
                 : "\tsubgraph cluster_Nodes {\n");
-  sb << "\tsubgraph cluster_Nodes {\n";
   for (Node *n : all) {
     if (dynamic_cast<ProjNode *>(n) || dynamic_cast<ScopeNode *>(n))
       continue; // Do not emit, rolled into MultiNode or Scope cluster already
@@ -109,7 +173,8 @@ void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
   }
   sb << "\t}\n";
 }
-void GraphVisualizer::nodes(std::ostringstream &sb, const std::vector<Node *> &all) {
+void GraphVisualizer::nodes(std::ostringstream &sb,
+                            const std::vector<Node *> &all) {
   nodesByCluster(sb, true, all);
   nodesByCluster(sb, false, all);
 }
@@ -121,7 +186,7 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
     // ProjNodes handled by Multi;
     // ScopeNodes are done separately
     if (dynamic_cast<ProjNode *>(n) || dynamic_cast<ScopeNode *>(n) ||
-        dynamic_cast<ProjNode *>(n))
+        dynamic_cast<ConstantNode *>(n))
       continue;
     int i = 0;
     for (Node *def : n->inputs) {
@@ -150,14 +215,17 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
 void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
   sb << "\tnode [shape=plaintext];\n";
   int level = 1;
-  for (auto &scope : n->scopes) {
+  for (int idx = n->scopes.size() - 1; idx >= 0; idx--) {
+    auto sysms = n->scopes[idx];
     std::string scopeName = makeScopeName(n, level);
     sb << "\tsubgraph cluster_" << scopeName << " {\n";
-    sb << "\t\tlabel=\"" << scopeName << " [label=<\n";
+    sb << scopeName << " [label=<\n";
     sb << "\t\t\t<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n";
     // Add the scope level
-    sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << level << "</TD>\n";
-    for (const auto &pair : scope) {
+    int scopeLevel = n->scopes.size() - level;
+    sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << scopeLevel << "</TD>\n";
+
+    for (const auto &pair : sysms) {
       const std::string &name = pair.first;
       sb << "<TD PORT=\"" << makePortName(scopeName, name) << "\">" << name
          << "</TD>";
@@ -170,29 +238,33 @@ void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
   // Scope clusters nest, so the graphics shows the nested scopes, so
   // they are not closed as they are printed; so they just keep nesting.
   // We close them all at once here.
-  for (int i = 0; i < level; ++i) {
+  for (int i = 0; i < level - 1; ++i) {
     sb << "\t}\n"; // End all Scope clusters
   }
 }
 
 void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
   sb << "\tedge [style=dashed color=cornflowerblue];\n";
-  int level = 0;
-  for (const auto &scope : n->scopes) {
+  int level = 1;
+  for (std::size_t i = n->scopes.size() - 1; i != -1; --i) {
+    auto syms = n->scopes[i];
     std::string scopeName = makeScopeName(n, level);
-    for (const auto &pair : scope) {
+    for (const auto &pair : syms) {
       std::string name = pair.first;
-      Node *def = n->in(pair.second);
+      int idx = syms[name];
+      Node *def = n->in(idx);
+      std::string unique_name = def->uniqueName();
       if (def == nullptr)
         continue;
-      sb << scopeName << ":" << '"' << makePortName(scopeName, name) << '"'
-         << " -> ";
-      if (auto *proj = dynamic_cast<ProjNode *>(def)) {
+      sb << "\t" << scopeName << ":" << '"' << makePortName(scopeName, name)
+         << '"' << " -> ";
+      if (auto *proj = dynamic_cast<ProjNode *>(def); proj) {
         std::string mname = proj->ctrl()->uniqueName();
         sb << mname << ":p" << proj->idx_;
-      } else
+      } else {
         sb << def->uniqueName();
-      sb << ";";
+      }
+      sb << ";\n";
     }
     level++;
   }
@@ -213,7 +285,7 @@ std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
     walk(all, n);
   }
   for (auto n : parser.scope_node->inputs) {
-    //std::cout << n->uniqueName() << "\n";
+    // std::cout << n->uniqueName() << "\n";
     walk(all, n);
   }
   std::vector<Node *> result;
@@ -221,24 +293,25 @@ std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
     result.push_back(entry.second);
   }
   // is the order going to be different here?
-/*  for(const auto& pair: all) {
-    Node*node = pair.second;
-    std::cout << node->uniqueName() << "\n";
-  }*/
+  /*  for(const auto& pair: all) {
+      Node*node = pair.second;
+      std::cout << node->uniqueName() << "\n";
+    }*/
   return result;
 }
 
 void GraphVisualizer::walk(std::unordered_map<int, Node *> &all, Node *n) {
-  if(!n) return;
+  if (!n)
+    return;
   if (all.find(n->nid) != all.end())
     return;
 
   all[n->nid] = n;
 
   for (Node *c : n->inputs) {
-      walk(all, c);
+    walk(all, c);
   }
   for (Node *c : n->outputs) {
-      walk(all, c);
+    walk(all, c);
   }
 }

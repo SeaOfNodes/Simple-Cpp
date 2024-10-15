@@ -1,7 +1,7 @@
 #include "../../Include/node/proj_node.h"
 
 ProjNode::ProjNode(MultiNode *ctrl, int idx, std::string label)
-    : Node({ctrl}), idx_(idx), label_(label) {
+    : Node({ctrl}), idx_(idx), label_(std::move(label)) {
 }
 
 std::string ProjNode::label() { return label_; }

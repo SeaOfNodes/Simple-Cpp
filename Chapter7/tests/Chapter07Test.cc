@@ -1,6 +1,4 @@
 #include "../Include/graph_visualizer.h"
-#include "../Include/node/return_node.h"
-#include "../Include/node/stop_node.h"
 
 #include <gtest/gtest.h>
 
