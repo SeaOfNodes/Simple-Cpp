@@ -56,9 +56,10 @@ std::ostringstream &Node::print_0(std::ostringstream &builder,
   }
 }
 
-std::ostringstream &Node::print(std::ostringstream& b) {
+std::ostringstream &Node::print(std::ostringstream &b) {
   print_0(b, bitset);
-  return b;}
+  return b;
+}
 
 std::size_t Node::nOuts() const { return outputs.size(); }
 
