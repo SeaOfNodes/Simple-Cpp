@@ -1,12 +1,15 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "../../Include/type/type.h"
 #include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+#include <bitset>
+
+#include "../../Include/type/type.h"
 
 /**
  * All Nodes in the Sea of Nodes IR inherit from the Node class.
@@ -64,6 +67,7 @@ public:
   int i_depth{};
 
 private:
+  std::vector<bool> bitset;
   /**
    * A private Global Static mutable counter, for unique node id generation.
    * To make the compiler multithreaded, this field will have to move into a
@@ -101,10 +105,10 @@ public:
 
   // This is the common print: check for DEAD and print "DEAD" else call the
   // per-Node print1.
-  virtual std::ostringstream &print_0(std::ostringstream &builder);
+  virtual std::ostringstream &print_0(std::ostringstream &builder, std::vector<bool> visited);
 
   // Every Node implements this.
-  virtual std::ostringstream &print_1(std::ostringstream &builder) = 0;
+  virtual std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>) = 0;
 
   virtual bool isMultiHead();
   virtual bool isMultiTail();

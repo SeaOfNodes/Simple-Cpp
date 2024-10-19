@@ -79,12 +79,14 @@ std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   sb << "\tconcentrate=\"true\";\n";
   sb << "\tcompound=\"true\";\n";
   // Just the Nodes first, in a cluster no edges
+
   nodes(sb, all);
 
   // Now the scopes, in a cluster no edges
   for (auto sn : parser.xScopes) {
     scopes(sb, sn);
   }
+
   // Walk the node edges
   nodeEdges(sb, all);
 
@@ -160,7 +162,7 @@ void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
     for (auto n : all) {
       if (auto *proj = dynamic_cast<RegionNode *>(n)) {
         sb << "\t\t{ rank=same; ";
-        sb << proj->print_1(sb).str();
+        sb << proj->print_0(sb, {}).str();
         sb << ";";
         for (auto phi : proj->outputs) {
           if (auto *proj = dynamic_cast<PhiNode *>(phi)) {

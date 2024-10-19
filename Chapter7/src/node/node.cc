@@ -35,18 +35,25 @@ Node *Node::unkeep() {
   return this;
 }
 
-std::ostringstream &Node::print_0(std::ostringstream &builder) {
+std::ostringstream &Node::print_0(std::ostringstream &builder,
+                                  std::vector<bool> visited) {
+  if (visited[nid]) {
+    builder << label();
+    return builder;
+  }
+  visited[nid] = true;
+
   if (isDead()) {
     builder << uniqueName() << ": DEAD";
     return builder;
   } else {
-    return print_1(builder);
+    return print_1(builder, visited);
   }
 }
 
 std::ostringstream &Node::print() {
   std::ostringstream builder;
-  return print_0(builder);
+  return print_0(builder, bitset);
 }
 
 std::size_t Node::nOuts() const { return outputs.size(); }
@@ -81,12 +88,8 @@ bool Node::delUse(Node *use) {
   return outputs.empty();
 }
 
-bool Node::isMultiHead() {
-  return false;
-}
-bool Node::isMultiTail() {
-  return false;
-}
+bool Node::isMultiHead() { return false; }
+bool Node::isMultiTail() { return false; }
 void Node::subsume(Node *nnn) {
   assert(nnn != this);
   while (nOuts() > 0) {
@@ -131,7 +134,8 @@ void Node::popN(std::size_t n) {
   for (int i = 0; i < n; i++) {
     Node *old_def = inputs.back();
     inputs.pop_back();
-    if (old_def != nullptr && old_def->delUse(this));
+    if (old_def != nullptr && old_def->delUse(this))
+      ;
   }
 }
 

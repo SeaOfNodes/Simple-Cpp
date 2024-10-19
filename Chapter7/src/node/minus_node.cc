@@ -6,9 +6,10 @@ MinusNode::MinusNode(Node *in) : Node({nullptr, in}) {}
 std::string MinusNode::label() { return "Minus"; }
 std::string MinusNode::glabel() { return "-"; }
 
-std::ostringstream &MinusNode::print_1(std::ostringstream &builder) {
+std::ostringstream &MinusNode::print_1(std::ostringstream &builder,
+                                       std::vector<bool> visited) {
   builder << "(-";
-  in(1)->print_0(builder);
+  in(1)->print_0(builder, visited);
   builder << ")";
   return builder;
 }
@@ -21,6 +22,4 @@ Type *MinusNode::compute() {
   return &Type::BOTTOM;
 }
 
-Node* MinusNode::idealize() {
-  return nullptr;
-}
+Node *MinusNode::idealize() { return nullptr; }

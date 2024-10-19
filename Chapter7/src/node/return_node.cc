@@ -9,10 +9,10 @@ ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {}
 
 bool ReturnNode::isCFG() { return true; }
 
-std::ostringstream &ReturnNode::print_1(std::ostringstream &builder) {
+std::ostringstream &ReturnNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
   builder << "return ";
   Node *expr1 = expr();
-  expr1->print_1(builder);
+  expr1->print_1(builder, visited);
   builder << ";";
   return builder;
 }

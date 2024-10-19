@@ -10,7 +10,7 @@ class RegionNode : public Node {
 public:
   RegionNode(std::initializer_list<Node *> nodes);
   std::string label() override;
-  std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited) override;
   bool isCFG() override;
 
   int findDeadInput();

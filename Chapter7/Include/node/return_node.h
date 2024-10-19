@@ -9,7 +9,7 @@ public:
   ReturnNode(Node* ctrl, Node* data);
   Node* ctrl();
   Node* expr();
-  std::ostringstream& print_1(std::ostringstream& builder) override;
+  std::ostringstream& print_1(std::ostringstream& builder, std::vector<bool> visited) override;
   [[nodiscard]] bool isCFG() override;
 
   std::string label() override;

@@ -33,7 +33,14 @@ StopNode *Parser::parse(bool show) {
   scope_node->define(ScopeNode::ARG0,
                      (new ProjNode(START, 1, ScopeNode::ARG0))->peephole());
   parseBlock();
+  // before pop
+  for (const auto &pair : scope_node->scopes[1]) {
+    std::string name = pair.first;
+  }
   scope_node->pop();
+  for (const auto &pair : scope_node->scopes[1]) {
+    std::string name = pair.first;
+  }
   xScopes.pop_back();
 
   if (!lexer->isEof())
@@ -58,7 +65,8 @@ Node *Parser::parseStatement() {
     return require(parseBlock(), "}");
   else if (matchx("if"))
     return parseIf();
-  else if(matchx("while")) return parseWhile();
+  else if (matchx("while"))
+    return parseWhile();
   else if (matchx("#showGraph"))
     return require(showGraph(), ";");
   else if (match(";"))
@@ -67,7 +75,7 @@ Node *Parser::parseStatement() {
     return parseExpressionStatement();
 }
 
-Node* Parser::parseWhile() {
+Node *Parser::parseWhile() {
   require("(");
 
   // Loop region has two control inputs, the first is the entry
@@ -75,27 +83,28 @@ Node* Parser::parseWhile() {
   // (see end_loop() call below).  Note that the absence of back edge is
   // used as an indicator to switch off peepholes of the region and
   // associated phis; see {@code inProgress()}.
-  ctrl((new LoopNode(ctrl()))->peephole()); // Note we set back edge to null here
-
+  ctrl(
+      (new LoopNode(ctrl()))->peephole()); // Note we set back edge to null here
 
   // At loop head, we clone the current Scope (this includes all
   // names in every nesting level within the Scope).
   // We create phis eagerly for all the names we find, see dup().
 
   // Save the current scope as the loop head
-  auto*head = (ScopeNode*)scope_node->keep();
+  auto *head = (ScopeNode *)scope_node->keep();
   // Clone the head Scope to create a new Scope for the body.
   // Create phis eagerly as part of cloning
-  xScopes.push_back(scope_node = scope_node->dup(true)); // The true argument triggers creating phis
+  xScopes.push_back(scope_node = scope_node->dup(
+                        true)); // The true argument triggers creating phis
 
   // Parse predicate
   auto pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  auto* ifNode = (IfNode*)((new IfNode(ctrl(), pred))->keep())->peephole();
+  auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node* ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
+  Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
   ifNode->unkeep();
-  Node* ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
+  Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
 
   // Clone the body Scope to create the exit Scope
   // which accounts for any side effects in the predicate
@@ -106,22 +115,21 @@ Node* Parser::parseWhile() {
   xScopes.push_back(exit);
   exit->ctrl(ifF);
 
-
   // Parse the true side, which corresponds to loop body
   // Our current scope is the body Scope
   ctrl(ifT); // set ctrl token to ifTrue projection
   parseStatement();
 
-  // The true branch loops back, so whatever is current control (_scope.ctrl) gets
-  // added to head loop as input. endLoop() updates the head scope,
-  // and goes through all the phis that were created earlier. For each
-  // phi, it sets the second input to the corresponding input from the back edge.
-  // If the phi is redundant, it is replaced by its sole input.
+  // The true branch loops back, so whatever is current control (_scope.ctrl)
+  // gets added to head loop as input. endLoop() updates the head scope, and
+  // goes through all the phis that were created earlier. For each phi, it sets
+  // the second input to the corresponding input from the back edge. If the phi
+  // is redundant, it is replaced by its sole input.
   head->endLoop(scope_node, exit);
 
   head->unkeep()->kill();
-  xScopes.pop_back();       // Cleanup
-  xScopes.pop_back();       // Cleanup
+  xScopes.pop_back(); // Cleanup
+  xScopes.pop_back(); // Cleanup
 
   // At exit the false control is the current control, and
   // the scope is the exit scope after the exit test.

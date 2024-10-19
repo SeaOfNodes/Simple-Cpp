@@ -6,12 +6,13 @@ MulNode::MulNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 std::string MulNode::label() { return "Mul"; }
 std::string MulNode::glabel() { return "*"; }
 
-std::ostringstream &MulNode::print_1(std::ostringstream &builder) {
+std::ostringstream &MulNode::print_1(std::ostringstream &builder,
+                                     std::vector<bool> visited) {
   builder << "(";
-  in(1)->print_0(builder);
+  in(1)->print_0(builder, visited);
 
   builder << "*";
-  in(2)->print_0(builder);
+  in(2)->print_0(builder, visited);
 
   builder << ")";
 

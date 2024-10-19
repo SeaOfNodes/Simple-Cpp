@@ -11,7 +11,8 @@ public:
   Type *con_;
   bool isMultiTail() override;
 
-  std::ostringstream &print_1(std::ostringstream &builder);
+  std::ostringstream &print_1(std::ostringstream &builder,
+                              std::vector<bool> visited);
   std::string label() override;
   std::string uniqueName();
   Type *compute();

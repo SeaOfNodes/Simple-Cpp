@@ -8,11 +8,12 @@ std::string BoolNode::glabel() { return op(); }
 std::string BoolNode::op() { return "BoolNode"; }
 bool BoolNode::doOp(long lhs, long rhs) const { return false; }
 
-std::ostringstream &BoolNode::print_1(std::ostringstream &builder) {
+std::ostringstream &BoolNode::print_1(std::ostringstream &builder,
+                                      std::vector<bool> visited) {
   builder << "(";
-  in(1)->print_1(builder);
+  in(1)->print_0(builder, visited);
   builder << op();
-  in(2)->print_1(builder);
+  in(2)->print_0(builder, visited);
   builder << ")";
   return builder;
 }

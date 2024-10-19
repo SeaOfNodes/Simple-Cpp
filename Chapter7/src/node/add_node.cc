@@ -5,11 +5,12 @@ AddNode::AddNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 std::string AddNode::label() { return "Add"; }
 std::string AddNode::glabel() { return "+"; }
 
-std::ostringstream &AddNode::print_1(std::ostringstream &builder) {
+std::ostringstream &AddNode::print_1(std::ostringstream &builder,
+                                     std::vector<bool> visited) {
   builder << "(";
-  in(1)->print_1(builder);
+  in(1)->print_0(builder, visited);
   builder << "+";
-  in(2)->print_1(builder);
+  in(2)->print_0(builder, visited);
   builder << ")";
   return builder;
 }

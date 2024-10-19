@@ -10,7 +10,7 @@ public:
   std::string label();
   std::string glabel();
 
-  std::ostringstream &print_1(std::ostringstream &);
+  std::ostringstream &print_1(std::ostringstream &, std::vector<bool> visited);
 
   Type *compute() override;
   Node *idealize() override;

@@ -12,7 +12,7 @@ public:
   std::string label() override;
 
   bool isCFG() override;
-  std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited) override;
 
   // If a single Return, return it.
   // Otherwise, null because ambiguous.

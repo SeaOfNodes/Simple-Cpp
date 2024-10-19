@@ -7,7 +7,7 @@ Type *ScopeNode::compute() { return &Type::BOTTOM; }
 Node *ScopeNode::idealize() { return nullptr; }
 
 void ScopeNode::push() {
-  scopes.push_back(std::unordered_map<std::string, int>{});
+  scopes.emplace_back();
 }
 void ScopeNode::pop() {
   // first pop elements in hashmap
@@ -24,7 +24,7 @@ Node *ScopeNode::define(std::string name, Node *n) {
     if (sysm.find(name) != sysm.end())
       return nullptr; // double define
 
-    sysm[name] = nIns();
+    sysm[name] = static_cast<int>(nIns());
   }
   return addDef(n);
 }
@@ -57,7 +57,7 @@ Node *ScopeNode::ctrl() { return in(0); }
 
 Node *ScopeNode::ctrl(Node *n) { return setDef(0, n); }
 
-std::ostringstream &ScopeNode::print_1(std::ostringstream &builder) {
+std::ostringstream &ScopeNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
   builder << label();
   keys.reserve(scopes.size());
 
@@ -75,7 +75,7 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder) {
       if (n == nullptr)
         builder << "nullptr";
       else
-        n->print_0(builder);
+        n->print_0(builder, visited);
     }
     builder << "]";
   }
@@ -104,8 +104,9 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
   Node* ctrl1 = ctrl();
   auto* loop = dynamic_cast<LoopNode*>(ctrl1);
   assert(loop && loop->inProgress());
+  ctrl1->setDef(2, back->ctrl());
   for(int i = 1; i<nIns(); i++) {
-    PhiNode*phi = (PhiNode*)in(i);
+    auto*phi = (PhiNode*)in(i);
     assert(phi->region() == ctrl1 && phi->in(2)==nullptr);
     phi->setDef(2, back->in(i));
     // Do an eager useless-phi removal

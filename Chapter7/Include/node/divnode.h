@@ -8,7 +8,7 @@ public:
   std::string label();
   std::string glabel();
 
-  std::ostringstream &print_1(std::ostringstream &builder);
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited);
 
   Type *compute();
   Node *idealize();

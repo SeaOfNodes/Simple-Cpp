@@ -2,9 +2,10 @@
 
 IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {}
 std::string IfNode::label() { return "if"; }
-std::ostringstream &IfNode::print_1(std::ostringstream &builder) {
+std::ostringstream &IfNode::print_1(std::ostringstream &builder,
+                                    std::vector<bool> visited) {
   builder << "if( ";
-  builder << in(1)->print_1(builder).str();
+  builder << in(1)->print_1(builder, visited).str();
   builder << " )";
   return builder;
 }
@@ -13,7 +14,7 @@ bool IfNode::isCFG() { return true; }
 Node *IfNode::ctrl() { return in(0); }
 Node *IfNode::pred() { return in(1); }
 
-bool IfNode::isMultiHead() {return true;}
+bool IfNode::isMultiHead() { return true; }
 
 Type *IfNode::compute() {
   // If the If node is not reachable then neither is any following Proj
@@ -44,9 +45,10 @@ Type *IfNode::compute() {
 
       if (prior) {
         return (proj->idx_ == 0) ? &TypeTuple::IF_TRUE : &TypeTuple::IF_FALSE;
-      } else {  return nullptr;}
+      } else {
+        return nullptr;
+      }
     }
-
   }
   return &TypeTuple::IF_BOTH;
 }

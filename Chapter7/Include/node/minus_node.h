@@ -3,16 +3,16 @@
 
 #include "../../Include/node/node.h"
 
-class MinusNode : public Node{
+class MinusNode : public Node {
 public:
-  MinusNode(Node* in);
+  MinusNode(Node *in);
   std::string label();
   std::string glabel();
 
-  std::ostringstream& print_1(std::ostringstream&);
+  std::ostringstream &print_1(std::ostringstream &, std::vector<bool> visited);
 
-  Type* compute();
-  Node* idealize();
+  Type *compute();
+  Node *idealize();
 };
 
 #endif

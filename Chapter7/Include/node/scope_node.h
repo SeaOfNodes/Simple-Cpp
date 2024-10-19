@@ -33,7 +33,7 @@ public:
   std::string label() override;
   Type *compute() override;
   Node *idealize() override;
-  std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited) override;
 
   /*
    * * Lookup a name in all scopes starting from most deeply nested.

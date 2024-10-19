@@ -21,7 +21,8 @@ public:
 
   std::string glabel() override;
 
-  std::ostringstream &print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder,
+                              std::vector<bool>) override;
 
   /*
    * Computes a new type from the type_ field of its inputs.
