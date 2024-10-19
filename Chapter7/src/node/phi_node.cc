@@ -5,14 +5,17 @@ PhiNode::PhiNode(std::string label, std::initializer_list<Node *> inputs)
 std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
-std::ostringstream &PhiNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
-  if(dynamic_cast<RegionNode*>(region())->inProgress()) {
+std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
+                                     std::vector<bool> visited) {
+  if (dynamic_cast<RegionNode *>(region())->inProgress()) {
     builder << "Z";
   }
   builder << "Phi(";
   for (Node *in : inputs) {
-    if(in == nullptr) builder << "_____";
-    else in->print_0(builder, visited);
+    if (in == nullptr)
+      builder << "___";
+    else
+      in->print_0(builder, visited);
     if (in != inputs.back())
       builder << ",";
   }
@@ -21,7 +24,8 @@ std::ostringstream &PhiNode::print_1(std::ostringstream &builder, std::vector<bo
 }
 Node *PhiNode::region() { return in(0); }
 Type *PhiNode::compute() {
-  if(auto* r = dynamic_cast<RegionNode*>(region()); !r || r->inProgress()) return &Type::BOTTOM;
+  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+    return &Type::BOTTOM;
   Type *t = &Type::TOP;
   for (int i = 1; i < nIns(); i++) {
     t = t->meet(in(i)->type_);
@@ -43,11 +47,10 @@ Node *PhiNode::singleUniqueInput() {
 
   return live;
 }
-bool PhiNode::isMultiTail() {
-  return true;
-}
+bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {
-  if(auto* r = dynamic_cast<RegionNode*>(region()); !r || r->inProgress()) return nullptr;
+  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+    return nullptr;
   // Remove a "junk" Phi: Phi(x,x) is just x
   Node *live = singleUniqueInput();
   if (live != nullptr)
@@ -89,7 +92,8 @@ Node *PhiNode::idealize() {
   return nullptr;
 }
 bool PhiNode::allCons() {
-  if(auto* r = dynamic_cast<RegionNode*>(region()); !r || r->inProgress()) return false;
+  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+    return false;
   return Node::allCons();
 }
 

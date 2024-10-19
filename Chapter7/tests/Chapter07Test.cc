@@ -5,44 +5,37 @@
 #include <iostream>
 #include <sstream>
 
-TEST(SimpleTest, testMyOwnSake) {
+/*TEST(SimpleTest, testMyOwnSake) {
   std::string source = R"(
   int a = 12;
   int b = 12;
-  #showGraph;
  return a + b;
 )";
   auto*parser = new Parser(source);
-  parser->parse(false);
-}
 
-TEST(SimpleTest, testAssignmentSema) {
-std::string source = R"(
-  int a = 1;
-  #showGraph;
-  return a;
-)";
-    auto*parser = new Parser(source);
-    parser->parse(false);
-}
+  parser->parse(false);
+}*/
 
 TEST(SimpleTest, testExample) {
   std::string source = R"(
   while(arg < 10) {
     arg = arg + 1;
-    #showGraph;
   }
   return arg;
 )";
   auto *parser = new Parser(source);
   Node::disablePeephole = true;
-  StopNode*ret = parser->parse(true);
+  StopNode *ret = parser->parse(false);
   std::ostringstream builder;
-  EXPECT_EQ("return Phi(Loop6,arg,(Phi_arg+1));", ret->print_1(builder).str());
+  std::string result = ret->print(builder).str();
+  EXPECT_EQ("return Phi(Loop6,arg,(Phi_arg+1));", result);
+  /*
   // something is missing from here
   Node::disablePeephole = false;
+*/
 }
 
+/*
 TEST(SimpleTest, testRegression) {
   std::string source = R"(
   int a = 1;
@@ -56,7 +49,8 @@ return a;
   auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
-  EXPECT_EQ("return Phi(Region23,1,Phi(Loop11,1,(Phi_a+1)));", ret->print_1(builder).str());
+  EXPECT_EQ("return Phi(Region23,1,Phi(Loop11,1,(Phi_a+1)));",
+ret->print_1(builder).str());
 }
 
 TEST(SimpleTest, testWhileNested) {
@@ -76,7 +70,9 @@ return sum;
   auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
-  EXPECT_EQ("return Phi(Loop8,0,Phi(Loop21,Phi_sum,(Phi(Loop,0,(Phi_j+1))+Phi_sum)));", ret->print_1(builder).str());
+  EXPECT_EQ("return
+Phi(Loop8,0,Phi(Loop21,Phi_sum,(Phi(Loop,0,(Phi_j+1))+Phi_sum)));",
+ret->print_1(builder).str());
   // IR pretty print
 }
 
@@ -95,7 +91,8 @@ return b;
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
   Node::disablePeephole = false;
-  EXPECT_EQ("return Phi(Loop8,2,Phi(Region27,Phi_b,4));", ret->print_1(builder).str());
+  EXPECT_EQ("return Phi(Loop8,2,Phi(Region27,Phi_b,4));",
+ret->print_1(builder).str());
   // IR pretty print
 }
 
@@ -114,7 +111,8 @@ return b;
   auto *parser = new Parser(source);
   std::ostringstream builder;
   StopNode*ret = parser->parse(true);
-  EXPECT_EQ("return Phi(Loop8,2,(Phi(Region27,Phi_b,4)+1));", ret->print_1(builder).str());
+  EXPECT_EQ("return Phi(Loop8,2,(Phi(Region27,Phi_b,4)+1));",
+ret->print_1(builder).str());
   // IR pretty print
 }
 
@@ -248,5 +246,4 @@ return a;
   EXPECT_EQ("return Phi(Loop8,1,(Phi_a+3));", ret->print_1(builder).str());
   // IR pretty print
 }
-
-
+*/

@@ -101,14 +101,16 @@ public:
   // correct later when we can parse programs with loops.  We print with a
   // tik-tok style; the common _print0 calls the per-Node _print1, which
   // calls back to _print0;
-  std::ostringstream &print();
+  std::ostringstream &print(std::ostringstream &b);
 
   // This is the common print: check for DEAD and print "DEAD" else call the
   // per-Node print1.
-  virtual std::ostringstream &print_0(std::ostringstream &builder, std::vector<bool> visited);
+  virtual std::ostringstream &print_0(std::ostringstream &builder,
+                                      std::vector<bool> visited);
 
   // Every Node implements this.
-  virtual std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>) = 0;
+  virtual std::ostringstream &print_1(std::ostringstream &builder,
+                                      std::vector<bool>) = 0;
 
   virtual bool isMultiHead();
   virtual bool isMultiTail();
