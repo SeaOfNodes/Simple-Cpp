@@ -185,12 +185,12 @@ while(a < 10) {
 }
 return a;
 )";
-  Node::disablePeephole = true;
   auto *parser = new Parser(source);
+  Node::disablePeephole = true;
   std::ostringstream builder;
   StopNode *ret = parser->parse(true);
   Node::disablePeephole = false;
-  EXPECT_EQ("return Phi(Loop7,1,((Phi_a+1)+2));;", ret->print(builder).str());
+  EXPECT_EQ("return Phi(Loop7,1,((Phi_a+1)+2));", ret->print(builder).str());
   // IR pretty print
 }
 
