@@ -112,12 +112,12 @@ Node *AddNode::idealize() {
   // Do we have  x + (y + z) ?
   // Swap to    (x + y) + z
   // Rotate (add add add) to remove the add on RHS
+  // Now we might see (add add non) or (add non non) but never (add non add) nor
   if (i2) {
     auto innerNode = new AddNode(lhs, rhs->in(1));
     auto simplifiedNode = innerNode->peephole();
     return new AddNode(simplifiedNode, rhs->in(2));
   }
-  // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
   if (!i1) {
     return spline_cmp(lhs, rhs) ? swap12() : phiCon(this, true);

@@ -207,6 +207,7 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
         sb << "[taillabel=" << i;
         if (def->isCFG())
           sb << " color=red";
+        if(i == 2 && (dynamic_cast<PhiNode*>(n) || dynamic_cast<LoopNode*>(n))) sb << " constraint=false";
         sb << "];\n";
       }
       i++;
