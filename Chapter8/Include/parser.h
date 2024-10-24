@@ -80,6 +80,9 @@ public:
   StopNode *STOP;
   std::vector<ScopeNode *> xScopes;
 
+  ScopeNode* continueScope;
+  ScopeNode* breakScope;
+
   explicit Parser(std::string source, TypeInteger *arg);
 
   explicit Parser(std::string source);
@@ -103,7 +106,7 @@ private:
    LIst of keywords disallowed as identifiers
    */
   const std::unordered_set<std::string> KEYWORDS = {
-      "else", "false", "if", "int", "return", "true", "while"};
+      "break", "continue", "else", "false", "if", "int", "return", "true", "while"};
 
   Node *parseStatement();
 
@@ -113,6 +116,13 @@ private:
   Node *parseIf();
 
   Node* parseWhile();
+
+  void checkLoopActive();
+
+  ScopeNode* jumpTo(ScopeNode* toScope);
+
+  Node* parseBreak();
+  Node* parseContinue();
 
   Node *parseAddition();
 

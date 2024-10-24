@@ -7,3 +7,7 @@ C++ implementation of https://github.com/SeaOfNodes/Simple
 This is still a **work in progress** and the code is not very readable.
 
 The code is currently equivalent to chapter7 of the main implementation.
+
+TODO:
+ - Implement Pretty Print for IR
+ - Fix Graphviz generation for ch7
