@@ -4,7 +4,6 @@
 #include "../../Include/node/phi_node.h"
 #include "../../Include/node/region_node.h"
 #include "../../Include/type/type.h"
-#include "../../Include/node/loop_node.h"
 
 #include <stack>
 #include <unordered_map>

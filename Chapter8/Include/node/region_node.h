@@ -23,4 +23,15 @@ public:
   // True if last input is null
   bool inProgress();
 };
+
+class LoopNode : public RegionNode {
+public:
+  LoopNode(Node* entry);
+  Node* entry();
+  Node* back();
+  std::string label() override;
+  Type *compute() override;
+  Node *idealize() override;
+  Node *idom() override;
+};
 #endif

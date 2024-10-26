@@ -34,18 +34,21 @@ Type *PhiNode::compute() {
 }
 
 Node *PhiNode::singleUniqueInput() {
-  Node *live = nullptr;
-  for (int i = 1; i < nIns(); i++) {
+  // Node *live = nullptr;
+/*  for (int i = 1; i < nIns(); i++) {
+    if (auto *loop = dynamic_cast<LoopNode *>(region());
+        loop->entry()->type_ == Type::XCONTROL)
+      return nullptr;
     if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this) {
       if (live == nullptr || live == in(i)) {
         live = in(i);
       } else {
         return nullptr;
       }
-    }
-  }
+    }*/
+  // }
 
-  return live;
+  // return live;
 }
 bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {

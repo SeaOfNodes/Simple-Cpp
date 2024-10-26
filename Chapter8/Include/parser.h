@@ -17,7 +17,6 @@
 #include "../Include/node/stop_node.h"
 #include "../Include/node/sub_node.h"
 #include "../Include/type/integer_type.h"
-#include "../Include/node/loop_node.h"
 
 #include <iostream>
 #include <unordered_set>

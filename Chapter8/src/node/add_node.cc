@@ -125,6 +125,9 @@ Node *AddNode::idealize() {
 
   // Now we only see (add add non)
 
+  if (lhs->in(1) == lhs)
+    return nullptr;
+
   // Do we have (x + con1) + con2?
   // Replace with (x + (con1+con2) which then fold the constants
   if (lhs->in(2)->type_->isConstant() && t2->isConstant()) {

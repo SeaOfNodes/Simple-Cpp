@@ -70,7 +70,7 @@ GraphVisualizer::GraphVisualizer() : GraphVisualizer(false) {}
 std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   std::vector<Node *> all = findAll(parser);
   std::ostringstream sb;
-  sb << "digraph chapter07 {\n";
+  sb << "digraph chapter08 {\n";
   sb << "/*\n";
   sb << parser.src();
   sb << "\n*/\n";
@@ -256,6 +256,8 @@ void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
       int idx = syms[name];
       Node *def = n->in(idx);
       std::string unique_name = def->uniqueName();
+      while (auto *lazy = dynamic_cast<ScopeNode *>(def))
+        def = lazy->in(idx);
       if (def == nullptr)
         continue;
       sb << "\t" << scopeName << ":" << '"' << makePortName(scopeName, name)

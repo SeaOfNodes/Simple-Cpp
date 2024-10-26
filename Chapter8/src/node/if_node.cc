@@ -46,7 +46,7 @@ Type *IfNode::compute() {
       if (prior) {
         return (proj->idx_ == 0) ? &TypeTuple::IF_TRUE : &TypeTuple::IF_FALSE;
       } else {
-        return nullptr;
+        return dom->type_;
       }
     }
   }

@@ -60,15 +60,16 @@ StopNode *Parser::parse(bool show) {
 std::string Parser::src() { return lexer->get_input(); }
 
 void Parser::checkLoopActive() {
-  if(breakScope == nullptr) throw std::runtime_error("No active loop for a break or continue;")
+  if(breakScope == nullptr) throw std::runtime_error("No active loop for a break or continue;");
 }
 Node* Parser::parseBreak() {
   checkLoopActive();
-  breakScope =
+  breakScope = static_cast<ScopeNode*>(require(jumpTo(breakScope), ";"));
+  return breakScope;
 }
 ScopeNode* Parser::jumpTo(ScopeNode *toScope) {
   ScopeNode* cur = scope_node->dup();
-  ctrl((new ConstantNode(Type::XCONTROL))->peephole()); // Kill current scope
+  ctrl(new ConstantNode(&Type::XCONTROL, Parser::START))->peephole(); // Kill current scope
   // Prune nested lexical scopes that have depth > than the loop head.
   while(cur->scopes.size() > breakScope->scopes.size()) cur->pop();
   // If this is a continue then first time the target is null
@@ -82,7 +83,8 @@ ScopeNode* Parser::jumpTo(ScopeNode *toScope) {
 }
 Node* Parser::parseContinue() {
   checkLoopActive();
-  continueScope =
+  continueScope = static_cast<ScopeNode*>(require(jumpTo(continueScope), ";"));
+  return continueScope;
 }
 Node *Parser::parseStatement() {
   if (matchx("return"))
@@ -145,11 +147,10 @@ Node *Parser::parseWhile() {
   // And its control input is the False branch of the loop predicate
   // Note that body Scope is still our current scope
   ctrl(ifF);
-  auto exit = scope_node->dup();
-  xScopes.push_back(breakscope = exit);
+  xScopes.push_back(breakScope = scope_node->dup());
   // No continues yet
 
-  _continueScope = nullptr;
+  continueScope = nullptr;
 
   // Parse the true side, which corresponds to loop body
   // Our current scope is the body Scope
@@ -168,8 +169,8 @@ Node *Parser::parseWhile() {
   // is redundant, it is replaced by its sole input.
   auto exit = breakScope;
   head->endLoop(scope_node, exit);
-
   head->unkeep()->kill();
+
   xScopes.pop_back(); // Cleanup
   xScopes.pop_back(); // Cleanup
 
