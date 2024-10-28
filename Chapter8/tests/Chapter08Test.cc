@@ -1,4 +1,5 @@
 #include "../Include/graph_visualizer.h"
+#include "../Include/graph_evaluator.h"
 
 #include <gtest/gtest.h>
 
@@ -23,7 +24,8 @@ return arg;
   EXPECT_EQ(
       "return Phi(Region36,Phi(Region25,Phi(Loop6,arg,(Phi_arg+1)),Add),Add);",
       result);
-  // graph eval here
+  EXPECT_EQ(5, GraphEvaluator::evaluate(ret, 1));
+  EXPECT_EQ(10, GraphEvaluator::evaluate(ret, 6));
 }
 
 TEST(SimpleTest, testEx5) {
