@@ -26,7 +26,6 @@ return arg;
   // graph eval here
 }
 
-
 TEST(SimpleTest, testEx5) {
   std::string source = R"(
   int a = 1;

@@ -28,11 +28,11 @@ Node *ScopeNode::define(std::string name, Node *n) {
 }
 
 Node *ScopeNode::lookup(std::string name) {
-  return update(name, nullptr, scopes.size() - 1);
+  return update(std::move(name), nullptr, static_cast<int>(scopes.size() - 1));
 }
 
 Node *ScopeNode::update(std::string name, Node *n) {
-  return update(name, n, scopes.size() - 1);
+  return update(std::move(name), n, static_cast<int>(scopes.size() - 1));
 }
 
 Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
@@ -52,12 +52,12 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
         loop->in(static_cast<std::size_t>(idx->second)));
     if (phi && loop->ctrl() == phi->region()) {
       old = loop->in(static_cast<std::size_t>(idx->second));
-    }
-    else {
+    } else {
       old = loop->setDef(
-          static_cast<std::size_t>(idx->second),
-          (new PhiNode(name, {loop->ctrl(),
-                       loop->update(name, nullptr, nestingLevel), nullptr}))
+          idx->second,
+          (new PhiNode(name,
+                       {loop->ctrl(), loop->update(name, nullptr, nestingLevel),
+                        nullptr}))
               ->peephole());
     }
     setDef(idx->second, old);
@@ -72,8 +72,9 @@ Node *ScopeNode::ctrl() { return in(0); }
 Node *ScopeNode::ctrl(Node *n) { return setDef(0, n); }
 
 std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
-                                       std::vector<bool>& visited) {
+                                       std::vector<bool> &visited) {
   builder << label();
+  builder << "[";
   keys.reserve(scopes.size());
   std::vector<std::string> names = reverseNames();
   for (int j = 0; j < nIns(); j++) {
@@ -99,7 +100,10 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
   // Note that we skip i==0, which is bound to '$ctrl'
   for (int i = 1; i < nIns(); i++) {
     if (in(i) != that->in(i)) { // No need for redundant Phis
-      Node *phi = new PhiNode(ns[i], {r, in(i), that->in(i)});
+      // If we are in lazy phi mode we need to a lookup
+      // by name as it will trigger a phi creation
+      Node *phi =
+          new PhiNode(ns[i], {r, this->lookup(ns[i]), that->lookup(ns[i])});
       phi = phi->peephole();
       setDef(i, phi);
     }
@@ -135,12 +139,12 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 }
 ScopeNode *ScopeNode::dup() { return dup(false); }
 ScopeNode *ScopeNode::dup(bool loop) {
-  ScopeNode *dup = new ScopeNode();
+  auto *dup = new ScopeNode();
   // Our goals are:
   // 1) duplicate the name bindings of the ScopeNode across all stack levels
   // 2) Make the new ScopeNode a user of all the nodes bound
   // 3) Ensure that the order of defs is the same to allow easy merging
-  for (auto syms : scopes) {
+  for (const auto &syms : scopes) {
     dup->scopes.push_back(syms);
   }
   // Control comes first
