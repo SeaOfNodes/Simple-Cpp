@@ -6,7 +6,7 @@ std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
 std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool> visited) {
+                                     std::vector<bool>& visited) {
   if (dynamic_cast<RegionNode *>(region())->inProgress()) {
     builder << "Z";
   }
@@ -34,10 +34,10 @@ Type *PhiNode::compute() {
 }
 
 Node *PhiNode::singleUniqueInput() {
-  // Node *live = nullptr;
-/*  for (int i = 1; i < nIns(); i++) {
+  Node *live = nullptr;
+  for (int i = 1; i < nIns(); i++) {
     if (auto *loop = dynamic_cast<LoopNode *>(region());
-        loop->entry()->type_ == Type::XCONTROL)
+        loop && (loop->entry()->type_ == &Type::XCONTROL))
       return nullptr;
     if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this) {
       if (live == nullptr || live == in(i)) {
@@ -45,10 +45,9 @@ Node *PhiNode::singleUniqueInput() {
       } else {
         return nullptr;
       }
-    }*/
-  // }
-
-  // return live;
+    }
+  }
+  return live;
 }
 bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {

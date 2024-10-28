@@ -3,7 +3,7 @@
 SubNode::SubNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 std::string SubNode::label() { return "Sub"; }
 std::string SubNode::glabel() { return "-"; }
-std::ostringstream &SubNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
+std::ostringstream &SubNode::print_1(std::ostringstream &builder, std::vector<bool>& visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
 

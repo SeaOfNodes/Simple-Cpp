@@ -8,7 +8,7 @@ std::string NotNode::label() { return "Not"; }
 
 std::string NotNode::glabel() { return "!"; }
 
-std::ostringstream &NotNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
+std::ostringstream &NotNode::print_1(std::ostringstream &builder, std::vector<bool>& visited) {
     builder << "(!";
 
     builder << in(1)->print_1(builder, visited).str();

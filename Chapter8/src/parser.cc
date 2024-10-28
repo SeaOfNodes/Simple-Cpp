@@ -67,9 +67,10 @@ Node* Parser::parseBreak() {
   breakScope = static_cast<ScopeNode*>(require(jumpTo(breakScope), ";"));
   return breakScope;
 }
+
 ScopeNode* Parser::jumpTo(ScopeNode *toScope) {
   ScopeNode* cur = scope_node->dup();
-  ctrl(new ConstantNode(&Type::XCONTROL, Parser::START))->peephole(); // Kill current scope
+  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole()); // Kill current scope
   // Prune nested lexical scopes that have depth > than the loop head.
   while(cur->scopes.size() > breakScope->scopes.size()) cur->pop();
   // If this is a continue then first time the target is null
@@ -126,7 +127,8 @@ Node *Parser::parseWhile() {
   // We create phis eagerly for all the names we find, see dup().
 
   // Save the current scope as the loop head
-  auto *head = (ScopeNode *)scope_node->keep();
+  ScopeNode *head = dynamic_cast<ScopeNode*>(scope_node->keep());
+
   // Clone the head Scope to create a new Scope for the body.
   // Create phis eagerly as part of cloning
   xScopes.push_back(scope_node = scope_node->dup(
@@ -157,7 +159,7 @@ Node *Parser::parseWhile() {
   ctrl(ifT); // set ctrl token to ifTrue projection
   parseStatement();
 
-  if(continueScope != nullptr){
+  if(continueScope != nullptr){;
     continueScope = jumpTo(continueScope);
     scope_node->kill();
     scope_node = continueScope;
@@ -169,6 +171,7 @@ Node *Parser::parseWhile() {
   // is redundant, it is replaced by its sole input.
   auto exit = breakScope;
   head->endLoop(scope_node, exit);
+  // This assert fails
   head->unkeep()->kill();
 
   xScopes.pop_back(); // Cleanup

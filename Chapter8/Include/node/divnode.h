@@ -8,10 +8,10 @@ public:
   std::string label();
   std::string glabel();
 
-  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited);
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;
 
-  Type *compute();
-  Node *idealize();
+  Type *compute() override;
+  Node *idealize() override;
   Node *copy(Node *lhs, Node *rhs) override;
 };
 #endif

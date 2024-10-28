@@ -3,7 +3,7 @@
 ConstantNode::ConstantNode(Type *type, Node *START)
     : con_(type), Node({START}) {}
 std::ostringstream &ConstantNode::print_1(std::ostringstream &builder,
-                                          std::vector<bool> visited) {
+                                          std::vector<bool>& visited) {
   return con_->print_1(builder);
 }
 

@@ -20,7 +20,7 @@ public:
   std::string glabel() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool> visited) override;
+                              std::vector<bool>& visited) override;
 
   Type *compute() override;
 

@@ -36,7 +36,7 @@ Node *Node::unkeep() {
 }
 
 std::ostringstream &Node::print_0(std::ostringstream &builder,
-                                  std::vector<bool> visited) {
+                                  std::vector<bool>& visited) {
   if (nid >= visited.size()) {
     visited.resize(nid + 1, false);
   }

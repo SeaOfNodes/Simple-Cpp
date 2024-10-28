@@ -13,7 +13,7 @@ public:
   std::string label_;
   ProjNode(MultiNode* ctrl, int idx, std::string label);
   std::string label() override;
-  std::ostringstream& print_1(std::ostringstream& builder, std::vector<bool> visited);
+  std::ostringstream& print_1(std::ostringstream& builder, std::vector<bool>& visited) override;
   bool isCFG() override;
 
   MultiNode* ctrl();

@@ -15,7 +15,7 @@ public:
   std::string label() override;
   std::string glabel() override;
 
-  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool> visited) override;
+  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;
   bool isMultiTail() override;
 
   Node *region();

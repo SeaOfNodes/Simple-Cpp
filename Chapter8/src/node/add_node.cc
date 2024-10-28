@@ -6,7 +6,7 @@ std::string AddNode::label() { return "Add"; }
 std::string AddNode::glabel() { return "+"; }
 
 std::ostringstream &AddNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool> visited) {
+                                     std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << "+";

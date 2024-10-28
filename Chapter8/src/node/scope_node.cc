@@ -46,6 +46,22 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
   if (idx == syms.end())
     return update(name, n, nestingLevel - 1);
   Node *old = in(idx->second);
+  if (auto *loop = dynamic_cast<ScopeNode *>(old)) {
+    // Lazy Phi!
+    auto *phi = dynamic_cast<PhiNode *>(
+        loop->in(static_cast<std::size_t>(idx->second)));
+    if (phi && loop->ctrl() == phi->region()) {
+      old = loop->in(static_cast<std::size_t>(idx->second));
+    }
+    else {
+      old = loop->setDef(
+          static_cast<std::size_t>(idx->second),
+          (new PhiNode(name, {loop->ctrl(),
+                       loop->update(name, nullptr, nestingLevel), nullptr}))
+              ->peephole());
+    }
+    setDef(idx->second, old);
+  }
   // If n is null we are looking up rather than updating, hence return existing
   // value
   return n == nullptr ? old : setDef(idx->second, n);
@@ -56,7 +72,7 @@ Node *ScopeNode::ctrl() { return in(0); }
 Node *ScopeNode::ctrl(Node *n) { return setDef(0, n); }
 
 std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
-                                       std::vector<bool> visited) {
+                                       std::vector<bool>& visited) {
   builder << label();
   keys.reserve(scopes.size());
   std::vector<std::string> names = reverseNames();
@@ -71,13 +87,13 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
   }
   builder << "]";
 
-return builder;
+  return builder;
 }
 
 Node *ScopeNode::mergeScopes(ScopeNode *that) {
   // not called with keep here
-  RegionNode *r = (RegionNode *)ctrl(
-      (new RegionNode({nullptr, ctrl(), that->ctrl()}))->keep());
+  RegionNode *r = dynamic_cast<RegionNode *>(
+      ctrl((new RegionNode({nullptr, ctrl(), that->ctrl()}))->keep()));
 
   std::vector<std::string> ns = reverseNames();
   // Note that we skip i==0, which is bound to '$ctrl'
@@ -97,20 +113,20 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
   assert(loop && loop->inProgress());
   ctrl1->setDef(2, back->ctrl());
   for (int i = 1; i < nIns(); i++) {
-    auto *phi = (PhiNode *)in(i);
-    assert(phi->region() == ctrl1 && phi->in(2) == nullptr);
-    phi->setDef(2, back->in(i));
-    // Do an eager useless-phi removal
-    Node *in = phi->peephole();
-    if (in != phi)
-      phi->subsume(in);
+    if (back->in(i) != this) {
+      auto *phi = dynamic_cast<PhiNode *>(in(i));
+      assert(phi->region() == ctrl1 && phi->in(2) == nullptr);
+      phi->setDef(2, back->in(i));
+    }
+    if (exit->in(i) == this) // Replace a lazy-phi on the exit path also
+      exit->setDef(i, in(i));
   }
   back->kill(); // Loop backedge is dead
   // Now one-time do a useless-phi removal
-  for(int i = 1; i < nIns(); i++) {
-    if(auto*phi = dynamic_cast<PhiNode*>(in(i))) {
-      Node* in = phi->peephole();
-      if(in!= phi) {
+  for (int i = 1; i < nIns(); i++) {
+    if (auto *phi = dynamic_cast<PhiNode *>(in(i))) {
+      Node *in = phi->peephole();
+      if (in != phi) {
         phi->subsume(in);
         setDef(i, in); // Set the Update back into Scope
       }
@@ -133,7 +149,7 @@ ScopeNode *ScopeNode::dup(bool loop) {
   for (int i = 1; i < nIns(); i++) {
     // For lazy phis on loops we use a sentinel
     // that will trigger phi creation on update
-    dup->addDef(loop?  this : in(i));
+    dup->addDef(loop ? this : in(i));
   }
   return dup;
 }

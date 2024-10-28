@@ -3,7 +3,7 @@
 IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {}
 std::string IfNode::label() { return "if"; }
 std::ostringstream &IfNode::print_1(std::ostringstream &builder,
-                                    std::vector<bool> visited) {
+                                    std::vector<bool>& visited) {
   builder << "if( ";
   builder << in(1)->print_1(builder, visited).str();
   builder << " )";

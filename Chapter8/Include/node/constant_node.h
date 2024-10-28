@@ -12,10 +12,10 @@ public:
   bool isMultiTail() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool> visited);
+                              std::vector<bool>& visited);
   std::string label() override;
-  std::string uniqueName();
-  Type *compute();
-  Node *idealize();
+  std::string uniqueName() override;
+  Type *compute() override;
+  Node *idealize() override;
 };
 #endif

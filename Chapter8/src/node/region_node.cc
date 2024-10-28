@@ -3,7 +3,7 @@
 RegionNode::RegionNode(std::initializer_list<Node *> nodes) : Node(nodes) {}
 std::string RegionNode::label() { return "Region"; }
 
-std::ostringstream &RegionNode::print_1(std::ostringstream &builder, std::vector<bool> visited) {
+std::ostringstream &RegionNode::print_1(std::ostringstream &builder, std::vector<bool>& visited) {
   builder << label();
   builder << nid;
   return builder;
