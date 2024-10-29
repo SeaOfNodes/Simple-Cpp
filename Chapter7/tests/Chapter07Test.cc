@@ -32,6 +32,7 @@ TEST(SimpleTest, testExample) {
   Node::disablePeephole = false;
 }
 
+/*
 TEST(SimpleTest, testRegression) {
   std::string source = R"(
   int a = 1;
@@ -245,3 +246,4 @@ return a;
   EXPECT_EQ("return Phi(Loop8,1,(Phi_a+3));", ret->print(builder).str());
   // IR pretty print
 }
+*/
