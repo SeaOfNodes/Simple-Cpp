@@ -28,7 +28,7 @@ public:
     */
    static Node* findControl(Node* control);
    /**
-     * Find the projection for a node
+     * Find the projection for a node(e.g from start node)
     */
    static ProjNode* findProjection(Node* node, int idx);
    /**

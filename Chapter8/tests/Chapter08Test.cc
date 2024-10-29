@@ -1,5 +1,5 @@
-#include "../Include/graph_visualizer.h"
 #include "../Include/graph_evaluator.h"
+#include "../Include/graph_visualizer.h"
 
 #include <gtest/gtest.h>
 
@@ -18,14 +18,14 @@ TEST(SimpleTest, testEx6) {
 return arg;
 )";
   auto *parser = new Parser(source);
-  StopNode *ret = parser->parse(false);
+  StopNode *stop = parser->parse(false);
   std::ostringstream builder;
-  std::string result = ret->print(builder).str();
+  std::string result = stop->print(builder).str();
   EXPECT_EQ(
       "return Phi(Region36,Phi(Region25,Phi(Loop6,arg,(Phi_arg+1)),Add),Add);",
       result);
-  EXPECT_EQ(5, GraphEvaluator::evaluate(ret, 1));
-  EXPECT_EQ(10, GraphEvaluator::evaluate(ret, 6));
+  EXPECT_EQ(5, GraphEvaluator::evaluate(stop, 1));
+  EXPECT_EQ(10, GraphEvaluator::evaluate(stop, 6));
 }
 
 TEST(SimpleTest, testEx5) {
