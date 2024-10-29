@@ -10,4 +10,4 @@ The code is currently equivalent to chapter7 of the main implementation.
 
 TODO:
  - Implement Pretty Print for IR
- - Fix Graphviz generation for ch7
+ - Fix Graphviz generation for ch8
