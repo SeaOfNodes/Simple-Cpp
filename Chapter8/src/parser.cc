@@ -60,31 +60,40 @@ StopNode *Parser::parse(bool show) {
 std::string Parser::src() { return lexer->get_input(); }
 
 void Parser::checkLoopActive() {
-  if(breakScope == nullptr) throw std::runtime_error("No active loop for a break or continue;");
+  if (breakScope == nullptr)
+    throw std::runtime_error("No active loop for a break or continue");
 }
-Node* Parser::parseBreak() {
+Node *Parser::parseBreak() {
   checkLoopActive();
-  breakScope = static_cast<ScopeNode*>(require(jumpTo(breakScope), ";"));
+  breakScope = dynamic_cast<ScopeNode *>(require(jumpTo(breakScope), ";"));
   return breakScope;
 }
 
-ScopeNode* Parser::jumpTo(ScopeNode *toScope) {
-  ScopeNode* cur = scope_node->dup();
-  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))->peephole()); // Kill current scope
+ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
+  ScopeNode *cur = scope_node->dup();
+  ctrl((new ConstantNode(&Type::XCONTROL, Parser::START))
+           ->peephole()); // Kill current scope
   // Prune nested lexical scopes that have depth > than the loop head.
-  while(cur->scopes.size() > breakScope->scopes.size()) cur->pop();
+  while (cur->scopes.size() > breakScope->scopes.size()) {
+    cur->pop();
+  };
   // If this is a continue then first time the target is null
   // So we just use the pruned current scope as the base for the
   // continue
-  if(toScope == nullptr) return cur;
+  if (toScope == nullptr) {
+    std::ostringstream builder;
+    return cur;
+  }
   // toScope is either the break scope, or a scope that was created here
-  toScope->scopes.size() <= breakScope->scopes.size();
+  assert(toScope->scopes.size() <= breakScope->scopes.size());
+  std::ostringstream builder;
   toScope->mergeScopes(cur);
   return toScope;
 }
-Node* Parser::parseContinue() {
+Node *Parser::parseContinue() {
   checkLoopActive();
-  continueScope = static_cast<ScopeNode*>(require(jumpTo(continueScope), ";"));
+  continueScope =
+      dynamic_cast<ScopeNode *>(require(jumpTo(continueScope), ";"));
   return continueScope;
 }
 Node *Parser::parseStatement() {
@@ -98,8 +107,10 @@ Node *Parser::parseStatement() {
     return parseIf();
   else if (matchx("while"))
     return parseWhile();
-  else if(matchx("break")) return parseBreak();
-  else if(matchx("continue")) return parseContinue();
+  else if (matchx("break"))
+    return parseBreak();
+  else if (matchx("continue"))
+    return parseContinue();
   else if (matchx("#showGraph"))
     return require(showGraph(), ";");
   else if (match(";"))
@@ -109,25 +120,25 @@ Node *Parser::parseStatement() {
 }
 
 Node *Parser::parseWhile() {
-  auto* savedContinueScope = continueScope;
-  auto* savedBreakScope = breakScope;
+  auto *savedContinueScope = continueScope;
+  auto *savedBreakScope = breakScope;
 
   require("(");
 
-      // Loop region has two control inputs, the first is the entry
-      // point, and second is back edge that is set after loop is parsed
-      // (see end_loop() call below).  Note that the absence of back edge is
-      // used as an indicator to switch off peepholes of the region and
-      // associated phis; see {@code inProgress()}.
-      ctrl(
-          (new LoopNode(ctrl()))->peephole()); // Note we set back edge to null here
+  // Loop region has two control inputs, the first is the entry
+  // point, and second is back edge that is set after loop is parsed
+  // (see end_loop() call below).  Note that the absence of back edge is
+  // used as an indicator to switch off peepholes of the region and
+  // associated phis; see {@code inProgress()}.
+  ctrl(
+      (new LoopNode(ctrl()))->peephole()); // Note we set back edge to null here
 
   // At loop head, we clone the current Scope (this includes all
   // names in every nesting level within the Scope).
   // We create phis eagerly for all the names we find, see dup().
 
   // Save the current scope as the loop head
-  ScopeNode *head = dynamic_cast<ScopeNode*>(scope_node->keep());
+  auto *head = dynamic_cast<ScopeNode *>(scope_node->keep());
 
   // Clone the head Scope to create a new Scope for the body.
   // Create phis eagerly as part of cloning
@@ -158,8 +169,9 @@ Node *Parser::parseWhile() {
   // Our current scope is the body Scope
   ctrl(ifT); // set ctrl token to ifTrue projection
   parseStatement();
+  // Continue scope
 
-  if(continueScope != nullptr){;
+  if (continueScope != nullptr) {
     continueScope = jumpTo(continueScope);
     scope_node->kill();
     scope_node = continueScope;
@@ -194,6 +206,7 @@ Node *Parser::parseIf() {
   Node *ifT = (new ProjNode((IfNode *)ifNode, 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
+
   Node *ifF = (new ProjNode((IfNode *)ifNode, 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current

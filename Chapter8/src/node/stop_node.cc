@@ -7,7 +7,7 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   if (ret() != nullptr) {
     return ret()->print_0(builder, visited);
   }
-  builder << "Stop[";
+  builder << "Stop[ ";
   for (Node *ret : inputs) {
 
     ret->print_0(builder, visited);

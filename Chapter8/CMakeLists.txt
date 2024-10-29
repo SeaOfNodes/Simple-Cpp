@@ -16,6 +16,7 @@ include_directories(${PROJECT_SOURCE_DIR}/Include)
 # Add the executable target
 add_library(simple_lib
         src/parser.cc
+
         # nodes
         src/node/add_node.cc
         src/node/constant_node.cc
@@ -44,7 +45,8 @@ add_library(simple_lib
 
         # utils
         src/utils.cc
-        src/graphVisualizer.cc)
+        src/graphVisualizer.cc
+        src/graphEvaluator.cc)
 
 set(CMAKE_BUILD_TYPE Debug)
 
