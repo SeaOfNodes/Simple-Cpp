@@ -28,6 +28,18 @@ return arg;
   EXPECT_EQ(10, GraphEvaluator::evaluate(stop, 6));
 }
 
+TEST(SimpleTest, basicEval) {
+  std::string source = R"(
+return arg;
+)";
+  auto *parser = new Parser(source);
+  StopNode *stop = parser->parse(false);
+  std::ostringstream builder;
+  std::string result = stop->print(builder).str();
+  EXPECT_EQ("return arg;", result);
+  EXPECT_EQ(2, GraphEvaluator::evaluate(stop, 2));
+}
+
 TEST(SimpleTest, testEx5) {
   std::string source = R"(
   int a = 1;
