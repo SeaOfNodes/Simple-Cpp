@@ -76,7 +76,7 @@ ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
   // Prune nested lexical scopes that have depth > than the loop head.
   while (cur->scopes.size() > breakScope->scopes.size()) {
     cur->pop();
-  };
+  }
   // If this is a continue then first time the target is null
   // So we just use the pruned current scope as the base for the
   // continue
@@ -124,7 +124,6 @@ Node *Parser::parseWhile() {
   auto *savedBreakScope = breakScope;
 
   require("(");
-
   // Loop region has two control inputs, the first is the entry
   // point, and second is back edge that is set after loop is parsed
   // (see end_loop() call below).  Note that the absence of back edge is

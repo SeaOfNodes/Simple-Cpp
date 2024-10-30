@@ -40,6 +40,23 @@ return arg;
   EXPECT_EQ(2, GraphEvaluator::evaluate(stop, 2));
 }
 
+TEST(SimpleTest, basicEval2) {
+  std::string source = R"(
+if(arg > 1) {
+  return arg;
+}
+)";
+  auto *parser = new Parser(source);
+  StopNode *stop = parser->parse(false);
+  std::ostringstream builder;
+  std::string result = stop->print(builder).str();
+  EXPECT_EQ("return arg;", result);
+  EXPECT_EQ(2, GraphEvaluator::evaluate(stop, 2));
+  // value is zero if it falls through
+  // SEE:  return {ResultType::FALLTHROUGH, 0};
+  EXPECT_EQ(0, GraphEvaluator::evaluate(stop, 1));
+}
+
 TEST(SimpleTest, testEx5) {
   std::string source = R"(
   int a = 1;
