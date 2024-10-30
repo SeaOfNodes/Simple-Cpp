@@ -65,6 +65,7 @@ public:
    * href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
    */
   int i_depth{};
+  static int ITER_CNT, ITER_NOP_CNT;
 
 private:
   std::vector<bool> bitset;
@@ -75,6 +76,7 @@ private:
    * uninitialized values.
    * */
   static int UNIQUE_ID;
+  static int UID();
 
 public:
   Node() = default;
@@ -114,10 +116,13 @@ public:
   virtual std::ostringstream &print_1(std::ostringstream &builder,
                                       std::vector<bool>&) = 0;
 
+  int hash();
+
   virtual bool isMultiHead();
   virtual bool isMultiTail();
   // Graph Node & Edge manipulation
   [[nodiscard]] Node *in(std::size_t i) const;
+  [[nodiscard]] Node *out(std::size_t i) const;
 
   [[nodiscard]] std::size_t nIns() const;
 
@@ -164,14 +169,24 @@ public:
 
   Node *peephole();
 
+  // Unlike peephole above, this explicitly returns null for no-change, or not-null
+  // for a better replacement
+  Node* peepholeOpt();
+
   /*
    * Find a node by index.
    * */
   Node *deadCodeElim(Node *m);
 
   virtual Type *compute();
+
+  // Set the type.  Assert monotonic progress.
+  // If changing, add users to worklist.
+  Type* setType(Type* type);
+
   virtual Node *idealize();
 
+  bool eq(Node* n);
   Node *swap12();
 
   // does this node contain all constants

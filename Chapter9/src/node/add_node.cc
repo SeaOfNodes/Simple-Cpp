@@ -106,6 +106,10 @@ Node *AddNode::idealize() {
   auto i2 = dynamic_cast<AddNode *>(rhs);
   if (!i1 && i2)
     return swap12();
+
+  if(auto* minus = dynamic_cast<MinusNode*>(rhs)) {
+    return new SubNode(lhs, minus->in(1));
+  }
   // Now we might see (add add non) or (add non non) or (add add add) but never
   // (add non add)
 

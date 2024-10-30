@@ -23,6 +23,9 @@ Node::Node(std::vector<Node *> inputs_) {
 Node *Node::in(std::size_t i) const {
   return (i < inputs.size()) ? inputs[i] : nullptr;
 }
+Node* Node::out(std::size_t i) const {
+  return  (i < outputs.size()) ? outputs[i] : nullptr;
+}
 
 std::string Node::uniqueName() { return label() + std::to_string(nid); }
 std::string Node::glabel() { return label(); }
@@ -47,7 +50,7 @@ std::ostringstream &Node::print_0(std::ostringstream &builder,
     visited.resize(nid + 1, false);
   }
 
-  if (visited[nid]) {
+  if (visited[nid] && !(dynamic_cast<ConstantNode*>(this))) {
     builder << label();
     return builder;
   }
@@ -224,6 +227,9 @@ Node *Node::find(std::vector<bool> visit, int nid_) {
   return nullptr;
 }
 
+bool Node::eq(Node *n) {
+  return true;
+}
 Node *Node::idealize() { return nullptr; }
 Type *Node::compute() { return nullptr; }
 
@@ -242,3 +248,4 @@ Node *Node::swap12() {
   inputs[2] = tmp;
   return this;
 }
+int Node::hash() {return 0;}

@@ -12,18 +12,25 @@ public:
 
   /*
    * The constant value of
-   * if not constant then 0=bottom, 1=top.
+   * if not constant then 1=bottom, 0=bottom.
    * */
   bool is_con_;
-  bool isTop();
-  bool isBot();
+
+  static TypeInteger make(bool is_con, long con);
+
   explicit TypeInteger(bool is_con, long con);
   bool isConstant() override;
+  bool isHighOrConst() override;
+
   std::ostringstream &print_1(std::ostringstream &builder) override;
   std::string toString();
   Type *xmeet(Type *other) override;
+
   long value();
   bool equals(TypeInteger *);
+
+  int hash() override;
+  bool eq(Type*t) override;
 
 private:
   long con_;

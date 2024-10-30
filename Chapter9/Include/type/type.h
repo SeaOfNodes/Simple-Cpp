@@ -3,9 +3,12 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
+
 
 class Type {
 public:
+  static std::unordered_map<Type*, Type*> INTERN;
   std::ostringstream builder;
   Type() = default;
   static constexpr unsigned int TBOT = 0;
@@ -26,18 +29,42 @@ public:
   static Type CONTROL;
   static Type XCONTROL;
 
+  int hashCode();
+  int hash();
+
+  // Is high or on the lattice centerline.
+  virtual bool isHighOrConst();
+  // Strict constant values, things on the lattice centerline.
+  // Excludes both high and low values
   virtual bool isConstant();
 
   const char *STRS[4] = {"Bot", "Top", "Ctrl", "~Ctrl"};
   virtual std::ostringstream &print_1(std::ostringstream &builder);
+  // ----------------------------------------------------------
+
+  // Factory method which interns "this"
+  template <typename T>
+  T intern();
+
+  virtual bool eq(Type* t);
+
+  bool operator==(Type& );
 
   bool isSimple();
   std::string toString();
+
+  bool isa(Type* t);
+  // Our lattice is defined with a MEET and a DUAL.
+  // JOIN is dual of meet of both duals.
+  virtual Type* join(Type* t);
+  virtual Type* dual();
 
   virtual Type *meet(Type *other);
   virtual Type *xmeet(Type *other);
 
 protected:
   explicit Type(unsigned int type);
+private:
+  int hash_;    // Hash cache; not-zero when set.
 };
 #endif

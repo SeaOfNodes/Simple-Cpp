@@ -20,7 +20,7 @@ Type *NotNode::compute() {
     if (auto *i = dynamic_cast<TypeInteger *>(in(1)->type_)) {
         return i->isConstant() ? TypeInteger::constant(i->value() == 0 ? 1 : 0) : i;
     }
-    return &Type::BOTTOM;
+    return &TypeInteger::TOP.meet(in(1)->type_);
 }
 
 Node *NotNode::idealize() { return nullptr; }

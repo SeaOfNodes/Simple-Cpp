@@ -12,10 +12,13 @@ public:
   bool isMultiTail() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool>& visited);
+                              std::vector<bool>& visited) override;
   std::string label() override;
   std::string uniqueName() override;
   Type *compute() override;
   Node *idealize() override;
+  bool eq(Node*) override;
+  // Dead control is its own idom root
+  Node* idom() override;
 };
 #endif

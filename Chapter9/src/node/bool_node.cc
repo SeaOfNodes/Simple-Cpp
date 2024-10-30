@@ -26,7 +26,7 @@ Type *BoolNode::compute() {
       return TypeInteger::constant(doOp(i0->value(), i1->value()) ? 1 : 0);
     return i0->meet(i1);
   }
-  return &Type::BOTTOM;
+  return in(1)->type_->meet(in(2)->type_);
 }
 
 Node *BoolNode::idealize() {

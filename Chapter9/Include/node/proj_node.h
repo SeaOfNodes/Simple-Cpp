@@ -22,5 +22,7 @@ public:
 
   Type* compute() override;
   Node* idealize() override;
+  bool eq(Node*n) override;
+  int hash() override;
 };
 #endif

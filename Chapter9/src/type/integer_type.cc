@@ -3,11 +3,11 @@
 TypeInteger::TypeInteger(bool is_con, long con)
     : con_(con), is_con_(is_con), Type(TINT) {}
 
-TypeInteger *TypeInteger::constant(long con) {
-  return new TypeInteger(true, con);
-}
+TypeInteger *TypeInteger::constant(long con) { return make(true, con); }
 
 bool TypeInteger::isConstant() { return is_con_; }
+bool TypeInteger::isHighOrConst() { return is_con_ || con_ = 0; }
+
 std::string TypeInteger::toString() { return print_1(builder).str(); }
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
@@ -16,9 +16,9 @@ std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
 }
 
 // Why the values the way they are is this because idealise optimisatiom
-TypeInteger TypeInteger::BOT = TypeInteger(false, 1);
-TypeInteger TypeInteger::TOP = TypeInteger(false, 0);
-TypeInteger TypeInteger::ZERO = TypeInteger(true, 0);
+TypeInteger TypeInteger::BOT = make(false, 1);
+TypeInteger TypeInteger::TOP = make(false, 0);
+TypeInteger TypeInteger::ZERO = make(true, 0);
 
 bool TypeInteger::equals(TypeInteger *o) {
   if (o == this)
@@ -29,23 +29,31 @@ bool TypeInteger::equals(TypeInteger *o) {
 }
 
 Type *TypeInteger::xmeet(Type *other) {
-  auto i = dynamic_cast<TypeInteger *>(other);
+  // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
+  TypeInteger i = dynamic_cast<TypeInteger *>(other);
+  if (this == BOT)
+    return this;
 
-  if (this == other)
-    return this;
-  // BON WINS
-  if (isBot())
-    return this;
-  if (i->isBot())
+  if (i == BOT)
     return i;
   // TOP loses
-  if (i->isTop())
+  if (i == TOP)
     return this;
-  if (isTop())
+  if (this == TOP)
     return i;
-  return con_ == i->con_ ? this : &TypeInteger::BOT;
+
+  // Since both are constants, and are never equals (contract) unequals
+  // constants fall to bottom
+  return BOT;
 }
 
-bool TypeInteger::isTop() { return !is_con_ && con_ == 0; }
-bool TypeInteger::isBot() { return !is_con_ && con_ == 1; }
+TypeInteger TypeInteger::make(bool is_con, long con) {
+  return new TypeInteger(is_con, con).intern();
+}
+
 long TypeInteger::value() { return con_; }
+int TypeInteger::hash() { return con_ ^ (is_con_ ? 0 : 0x4000); }
+bool TypeInteger::eq(Type *t) {
+  TypeInteger i = t;
+  return con_ == i.con_ && is_con_ == i.is_con_;
+}

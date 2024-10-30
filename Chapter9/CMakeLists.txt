@@ -45,7 +45,8 @@ add_library(simple_lib
         # utils
         src/utils.cc
         src/graphVisualizer.cc
-        src/graphEvaluator.cc)
+        src/graphEvaluator.cc
+        src/iterPeeps.cc)
 
 set(CMAKE_BUILD_TYPE Debug)
 
