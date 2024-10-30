@@ -16,7 +16,6 @@ include_directories(${PROJECT_SOURCE_DIR}/Include)
 # Add the executable target
 add_library(simple_lib
         src/parser.cc
-
         # nodes
         src/node/add_node.cc
         src/node/constant_node.cc

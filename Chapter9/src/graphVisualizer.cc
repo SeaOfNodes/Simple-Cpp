@@ -70,7 +70,7 @@ GraphVisualizer::GraphVisualizer() : GraphVisualizer(false) {}
 std::string GraphVisualizer::generateDotOutput(Parser &parser) {
   std::vector<Node *> all = findAll(parser);
   std::ostringstream sb;
-  sb << "digraph chapter08 {\n";
+  sb << "digraph chapter09 {\n";
   sb << "/*\n";
   sb << parser.src();
   sb << "\n*/\n";

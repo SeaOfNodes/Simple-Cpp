@@ -94,6 +94,7 @@ public:
   virtual std::string glabel();
 
   std::string to_string();
+
   // ------------------------------------------------
 
   // Debugger printing.
@@ -111,7 +112,7 @@ public:
 
   // Every Node implements this.
   virtual std::ostringstream &print_1(std::ostringstream &builder,
-                                      std::vector<bool> &) = 0;
+                                      std::vector<bool>&) = 0;
 
   virtual bool isMultiHead();
   virtual bool isMultiTail();

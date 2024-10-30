@@ -35,6 +35,7 @@ Node *Node::unkeep() {
   return this;
 }
 
+
 std::string Node::to_string() {
   std::ostringstream builder;
   return print(builder).str();
