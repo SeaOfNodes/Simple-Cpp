@@ -52,7 +52,8 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   std::string label = lphi->label_ + (dynamic_cast<PhiNode *>(rhs)
                                           ? dynamic_cast<PhiNode *>(rhs)->label_
                                           : "");
-  Node *phi = (new PhiNode(label, ns))->peephole();
+  Node *phi = alloc.new_object<PhiNode>(label, ns);
+  phi = phi->peephole();
   // Rotate needs another op, otherwise just the phi
   return lhs == lphi ? phi : op->copy(lhs->in(1), phi);
 }
@@ -94,9 +95,10 @@ Node *AddNode::idealize() {
 
   // Add of same to a multiply by 2
   if (lhs == rhs) {
-    return new MulNode(
-        lhs, (new ConstantNode(TypeInteger::constant(2), Parser::START))
-                 ->peephole());
+    return  alloc.new_object<MulNode>(
+        lhs,
+        (alloc.new_object<ConstantNode>(TypeInteger::constant(2), Parser::START))->peephole()
+    );
   }
   // Goal: a left-spine set of adds, with constants on the rhs (which then
   // fold).
@@ -113,9 +115,9 @@ Node *AddNode::idealize() {
   // Swap to    (x + y) + z
   // Rotate (add add add) to remove the add on RHS
   if (i2) {
-    auto innerNode = new AddNode(lhs, rhs->in(1));
+    auto innerNode = alloc.new_object<AddNode>(lhs, rhs->in(1));
     auto simplifiedNode = innerNode->peephole();
-    return new AddNode(simplifiedNode, rhs->in(2));
+    return alloc.new_object<AddNode>(simplifiedNode, rhs->in(2));
   }
   // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
@@ -133,8 +135,8 @@ Node *AddNode::idealize() {
   if (lhs->in(2)->type_->isConstant() && t2->isConstant()) {
     auto lhsFirst = lhs->in(1);
     auto lhsSecond = lhs->in(2);
-    auto innerNode = (new AddNode(lhsSecond, rhs))->peephole();
-    return new AddNode(lhsFirst, innerNode);
+    auto innerNode = alloc.new_object<AddNode>(lhsSecond, rhs)->peephole();
+    return alloc.new_object<AddNode>(lhsFirst, innerNode);
   }
 
   // Do we have ((x + (phi cons)) + con) ?
@@ -149,9 +151,11 @@ Node *AddNode::idealize() {
 
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
-  if (spline_cmp(lhs->in(2), rhs))
-    return new AddNode(((new AddNode(lhs->in(1), rhs))->peephole()),
-                       lhs->in(2));
+  if (spline_cmp(lhs->in(2), rhs)) {
+    auto innerNode = alloc.new_object<AddNode>(lhs->in(1), rhs)->peephole();
+    return alloc.new_object<AddNode>(innerNode, lhs->in(2));
+  }
+
   return nullptr;
 }
 
@@ -177,4 +181,4 @@ bool AddNode::spline_cmp(Node *hi, Node *lo) {
   return lo->nid > hi->nid;
 }
 
-Node *AddNode::copy(Node *lhs, Node *rhs) { return new AddNode(lhs, rhs); }
+Node *AddNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<AddNode> (lhs, rhs); }

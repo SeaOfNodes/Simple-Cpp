@@ -30,7 +30,7 @@ public:
   static Type XCONTROL;
 
   int hashCode();
-  int hash();
+  virtual int hash();
 
   // Is high or on the lattice centerline.
   virtual bool isHighOrConst();

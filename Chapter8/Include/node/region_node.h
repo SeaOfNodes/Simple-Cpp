@@ -8,6 +8,7 @@
 
 class RegionNode : public Node {
 public:
+  RegionNode() {}
   RegionNode(std::initializer_list<Node *> nodes);
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;

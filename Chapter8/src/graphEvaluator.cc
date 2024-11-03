@@ -183,7 +183,7 @@ GraphEvaluator::evaluateWithResult(Node *graph, long parameter, int loops) {
     return res;
   }
 
-  auto *evaluator = new GraphEvaluator();
+  auto *evaluator = alloc.new_object<GraphEvaluator>();
   evaluator->loopPhiCache.reserve(16);
   return evaluator->evaluate(start, parameter, loops);
 }

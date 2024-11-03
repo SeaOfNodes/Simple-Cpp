@@ -9,6 +9,7 @@
 class PhiNode : public Node {
 public:
   std::string label_;
+  PhiNode() {}
   PhiNode(std::string label, std::initializer_list<Node *> inputs);
   PhiNode(std::string label, std::vector<Node *> inputs);
 

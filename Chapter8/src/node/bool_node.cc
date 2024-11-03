@@ -9,7 +9,7 @@ std::string BoolNode::op() { return "BoolNode"; }
 bool BoolNode::doOp(long lhs, long rhs) const { return false; }
 
 std::ostringstream &BoolNode::print_1(std::ostringstream &builder,
-                                      std::vector<bool>& visited) {
+                                      std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << op();
@@ -32,8 +32,8 @@ Type *BoolNode::compute() {
 Node *BoolNode::idealize() {
   // compare of Same(pointer comparison)
   if (in(1) == in(2))
-    return new ConstantNode(TypeInteger::constant(doOp(3, 3) ? 1 : 0),
-                            Parser::START);
+    return alloc.new_object<ConstantNode>(
+        TypeInteger::constant(doOp(3, 3) ? 1 : 0), Parser::START);
   // Do we have ((x * (phi cons)) * con) ?
   // Do we have ((x * (phi cons)) * (phi cons)) ?
   // Push constant up through the phi: x * (phi con0*con0 con1*con1...)
@@ -47,7 +47,7 @@ Node *BoolNode::idealize() {
 // EQ
 EQ::EQ(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *EQ::copy(Node *lhs, Node *rhs) { return new EQ(lhs, rhs); }
+Node *EQ::copy(Node *lhs, Node *rhs) { return alloc.new_object<EQ>(lhs, rhs); }
 
 std::string EQ::label() { return "EQ"; }
 std::string EQ::op() { return "=="; }
@@ -56,7 +56,7 @@ bool EQ::doOp(long lhs, long rhs) const { return lhs == rhs; }
 // LT
 LT::LT(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *LT::copy(Node *lhs, Node *rhs) { return new LT(lhs, rhs); }
+Node *LT::copy(Node *lhs, Node *rhs) { return alloc.new_object<LT>(lhs, rhs); }
 
 std::string LT::label() { return "LT"; }
 
@@ -66,7 +66,7 @@ bool LT::doOp(long lhs, long rhs) const { return lhs < rhs; }
 // LE
 LE::LE(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
 
-Node *LE::copy(Node *lhs, Node *rhs) { return new LE(lhs, rhs); }
+Node *LE::copy(Node *lhs, Node *rhs) { return alloc.new_object<LE>(lhs, rhs); }
 
 std::string LE::label() { return "LE"; }
 

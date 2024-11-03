@@ -7,7 +7,7 @@ std::string DivNode::label() { return "Div"; }
 std::string DivNode::glabel() { return "//"; }
 
 std::ostringstream &DivNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool>& visited) {
+                                     std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << "/";
@@ -30,4 +30,6 @@ Type *DivNode::compute() {
 
 Node *DivNode::idealize() { return nullptr; }
 
-Node *DivNode::copy(Node *lhs, Node *rhs) { return new DivNode(lhs, rhs); }
+Node *DivNode::copy(Node *lhs, Node *rhs) {
+  return alloc.new_object<DivNode>(lhs, rhs);
+}

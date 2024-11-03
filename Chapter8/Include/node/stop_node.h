@@ -7,6 +7,7 @@
 #include <initializer_list>
 class StopNode : public Node {
 public:
+  StopNode() {}
   StopNode(std::initializer_list<Node *> inputs);
 
   std::string label() override;

@@ -3,6 +3,13 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <memory_resource>
+
+class Node;
+// arena allocator
+inline std::pmr::monotonic_buffer_resource mem(1024);
+inline std::pmr::polymorphic_allocator<Node> alloc(&mem);
+// arena allocator end
 
 class Type {
 public:

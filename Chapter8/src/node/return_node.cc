@@ -1,5 +1,5 @@
 #include "../../Include/node/return_node.h"
-
+#include <initializer_list>
 #include <type/tuple_type.h>
 
 ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {}
@@ -18,7 +18,7 @@ std::ostringstream &ReturnNode::print_1(std::ostringstream &builder, std::vector
 }
 
 Type *ReturnNode::compute() {
-  return new TypeTuple({ctrl()->type_, expr()->type_});
+  return alloc.new_object<TypeTuple>(std::initializer_list<Type*>{ctrl()->type_, expr()->type_});
 }
 
 std::string ReturnNode::label() { return "Return"; }

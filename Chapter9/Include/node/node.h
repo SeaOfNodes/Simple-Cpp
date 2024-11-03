@@ -52,7 +52,7 @@ public:
 
   /**
    * Current computed type for this Node.  This value changes as the graph
-   * changes and more knowledge is gained about the program.
+   * changes and more knowledge is gained about the program
    */
   Type *type_;
 
@@ -116,7 +116,7 @@ public:
   virtual std::ostringstream &print_1(std::ostringstream &builder,
                                       std::vector<bool>&) = 0;
 
-  int hash();
+  virtual int hash();
 
   virtual bool isMultiHead();
   virtual bool isMultiTail();
@@ -186,7 +186,7 @@ public:
 
   virtual Node *idealize();
 
-  bool eq(Node* n);
+  virtual bool eq(Node* n);
   Node *swap12();
 
   // does this node contain all constants

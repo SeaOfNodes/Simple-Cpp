@@ -80,7 +80,7 @@ public:
   Node() = default;
 
   Node(std::initializer_list<Node *> inputNodes);
-  Node(std::vector<Node *> inputs);
+  explicit Node(std::vector<Node *> inputs);
 
   virtual ~Node() = default;
 

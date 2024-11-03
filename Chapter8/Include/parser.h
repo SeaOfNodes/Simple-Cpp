@@ -21,6 +21,7 @@
 #include <iostream>
 #include <unordered_set>
 
+
 class Lexer {
 public:
   Lexer() = default;
@@ -85,8 +86,6 @@ public:
   explicit Parser(std::string source, TypeInteger *arg);
 
   explicit Parser(std::string source);
-
-  ~Parser();
 
   StopNode *parse();
 

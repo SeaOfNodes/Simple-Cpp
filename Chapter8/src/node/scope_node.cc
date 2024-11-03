@@ -55,10 +55,13 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
     } else {
       old = loop->setDef(
           idx->second,
-          (new PhiNode(name,
-                       {loop->ctrl(), loop->update(name, nullptr, nestingLevel),
-                        nullptr}))
-              ->peephole());
+          alloc.new_object<PhiNode>(name,
+                                    std::initializer_list<Node*>{
+                                        loop->ctrl(),
+                                        loop->update(name, nullptr, nestingLevel),
+                                        nullptr
+                                    })->peephole()
+      );
     }
     setDef(idx->second, old);
   }
@@ -92,9 +95,8 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
 }
 
 Node *ScopeNode::mergeScopes(ScopeNode *that) {
-  // not called with keep here
   RegionNode *r = dynamic_cast<RegionNode *>(
-      ctrl((new RegionNode({nullptr, ctrl(), that->ctrl()}))->keep()));
+      ctrl(alloc.new_object<RegionNode>(std::initializer_list<Node*>{static_cast<Node*>(nullptr), ctrl(), that->ctrl()}))->keep());
 
   std::vector<std::string> ns = reverseNames();
   // Note that we skip i==0, which is bound to '$ctrl'
@@ -103,7 +105,7 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
       // If we are in lazy phi mode we need to a lookup
       // by name as it will trigger a phi creation
       Node *phi =
-          new PhiNode(ns[i], {r, this->lookup(ns[i]), that->lookup(ns[i])});
+          alloc.new_object<PhiNode>(ns[i], std::initializer_list<Node*>{r, this->lookup(ns[i]), that->lookup(ns[i])});
       phi = phi->peephole();
       setDef(i, phi);
     }
@@ -139,7 +141,7 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 }
 ScopeNode *ScopeNode::dup() { return dup(false); }
 ScopeNode *ScopeNode::dup(bool loop) {
-  auto *dup = new ScopeNode();
+  auto *dup = alloc.new_object<ScopeNode>();
   // Our goals are:
   // 1) duplicate the name bindings of the ScopeNode across all stack levels
   // 2) Make the new ScopeNode a user of all the nodes bound

@@ -18,4 +18,4 @@ std::ostringstream &SubNode::print_1(std::ostringstream &builder, std::vector<bo
 Type *SubNode::compute() { return &Type::BOTTOM; }
 
 Node *SubNode::idealize() { return nullptr; }
-Node *SubNode::copy(Node *lhs, Node *rhs) { return new SubNode(lhs, rhs); }
+Node *SubNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<SubNode>(lhs, rhs); }

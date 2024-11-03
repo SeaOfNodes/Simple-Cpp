@@ -125,7 +125,8 @@ Node *Node::peephole() {
   // If type is constant replace it with a constant nodex
   if (!(a) && type_->isConstant()) {
     // Create the ConstantNode object and call peephole() on it
-    auto peepholedNode = (new ConstantNode(type, Parser::START))->peephole();
+    auto peepholedNode =
+        alloc.new_object<ConstantNode>(type, Parser::START)->peephole();
 
     // Pass the result of peephole() to deadCodeElim
     return deadCodeElim(peepholedNode);

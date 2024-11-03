@@ -17,7 +17,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
   START->peephole();
 }
 
-Parser::Parser(std::string source) : Parser(source, &TypeInteger::BOT) {}
+Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT) {}
 
 Parser::~Parser() {
   delete lexer;
@@ -284,7 +284,7 @@ Type *Lexer::parseNumber() {
   if (snum.length() > 1 && snum[0] == '0')
     throw std::runtime_error(
         "Syntax error: integer values cannot start with '0'");
-  return TypeInteger::constant(std::stol(snum));
+  return dynamic_cast<Type*>(TypeInteger::constant(std::stol(snum)));
 }
 
 bool Lexer::peek(char ch) {

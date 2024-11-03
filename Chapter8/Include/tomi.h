@@ -1,4 +1,6 @@
 // Small Standard Lib from Tomi.
+#ifndef TOMI_H
+#define TOMI_H
 
 #include <cassert>
 #include <cstddef>
@@ -498,11 +500,15 @@ public:
   Arena() : start_{nullptr}, curr_{nullptr}, end_{nullptr} {}
 
   ~Arena() {
+    int count = 0;
+
     while (start_) {
+      count++;
       auto next = *reinterpret_cast<char **>(start_);
       delete[] start_;
       start_ = next;
     }
+    std::cerr << "Called: " << count;
   }
 
   void *alloc(std::size_t n) {
@@ -541,6 +547,6 @@ private:
   char *end_;
 };
 
-void *operator new(std::size_t n, Arena &a) { return a.alloc(n); }
-
 } // namespace Tomi
+inline void *operator new(std::size_t n, Tomi::Arena &a) { return a.alloc(n); }
+#endif

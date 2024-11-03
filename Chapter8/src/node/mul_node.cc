@@ -7,7 +7,7 @@ std::string MulNode::label() { return "Mul"; }
 std::string MulNode::glabel() { return "*"; }
 
 std::ostringstream &MulNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool>& visited) {
+                                     std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
 
@@ -57,4 +57,6 @@ Node *MulNode::idealize() {
   return nullptr;
 }
 
-Node *MulNode::copy(Node *lhs, Node *rhs) { return new MulNode(lhs, rhs); }
+Node *MulNode::copy(Node *lhs, Node *rhs) {
+  return alloc.new_object<MulNode>(lhs, rhs);
+}

@@ -7,11 +7,28 @@ project(Simple VERSION 1.0)
 enable_testing()
 
 # Specify the C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 
 # Add the include directory to the search path
 include_directories(${PROJECT_SOURCE_DIR}/Include)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # using Clang
+    message("using clang")
+    set(DONSUS_USED_COMPILER "clang")
+    add_compile_options(-Wunused-variable -Werror=unused-variable)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # using GCC
+    message("using gcc")
+    set(DONSUS_USED_COMPILER "gcc")
+    add_compile_options(-Wunused-variable -Werror=unused-variable)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # using Visual Studio C++
+    message("using msvc")
+    set(DONSUS_USED_COMPILER "msvc")
+    add_compile_options(/W4 /WX)
+endif()
 
 # Add the executable target
 add_library(simple_lib

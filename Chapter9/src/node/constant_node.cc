@@ -14,7 +14,7 @@ Type *ConstantNode::compute() { return con_; }
 bool ConstantNode::isMultiTail() { return true; }
 std::string ConstantNode::uniqueName() { return "Con_" + std::to_string(nid); }
 Node *ConstantNode::idealize() { return nullptr; }
-Node* ConstantNode::eq(Node *) {
+bool ConstantNode::eq(Node *n) {
   ConstantNode* con = dynamic_cast<ConstantNode*>(n);
   return con_ == con->con_;
 }

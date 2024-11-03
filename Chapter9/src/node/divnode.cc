@@ -21,7 +21,7 @@ Type *DivNode::compute() {
   if (i0 && i1) {
     if (i0->isConstant() && i1->isConstant()) {
       return i1->value() == 0
-                 ? &TypeInteger::ZERO
+                 ? TypeInteger::ZERO
                  : TypeInteger::constant(i0->value() / i1->value());
     }
   }

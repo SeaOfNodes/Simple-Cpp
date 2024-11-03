@@ -7,7 +7,7 @@ project(Simple VERSION 1.0)
 enable_testing()
 
 # Specify the C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add the include directory to the search path

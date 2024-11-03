@@ -82,8 +82,8 @@ Node *PhiNode::idealize() {
       lhss[i] = in(i)->in(1);
       rhss[i] = in(i)->in(2);
     }
-    Node *phi_lhs = new PhiNode(label_, lhss);
-    Node *phi_rhs = new PhiNode(label_, rhss);
+    Node *phi_lhs = alloc.new_object<PhiNode>(label_, lhss);
+    Node *phi_rhs = alloc.new_object<PhiNode>(label_, rhss);
     // Phi(region, arg, arg)
     // Phi(region, 1, 2)
     // now the first one has the same inputs

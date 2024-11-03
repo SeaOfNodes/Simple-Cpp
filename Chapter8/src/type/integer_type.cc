@@ -4,7 +4,7 @@ TypeInteger::TypeInteger(bool is_con, long con)
     : con_(con), is_con_(is_con), Type(TINT) {}
 
 TypeInteger *TypeInteger::constant(long con) {
-  return new TypeInteger(true, con);
+  return alloc.new_object<TypeInteger>(true, con);
 }
 
 bool TypeInteger::isConstant() { return is_con_; }

@@ -45,7 +45,7 @@ std::string handle_file(const char*path_base) {
 int main(int argc, char const **argv) {
   if (argc <= 1)
     print_usage();
-  auto *parser = new Parser(handle_file(argv[1]));
+  auto *parser = alloc.new_object<Parser>(handle_file(argv[1]));
   std::ostringstream builder;
   StopNode *ret = parser->parse(true);
   ret->print(builder).str();
