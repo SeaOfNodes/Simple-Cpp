@@ -3,7 +3,6 @@
 // Handling source file
 #include <fstream>
 #include "../Include/parser.h"
-#include <iostream>
 
 #define VERSION_STRING "0.0.1"
 
@@ -49,5 +48,6 @@ int main(int argc, char const **argv) {
   std::ostringstream builder;
   StopNode *ret = parser->parse(true);
   ret->print(builder).str();
+  mem.reset();
   return 0;
 }

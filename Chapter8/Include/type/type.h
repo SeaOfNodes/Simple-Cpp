@@ -2,13 +2,15 @@
 #define TYPE_H
 #include <cassert>
 #include <iostream>
-#include <sstream>
+#include <memory>
 #include <memory_resource>
-
+#include <optional>
+#include <sstream>
 class Node;
-// arena allocator
-inline std::pmr::monotonic_buffer_resource mem(1024);
-inline std::pmr::polymorphic_allocator<Node> alloc(&mem);
+// arena allocator(static initialisation)
+inline std::optional<std::pmr::monotonic_buffer_resource> mem{std::in_place,
+                                                              1024};
+inline std::pmr::polymorphic_allocator<Node> alloc(&*(mem));
 // arena allocator end
 
 class Type {
