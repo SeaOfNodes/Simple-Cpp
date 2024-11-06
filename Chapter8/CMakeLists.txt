@@ -13,6 +13,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the include directory to the search path
 include_directories(${PROJECT_SOURCE_DIR}/Include)
 
+#[[option(ENABLE_ASAN "Enable AddressSanitizer" ON)
+
+if(ENABLE_ASAN)
+    message(STATUS "Enabling AddressSanitizer")
+    add_link_options(-fsanitize=address)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+endif()]]
 # Add the executable target
 add_library(simple_lib
         src/parser.cc
