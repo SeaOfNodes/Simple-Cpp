@@ -32,7 +32,7 @@ public:
     int totalWork;
     std::bitset<10> on_;
     std::mt19937 rng; // For randomising pull from the WorkList
-    Tomi::Vector<Node *> es;
+    std::vector<Node *> es;
     long seed{};
 
     /*
@@ -41,7 +41,7 @@ public:
      */
     template <typename T> T push(T x);
 
-    template <typename T> void addAll(Tomi::Vector<T>);
+    template <typename T> void addAll(std::vector<T>);
     /*
      * True if Node is on the WorkList
      */

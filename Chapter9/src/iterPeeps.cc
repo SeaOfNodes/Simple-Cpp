@@ -17,7 +17,7 @@ template <typename T> T IterPeeps::WorkList::push(T x) {
   return x;
 }
 
-template <typename T> void IterPeeps::WorkList::addAll(Tomi::Vector<T> e) {
+template <typename T> void IterPeeps::WorkList::addAll(std::vector<T> e) {
   for (T n : e) {
     push(n);
   }
@@ -46,7 +46,7 @@ void IterPeeps::reset() { WORK.clear(); }
 
 template <typename T> T IterPeeps::add(T n) { return WORK.push(n); }
 
-void IterPeeps::addAll(std::Vector<Node *> ary) { WORK.addAll(ary); }
+void IterPeeps::addAll(std::vector<Node *> ary) { WORK.addAll(ary); }
 
 IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
 

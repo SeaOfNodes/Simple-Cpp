@@ -117,17 +117,19 @@ void Node::subsume(Node *nnn) {
   }
   kill();
 }
-Type* Node::setType(Type *type) {
-  Type* old = type_;
+Type *Node::setType(Type *type) {
+  Type *old = type_;
   assert(old == nullptr || type->isa(old));
-  if(old == type) return old;
+  if (old == type)
+    return old;
   type_ = type;
   IterPeeps.addAll(outputs);
   moveDepsToWorkList();
   return old;
 }
 void Node::moveDepsToWorkList() {
-  if(deps_ == nullptr) return;
+  if (deps_ == nullptr)
+    return;
   IterPeeps.addAll(deps_);
   deps_.clear();
 }

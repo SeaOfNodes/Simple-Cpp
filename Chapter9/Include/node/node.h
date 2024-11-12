@@ -84,7 +84,7 @@ public:
 
   // Hash of opcode and inputs
   int hashCode();
-  Tomi::Vector<Node*> deps_;
+  std::vector<Node*> deps_;
 private:
   std::vector<bool> bitset;
   /**
