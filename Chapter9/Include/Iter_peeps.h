@@ -14,14 +14,13 @@ class IterPeeps {
 public:
   template <typename T> static T add(T n);
 
-  static void addAll(Tomi::Vector<Node *> ary);
+  static void addAll(std::vector<Node *> ary);
   /**
    * Iterate peepholes to a fixed point
    */
+
   static StopNode *iterate(StopNode *stop, bool show);
-  static bool MidAssert;
-  static bool midAssert();
-  static bool progressOnList(Node *stop);
+  static bool MidAssert();
   static void reset();
 
   class WorkList {
@@ -55,4 +54,8 @@ public:
     void clear();
   };
   static WorkList WORK;
+
+private:
+  static bool MID_ASSERT;
+  static bool progressOnList(Node *stop);
 };

@@ -10,6 +10,15 @@
 #include <bitset>
 
 #include "../../Include/type/type.h"
+#include "../../Include/Iter_peeps.h"
+#include "../../Include/tomi.h"
+
+// Custom hashing for Node:
+class Node;
+
+template <> struct Tomi::hash<Node *> {
+  unsigned long long operator()(Node *val);
+};
 
 /**
  * All Nodes in the Sea of Nodes IR inherit from the Node class.
@@ -65,8 +74,17 @@ public:
    * href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
    */
   int i_depth{};
-  static int ITER_CNT, ITER_NOP_CNT;
+  static int ITER_CNT;
+  static int ITER_NOP_CNT;
+  int hash_{};
 
+  // Global Value Numbering.  Hash over opcode and inputs; hits in this table
+  // are structurally equal.
+  static Tomi::HashMap<Node*, Node*> GVN;
+
+  // Hash of opcode and inputs
+  int hashCode();
+  Tomi::Vector<Node*> deps_;
 private:
   std::vector<bool> bitset;
   /**
@@ -199,6 +217,9 @@ public:
   virtual Node *copy(Node *lhs, Node *rhs);
 
   Node *find(std::vector<bool> visit, int nid_);
+
+  // Move the dependents onto a worklist, and clear for future dependents.
+  void moveDepsToWorkList();
 
   static void reset();
 };

@@ -92,6 +92,7 @@ Type *Type::dual() {
   }
 }
 
+// Part of hashmap interface see in header.
 unsigned long long Tomi::hash<Type *>::operator()(Type *val) {
   return val->hashCode();
 }

@@ -42,12 +42,14 @@ void IterPeeps::WorkList::clear() {
 
   totalWork = 0;
 }
+void IterPeeps::reset() { WORK.clear(); }
 
 template <typename T> T IterPeeps::add(T n) { return WORK.push(n); }
 
-void IterPeeps::addAll(Tomi::Vector<Node *> ary) { WORK.addAll(ary); }
+void IterPeeps::addAll(std::Vector<Node *> ary) { WORK.addAll(ary); }
 
 IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
+
 StopNode *IterPeeps::iterate(StopNode *stop, bool show) {}
 
 /*
@@ -55,3 +57,14 @@ bool IterPeeps::progressOnList(Node *stop) {
   MID_ASSERT = true;
   int old_cnt = Node::ITER_CNT;
 }*/
+
+bool IterPeeps::MidAssert() { return MID_ASSERT; }
+bool IterPeeps::progressOnList(Node *stop) {
+  MID_ASSERT = true;
+
+  MID_ASSERT = false;
+  return false;
+}
+
+bool IterPeeps::MID_ASSERT = false;
+IterPeeps::WORK = IterPeeps::WorkList();

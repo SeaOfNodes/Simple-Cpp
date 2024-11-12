@@ -6,11 +6,14 @@
 #include <sstream>
 #include <unordered_map>
 
+
+// Custom hashing for Type:
 class Type;
 
 template <> struct Tomi::hash<Type *> {
   unsigned long long operator()(Type *val);
 };
+
 class Type {
 public:
   static Tomi::HashMap<Type *, Type *> INTERN;

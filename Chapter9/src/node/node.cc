@@ -23,8 +23,8 @@ Node::Node(std::vector<Node *> inputs_) {
 Node *Node::in(std::size_t i) const {
   return (i < inputs.size()) ? inputs[i] : nullptr;
 }
-Node* Node::out(std::size_t i) const {
-  return  (i < outputs.size()) ? outputs[i] : nullptr;
+Node *Node::out(std::size_t i) const {
+  return (i < outputs.size()) ? outputs[i] : nullptr;
 }
 
 std::string Node::uniqueName() { return label() + std::to_string(nid); }
@@ -38,7 +38,6 @@ Node *Node::unkeep() {
   return this;
 }
 
-
 std::string Node::to_string() {
   std::ostringstream builder;
   return print(builder).str();
@@ -50,7 +49,7 @@ std::ostringstream &Node::print_0(std::ostringstream &builder,
     visited.resize(nid + 1, false);
   }
 
-  if (visited[nid] && !(dynamic_cast<ConstantNode*>(this))) {
+  if (visited[nid] && !(dynamic_cast<ConstantNode *>(this))) {
     builder << label();
     return builder;
   }
@@ -118,26 +117,64 @@ void Node::subsume(Node *nnn) {
   }
   kill();
 }
-Node *Node::peephole() {
-  Type *type = compute();
-  type_ = type; // assign type_ to con_
+Type* Node::setType(Type *type) {
+  Type* old = type_;
+  assert(old == nullptr || type->isa(old));
+  if(old == type) return old;
+  type_ = type;
+  IterPeeps.addAll(outputs);
+  moveDepsToWorkList();
+  return old;
+}
+void Node::moveDepsToWorkList() {
+  if(deps_ == nullptr) return;
+  IterPeeps.addAll(deps_);
+  deps_.clear();
+}
 
-  if (disablePeephole)
-    return this;
+Node *Node::peepholeOpt() {
+  ITER_CNT++;
+  Type *old = setType(compute());
+
+  // Replace constant computations from non-constants with a constant node
 
   auto *a = dynamic_cast<ConstantNode *>(this);
-  // If type is constant replace it with a constant nodex
-  if (!(a) && type_->isConstant()) {
-    // Create the ConstantNode object and call peephole() on it
-    auto peepholedNode = (new ConstantNode(type, Parser::START))->peephole();
-
-    // Pass the result of peephole() to deadCodeElim
-    return deadCodeElim(peepholedNode);
+  if (!(a) && type_->isHighOrConst()) {
+    auto peepholedNode = (new ConstantNode(type_, Parser::START))->peephole();
+    return peepholedNode;
+  }
+  // Global Value Numbering
+  if (hash_ == 0) {
+    // calls HashCode for hashing
+    Node *n = *GVN.get(this); // Will set _hash as a side effect
+    if (n == nullptr) {
+      GVN.put(this, this);
+    } else {
+      // Because of random worklist ordering, the two equal nodes
+      // might have different types.  Because of monotonicity, both
+      // types are valid.  To preserve monotonicity, the resulting
+      // shared Node has to have the best of both types.
+      n->setType(n->type_->join(type_));
+      hash_ = 0;
+      return deadCodeElim(n);
+    }
   }
   Node *n = idealize();
   if (n != nullptr)
-    return deadCodeElim(n->peephole());
-  return this;
+    return n;
+  if (old == type_)
+    ITER_NOP_CNT++;
+  return old == type_ ? nullptr : this;
+}
+Node *Node::peephole() {
+  Type *type = compute();
+
+  if (disablePeephole) {
+    type_ = type; // assign type_ to con_
+    return this;
+  }
+  Node *n = peepholeOpt();
+  return n == nullptr ? this : deadCodeElim(n->peephole());
 }
 
 /*
@@ -227,9 +264,7 @@ Node *Node::find(std::vector<bool> visit, int nid_) {
   return nullptr;
 }
 
-bool Node::eq(Node *n) {
-  return true;
-}
+bool Node::eq(Node *n) { return true; }
 Node *Node::idealize() { return nullptr; }
 Type *Node::compute() { return nullptr; }
 
@@ -248,4 +283,14 @@ Node *Node::swap12() {
   inputs[2] = tmp;
   return this;
 }
-int Node::hash() {return 0;}
+int Node::hash() { return 0; }
+
+Tomi::HashMap<Node *, Node *> Node::GVN = Tomi::HashMap<Node *, Node *>();
+
+// Part of hashmap interface see in header.
+unsigned long long Tomi::hash<Node *>::operator()(Node *val) {
+  return val->hashCode();
+}
+
+int Node::ITER_NOP_CNT = 0;
+int Node::ITER_CNT = 0;

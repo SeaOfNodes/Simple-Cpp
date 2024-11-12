@@ -441,23 +441,24 @@ public:
    * The new key–value pair is then placed into that cell.[
    */
   void repopulate() {
-    for (size_t i = 0; i < TableSize;
-         ++i) {              // Loop over the indices up to TableSize
-      auto &node = table[i]; // Access each node in the table
-      if (!node.isTombStone &&
-          node.hash != 0) { // Only repopulate non-tombstone, non-empty entries
+    size_t oldTableSize = TableSize;
+    TableSize *= 2;
+    auto oldTable = table;
+    table = new detail::HashNode<K, V>[TableSize];
+    n_elements = 0;
+
+    for (size_t i = 0; i < oldTableSize; ++i) {
+      auto &node = oldTable[i];
+      if (node.hash != 0 && !node.isTombStone) {
         put(node.key, node.val);
       }
     }
+
+    delete[] oldTable;
   }
   void put(const K &key, const V &value) {
-    n_elements++;
     size_t seventyFivePercentOfTableSize = TableSize * 8 / 10;
     if (n_elements == seventyFivePercentOfTableSize) {
-      TableSize = TableSize * 2;
-      delete[] table;
-      table = new detail::HashNode<K, V>[TableSize];
-      // re add elements that are not dead
       repopulate();
     }
     unsigned long hashValue = hashFunc(key) % table_size;
@@ -468,6 +469,7 @@ public:
       entry.hash = hashValue;
       entry.key = key;
       entry.val = value;
+      n_elements++;
 
     } else {
       // linear probing loop
@@ -476,6 +478,8 @@ public:
           auto &old = table[hashValue];
           old.key = key;
           old.val = value;
+          n_elements++;
+          continue;
         }
         if (table[hashValue].getKey() == key) {
           table[hashValue].setValue(value);
@@ -490,6 +494,7 @@ public:
       }
       auto &create_new = table[hashValue];
       create_new.hash = hashValue;
+      n_elements++;
       create_new.key = key;
       create_new.val = value;
     }
