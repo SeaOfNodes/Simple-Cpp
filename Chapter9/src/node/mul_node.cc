@@ -7,7 +7,7 @@ std::string MulNode::label() { return "Mul"; }
 std::string MulNode::glabel() { return "*"; }
 
 std::ostringstream &MulNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool>& visited) {
+                                     std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
 
@@ -27,7 +27,7 @@ Type *MulNode::compute() {
       return TypeInteger::constant(i0->value() * i1->value());
     }
   }
-  return &Type::BOTTOM;
+  return Type::BOTTOM;
 }
 
 Node *MulNode::idealize() {

@@ -12,8 +12,8 @@ std::ostringstream &RegionNode::print_1(std::ostringstream &builder, std::vector
 bool RegionNode::isCFG() { return true; }
 
 Type *RegionNode::compute() {
-  if(inProgress()) return  &Type::CONTROL;
-  Type *t = &Type::XCONTROL;
+  if(inProgress()) return  Type::CONTROL;
+  Type *t = Type::XCONTROL;
   for (int i = 1; i < nIns(); i++) {
     t = t->meet(in(i)->type_);
   }
@@ -51,7 +51,7 @@ Node* RegionNode::idealize() {
 
 int RegionNode::findDeadInput() {
   for (int i = 1; i < nIns(); i++) {
-    if (in(i)->type_ == &Type::XCONTROL) {
+    if (in(i)->type_ == Type::XCONTROL) {
       return i;
     }
   }

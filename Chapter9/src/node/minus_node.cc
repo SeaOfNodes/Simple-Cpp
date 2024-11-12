@@ -7,7 +7,7 @@ std::string MinusNode::label() { return "Minus"; }
 std::string MinusNode::glabel() { return "-"; }
 
 std::ostringstream &MinusNode::print_1(std::ostringstream &builder,
-                                       std::vector<bool>& visited) {
+                                       std::vector<bool> &visited) {
   builder << "(-";
   in(1)->print_0(builder, visited);
   builder << ")";
@@ -19,7 +19,7 @@ Type *MinusNode::compute() {
   if (i0) {
     return i0->isConstant() ? TypeInteger::constant(-i0->value()) : i0;
   }
-  return &Type::BOTTOM;
+  return Type::BOTTOM;
 }
 
 Node *MinusNode::idealize() { return nullptr; }

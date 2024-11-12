@@ -7,7 +7,7 @@ std::string DivNode::label() { return "Div"; }
 std::string DivNode::glabel() { return "//"; }
 
 std::ostringstream &DivNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool>& visited) {
+                                     std::vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << "/";
@@ -25,7 +25,7 @@ Type *DivNode::compute() {
                  : TypeInteger::constant(i0->value() / i1->value());
     }
   }
-  return &Type::BOTTOM;
+  return Type::BOTTOM;
 }
 
 Node *DivNode::idealize() { return nullptr; }

@@ -3,7 +3,7 @@
 IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {}
 std::string IfNode::label() { return "if"; }
 std::ostringstream &IfNode::print_1(std::ostringstream &builder,
-                                    std::vector<bool>& visited) {
+                                    std::vector<bool> &visited) {
   builder << "if( ";
   builder << in(1)->print_1(builder, visited).str();
   builder << " )";
@@ -18,17 +18,17 @@ bool IfNode::isMultiHead() { return true; }
 
 Type *IfNode::compute() {
   // If the If node is not reachable then neither is any following Proj
-  if (ctrl()->type_ != &Type::CONTROL && ctrl()->type_ != &Type::BOTTOM)
-    return &TypeTuple::IF_NEITHER;
+  if (ctrl()->type_ != Type::CONTROL && ctrl()->type_ != Type::BOTTOM)
+    return TypeTuple::IF_NEITHER;
   // If constant is 0 then false branch is reachable
   // Else true branch is reachable
   if (TypeInteger *ti = dynamic_cast<TypeInteger *>(pred()->type_)) {
     if (ti->isConstant()) {
       // Your code here
       if (ti->value() == 0)
-        return &TypeTuple::IF_FALSE;
+        return TypeTuple::IF_FALSE;
       else
-        return &TypeTuple::IF_TRUE;
+        return TypeTuple::IF_TRUE;
     }
   }
 
@@ -44,13 +44,13 @@ Type *IfNode::compute() {
       ProjNode *proj = dynamic_cast<ProjNode *>(prior);
 
       if (prior) {
-        return (proj->idx_ == 0) ? &TypeTuple::IF_TRUE : &TypeTuple::IF_FALSE;
+        return (proj->idx_ == 0) ? TypeTuple::IF_TRUE : TypeTuple::IF_FALSE;
       } else {
         return dom->type_;
       }
     }
   }
-  return &TypeTuple::IF_BOTH;
+  return TypeTuple::IF_BOTH;
 }
 
 Node *IfNode::idealize() { return nullptr; }

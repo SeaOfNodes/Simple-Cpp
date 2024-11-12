@@ -5,10 +5,9 @@
 #include <sstream>
 #include <unordered_map>
 
-
 class Type {
 public:
-  static std::unordered_map<Type*, Type*> INTERN;
+  static std::unordered_map<Type *, Type *> INTERN;
   std::ostringstream builder;
   Type() = default;
   static constexpr unsigned int TBOT = 0;
@@ -24,10 +23,10 @@ public:
 
   unsigned int type_;
 
-  static Type BOTTOM;
-  static Type TOP;
-  static Type CONTROL;
-  static Type XCONTROL;
+  static Type *BOTTOM;
+  static Type *TOP;
+  static Type *CONTROL;
+  static Type *XCONTROL;
 
   int hashCode();
   virtual int hash();
@@ -43,28 +42,34 @@ public:
   // ----------------------------------------------------------
 
   // Factory method which interns "this"
-  template <typename T>
-  T intern();
+  template <typename T> T *intern() {
+    T *nnn = dynamic_cast<T *>(INTERN[this]);
+    if (nnn == nullptr) {
+      INTERN[this] = this;
+      return static_cast<T *>(this);
+    }
+    return nnn;
+  }
+  virtual bool eq(Type *t);
 
-  virtual bool eq(Type* t);
-
-  bool operator==(Type& );
+  bool operator==(Type *);
 
   bool isSimple();
   std::string toString();
 
-  bool isa(Type* t);
+  bool isa(Type *t);
   // Our lattice is defined with a MEET and a DUAL.
   // JOIN is dual of meet of both duals.
-  virtual Type* join(Type* t);
-  virtual Type* dual();
+  virtual Type *join(Type *t);
+  virtual Type *dual();
 
   virtual Type *meet(Type *other);
   virtual Type *xmeet(Type *other);
 
 protected:
   explicit Type(unsigned int type);
+
 private:
-  int hash_;    // Hash cache; not-zero when set.
+  int hash_; // Hash cache; not-zero when set.
 };
 #endif

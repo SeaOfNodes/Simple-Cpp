@@ -1,11 +1,8 @@
-// Small Standard Lib from Tomi.
+// Small Standard Lib for the Donsus project(c++23)
 
 #include <cassert>
-#include <cstddef>
 #include <initializer_list>
 #include <iostream>
-#include <memory>
-#include <new>
 
 namespace Tomi {
 template <typename Type> class Vector {
@@ -370,8 +367,7 @@ private:
 };
 
 namespace detail {
-// typical initial size
-const unsigned long long TABLE_SIZE = 16;
+const unsigned long long TABLE_SIZE = 2;
 static const unsigned long long FNV_OFFSET_BASIS = 0xcbf29ce484222325;
 static const unsigned long long FNV_PRIME = 0x100000001b3;
 
@@ -384,26 +380,20 @@ static unsigned long long fnv_algo(std::span<const std::byte> data) {
   }
   return hash;
 }
-// represents a bucket
-template <typename K, typename V> class HashNode {
-public:
-  HashNode(const K &key_, const V &value_)
-      : key(key_), value(value_), next(nullptr) {}
-  K getKey() const { return key; }
-  V getValue() const { return value; }
-  const V *getPtrValue() const { return &value; }
-  void setValue(V value_) { value = value_; }
-  HashNode *getNext() const { return next; }
-  void setNext(HashNode *next_) { next = next_; }
-
-private:
-  // key value pair
+// keep the node flat
+template <typename K, typename V> struct HashNode {
+  unsigned long long hash{};
   K key;
-  V value;
-  // next node with the same key
-  HashNode *next;
+  V val;
+  bool isTombStone{false};
+  K getKey() const { return key; }
+  V getValue() const { return val; };
+  const V *getPtrValue() const { return &val; }
+  void setValue(V value_) { val = value_; }
+  void setKey(K key_) { key = key_; }
 };
 } // namespace detail
+
 template <typename T> struct hash {
   unsigned long long operator()(const T &val) {
     auto *begin = reinterpret_cast<const std::byte *>(&val[0]);
@@ -411,136 +401,115 @@ template <typename T> struct hash {
   }
 };
 
-// HashMap both accessing and inserting are O(n).
 template <typename K, typename V, size_t table_size = detail::TABLE_SIZE,
           typename F = hash<K>>
 class HashMap {
 public:
-  HashMap() : table(new detail::HashNode<K, V> *[table_size]()) {}
-  ~HashMap() {
-    for (size_t i = 0; i < table_size; ++i) {
-      detail::HashNode<K, V> *entry = table[i];
-
-      while (entry != nullptr) {
-        detail::HashNode<K, V> *prev = entry;
-        entry = entry->getNext();
-        delete prev;
-      }
-      table[i] = nullptr;
-    }
-    delete[] table;
-  }
+  HashMap()
+      : TableSize(table_size), table(new detail::HashNode<K, V>[table_size]) {}
+  ~HashMap() { delete[] table; }
   const V *get(const K &key) {
     unsigned long hashValue = hashFunc(key) % table_size;
-    detail::HashNode<K, V> *entry = table[hashValue];
-    while (entry != nullptr) {
-      if (entry->getKey() == key) {
-        return entry->getPtrValue();
+    auto &entry = table[hashValue];
+    if (entry.hash != 0 && !entry.isTombStone) {
+      if (entry.getKey() == key) {
+        return entry.getPtrValue();
       }
-      entry = entry->getNext();
     }
+    while (table[hashValue].hash != 0 && !table[hashValue].isTombStone) {
+      if (table[hashValue].getKey() == key)
+        return table[hashValue].getPtrValue();
+      hashValue = (hashValue + 1) % table_size;
+    }
+    // not in the table
     return nullptr;
   }
-  void put(const K &key, const V &value) {
-    unsigned long hashValue = hashFunc(key) % table_size;
-    detail::HashNode<K, V> *prev = nullptr;
-    detail::HashNode<K, V> *entry = table[hashValue];
-
-    while (entry != nullptr && entry->getKey() != key) {
-      prev = entry;
-      entry = entry->getNext();
-    }
-    if (entry == nullptr) {
-      entry = new detail::HashNode<K, V>(key, value);
-      if (prev == nullptr) {
-        // insert as first bucket
-        table[hashValue] = entry;
-      } else {
-        prev->setNext(entry);
+  /*
+   * To insert a key–value pair (x,v) into the table
+   * (possibly replacing any existing pair with the same key),
+   * the insertion algorithm follows the same sequence of cells
+   * that would be followed for a search, until finding either
+   * an empty cell or a cell whose stored key is x.
+   * The new key–value pair is then placed into that cell.[
+   */
+  void repopulate() {
+    for (size_t i = 0; i < TableSize;
+         ++i) {              // Loop over the indices up to TableSize
+      auto &node = table[i]; // Access each node in the table
+      if (!node.isTombStone &&
+          node.hash != 0) { // Only repopulate non-tombstone, non-empty entries
+        put(node.key, node.val);
       }
-    } else {
-      // just update the value
-      entry->setValue(value);
     }
   }
+  void put(const K &key, const V &value) {
+    n_elements++;
+    size_t seventyFivePercentOfTableSize = TableSize * 8 / 10;
+    if (n_elements == seventyFivePercentOfTableSize) {
+      TableSize = TableSize * 2;
+      delete[] table;
+      table = new detail::HashNode<K, V>[TableSize];
+      // re add elements that are not dead
+      repopulate();
+    }
+    unsigned long hashValue = hashFunc(key) % table_size;
+    auto &entry = table[hashValue];
+    unsigned long originalHashValue = hashValue;
+
+    if (entry.hash == 0) {
+      entry.hash = hashValue;
+      entry.key = key;
+      entry.val = value;
+
+    } else {
+      // linear probing loop
+      while (table[hashValue].hash != 0) {
+        if (table[hashValue].isTombStone) {
+          auto &old = table[hashValue];
+          old.key = key;
+          old.val = value;
+        }
+        if (table[hashValue].getKey() == key) {
+          table[hashValue].setValue(value);
+          return;
+        }
+
+        hashValue = (hashValue + 1) % table_size;
+        if (hashValue == originalHashValue) {
+          // resize
+          // hopefully never get here
+        }
+      }
+      auto &create_new = table[hashValue];
+      create_new.hash = hashValue;
+      create_new.key = key;
+      create_new.val = value;
+    }
+  }
+  // Lazy Deletion(https://en.wikipedia.org/wiki/Lazy_deletion)
   void remove(const K &key) {
     unsigned long hashValue = hashFunc(key) % table_size;
-    detail::HashNode<K, V> *prev = nullptr;
-    detail::HashNode<K, V> *entry = table[hashValue];
+    auto &entry = table[hashValue];
 
-    while (entry != nullptr && entry->getKey() != key) {
-      prev = entry;
-      entry = entry->getNext();
-    }
-
-    if (entry == nullptr) {
+    if (entry.hash == 0) {
       return;
     } else {
-      if (prev == nullptr) {
-        table[hashValue] = entry->getNext();
-      } else {
-        prev->setNext(entry->getNext());
+      n_elements--;
+      while (table[hashValue].hash != 0) {
+        if (table[hashValue].getKey() == key) {
+          auto &old = table[hashValue];
+          old.isTombStone = true;
+          return;
+        }
+        hashValue = (hashValue + 1) % table_size;
       }
-      delete entry;
     }
   }
 
 private:
-  detail::HashNode<K, V> **table;
+  size_t TableSize;
+  size_t n_elements{};
+  detail::HashNode<K, V> *table;
   F hashFunc;
 };
-
-// basic arena allocator
-class Arena {
-public:
-  static constexpr std::size_t kMinAllocSize = 0x10000;
-
-  Arena() : start_{nullptr}, curr_{nullptr}, end_{nullptr} {}
-
-  ~Arena() {
-    while (start_) {
-      auto next = *reinterpret_cast<char **>(start_);
-      delete[] start_;
-      start_ = next;
-    }
-  }
-
-  void *alloc(std::size_t n) {
-    // Ensure alignment
-    constexpr std::size_t alignment = alignof(std::max_align_t);
-    if (curr_ + n > end_) [[unlikely]] {
-      alloc_more(n);
-    }
-
-    void *v = curr_;
-    curr_ += n;
-
-    // Align the next position for future allocations
-    std::size_t space = end_ - curr_;
-    void *aligned = std::align(alignment, 1, v, space);
-    curr_ = static_cast<char *>(v) + n;
-
-    return v;
-  }
-
-private:
-  void alloc_more(std::size_t s) {
-    s += sizeof(char *);
-    if (s < kMinAllocSize)
-      s = kMinAllocSize;
-    auto buf = new char[s];
-    // Store the previous block's pointer at the beginning
-    *reinterpret_cast<char **>(buf) = start_;
-    start_ = buf;
-    curr_ = buf + sizeof(char *);
-    end_ = buf + s;
-  }
-
-  char *start_;
-  char *curr_;
-  char *end_;
-};
-
-void *operator new(std::size_t n, Arena &a) { return a.alloc(n); }
-
 } // namespace Tomi

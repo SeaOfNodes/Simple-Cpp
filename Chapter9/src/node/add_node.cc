@@ -70,7 +70,7 @@ Type *AddNode::compute() {
       return TypeInteger::constant(i0->value() + i1->value());
     }
   }
-  return &Type::BOTTOM;
+  return Type::BOTTOM;
 }
 
 Node *AddNode::idealize() {
@@ -107,7 +107,7 @@ Node *AddNode::idealize() {
   if (!i1 && i2)
     return swap12();
 
-  if(auto* minus = dynamic_cast<MinusNode*>(rhs)) {
+  if (auto *minus = dynamic_cast<MinusNode *>(rhs)) {
     return new SubNode(lhs, minus->in(1));
   }
   // Now we might see (add add non) or (add non non) or (add add add) but never

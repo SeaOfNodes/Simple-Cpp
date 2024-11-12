@@ -25,8 +25,8 @@ std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
 Node *PhiNode::region() { return in(0); }
 Type *PhiNode::compute() {
   if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
-    return &Type::BOTTOM;
-  Type *t = &Type::TOP;
+    return Type::BOTTOM;
+  Type *t = Type::TOP;
   for (int i = 1; i < nIns(); i++) {
     t = t->meet(in(i)->type_);
   }
@@ -37,9 +37,9 @@ Node *PhiNode::singleUniqueInput() {
   Node *live = nullptr;
   for (int i = 1; i < nIns(); i++) {
     if (auto *loop = dynamic_cast<LoopNode *>(region());
-        loop && (loop->entry()->type_ == &Type::XCONTROL))
+        loop && (loop->entry()->type_ == Type::XCONTROL))
       return nullptr;
-    if (region()->in(i)->type_ != &Type::XCONTROL && in(i) != this) {
+    if (region()->in(i)->type_ != Type::XCONTROL && in(i) != this) {
       if (live == nullptr || live == in(i)) {
         live = in(i);
       } else {

@@ -12,11 +12,11 @@ public:
 
   Type *xmeet(Type *other);
 
-  std::ostringstream& print_1(std::ostringstream &builder) override;
+  std::ostringstream &print_1(std::ostringstream &builder) override;
 
-  static TypeTuple IF_BOTH;
-  static TypeTuple IF_NEITHER;
-  static TypeTuple IF_TRUE;
-  static TypeTuple IF_FALSE;
+  static TypeTuple *IF_BOTH;
+  static TypeTuple *IF_NEITHER;
+  static TypeTuple *IF_TRUE;
+  static TypeTuple *IF_FALSE;
 };
 #endif

@@ -2,10 +2,9 @@
 #include "../Include/node/stop_node.h"
 
 #include "../Include/tomi.h"
-
-
-#include <random>
 #include <algorithm>
+#include <bitset>
+#include <random>
 
 class IterPeeps {
   /*
@@ -13,48 +12,47 @@ class IterPeeps {
    * The Node's nid is used to check membership in the worklist.
    */
 public:
-  template <typename T>
-  static T add(T n);
-  static void addAll(Tomi::Vector<Node*> ary);
+  template <typename T> static T add(T n);
+
+  static void addAll(Tomi::Vector<Node *> ary);
   /**
-     * Iterate peepholes to a fixed point
+   * Iterate peepholes to a fixed point
    */
-  static StopNode* iterate(StopNode* stop, bool show);
+  static StopNode *iterate(StopNode *stop, bool show);
   static bool MidAssert;
   static bool midAssert();
-  static bool progressOnList(Node* stop);
+  static bool progressOnList(Node *stop);
   static void reset();
 
-  WorkList<Node*> WORK;
-  template <typename T> class WorkList {
-  private:
-    Tomi::Vector<Node *> es_;
-    int len_;
-    Tomi::Vector<bool> onV; // Bitset if Node._nid is on WorkList
-    std::mt19937 rng_;      // For randomizing pull from the WorkList
-    long seed;
-    /* Useful stat - how many nodes are processed in the post parse iterative
-     * opt */
-    long totalWork;
+  class WorkList {
+  public:
     WorkList();
     WorkList(long seed);
+    /* Useful stat - how many nodes are processed in the post parse iterative
+     * opt */
+    int totalWork;
+    std::bitset<10> on_;
+    std::mt19937 rng; // For randomising pull from the WorkList
+    Tomi::Vector<Node *> es;
+    long seed{};
 
-  public:
     /*
       Pushes a Node on the WorkList, ensuring no duplicates
       If Node is null it will not be added.
      */
-    T push(T x);
-    void addAll(Tomi::Vector<T>);
+    template <typename T> T push(T x);
+
+    template <typename T> void addAll(Tomi::Vector<T>);
     /*
      * True if Node is on the WorkList
      */
-    bool on(T x);
+    template <typename T> bool on(T x);
     /*
       Removes a random Node from the WorkList; null if WorkList is empty
      */
-    T pop();
+    template <typename T> T pop();
 
     void clear();
   };
+  static WorkList WORK;
 };

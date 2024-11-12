@@ -22,7 +22,7 @@ ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
 }
 
-Type *StopNode::compute() { return &Type::BOTTOM; }
+Type *StopNode::compute() { return Type::BOTTOM; }
 
 Node *StopNode::idealize() {
   int len = static_cast<int>(nIns());
@@ -31,7 +31,7 @@ Node *StopNode::idealize() {
     std::ostringstream b;
     if (!in(i)->type_)
       std::cout << "Type is not set";
-    if (in(i)->type_ == &Type::XCONTROL) {
+    if (in(i)->type_ == Type::XCONTROL) {
       delDef(i--);
     }
   }

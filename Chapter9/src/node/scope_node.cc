@@ -1,9 +1,9 @@
 #include "../../Include/node/scope_node.h"
 #include <cassert>
 
-ScopeNode::ScopeNode() : Node({}) { type_ = &Type::BOTTOM; }
+ScopeNode::ScopeNode() : Node({}) { type_ = Type::BOTTOM; }
 std::string ScopeNode::label() { return "Scope"; }
-Type *ScopeNode::compute() { return &Type::BOTTOM; }
+Type *ScopeNode::compute() { return Type::BOTTOM; }
 Node *ScopeNode::idealize() { return nullptr; }
 
 void ScopeNode::push() { scopes.emplace_back(); }

@@ -1,64 +1,57 @@
 #include "../Include/Iter_peeps.h"
 
-template <typename T> IterPeeps::WorkList<T>::WorkList() : WorkList(123) {}
+IterPeeps::WorkList::WorkList() : WorkList(123) {}
 
-template <typename T>
-IterPeeps::WorkList<T>::WorkList(long seed)
-    : es_(1, 0), len_(0), seed(seed), totalWork(0), rng_(seed) {}
+IterPeeps::WorkList::WorkList(long seed)
+    : seed(seed), totalWork(0), rng(seed) {}
 
-template <typename T> T IterPeeps::WorkList<T>::push(T x) {
+template <typename T> T IterPeeps::WorkList::push(T x) {
   if (x == nullptr)
     return nullptr;
-  int idx = x.nid;
-  if (!onV[idx]) {
-    onV[idx] = true;
-    if (len_ == es_.size()) {
-      es_.resize(len_ << 1);
-    }
-    es_[len_++] = x;
+  int idx = x->nid;
+  if (!on_.test(idx)) {
+    on_.set(idx);
+    es.push_back(x);
     totalWork++;
   }
   return x;
 }
 
-template <typename T> T IterPeeps::WorkList<T>::addAll(Tomi::Vector<T> e) {
+template <typename T> void IterPeeps::WorkList::addAll(Tomi::Vector<T> e) {
   for (T n : e) {
     push(n);
   }
 }
 
-template <typename T> T IterPeeps::WorkList<T>::on(T x) { return onV[x.nid]; }
-
-template <typename T> T IterPeeps::WorkList<T>::pop() {
-  if (len_ == 0)
-    return nullptr;
-  int idx = std::uniform_int_distribution<int>(0, len_ - 1)(rng_);
-  T x = es_[idx];
-  es_[idx] = es_[--len_];
-  onV[idx] = false;
+template <typename T> bool IterPeeps::WorkList::on(T x) {
+  return on_.test(x.nidA);
 }
 
-template <typename T> T IterPeeps::WorkList<T>::clear() {
-  len_ = 0;
-  rng_.seed(seed);
-  std::fill(onV.begin(), onV.end(), false);
+template <typename T> T IterPeeps::WorkList::pop() {
+  if (es.empty())
+    return nullptr;
+  std::uniform_int_distribution<int> gen(0, es.size());
+  int idx = gen(rng);
+  T x = es[idx];
+  on_.reset(x.id);
+  return x;
+}
+
+void IterPeeps::WorkList::clear() {
+  on_.reset();
+
   totalWork = 0;
 }
 
-template <typename T>
-T IterPeeps::add(T n) {
-  return WORK.push(n);
-}
+template <typename T> T IterPeeps::add(T n) { return WORK.push(n); }
 
-void IterPeeps::addAll(Tomi::Vector<Node *> ary) {
-  WORK.addAll(ary);
-}
+void IterPeeps::addAll(Tomi::Vector<Node *> ary) { WORK.addAll(ary); }
 
-StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
+IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
+StopNode *IterPeeps::iterate(StopNode *stop, bool show) {}
 
-}
-
+/*
 bool IterPeeps::progressOnList(Node *stop) {
   MID_ASSERT = true;
   int old_cnt = Node::ITER_CNT;
-}
+}*/
