@@ -1,7 +1,7 @@
 #include "../../Include/type/type.h"
 
 bool Type::isHighOrConst() { return type_ == TTOP || type_ == TXCTRL; }
-bool Type::isConstant() {return false;}
+bool Type::isConstant() { return false; }
 
 bool Type::isSimple() { return type_ < TSIMPLE; }
 std::ostringstream &Type::print_1(std::ostringstream &builder) {
@@ -10,11 +10,11 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-std::unordered_map<Type*, Type*> Type::INTERN = std::unordered_map<Type*, Type*>();
-Type* Type::BOTTOM = Type(TBOT).intern<Type>();
-Type* Type::TOP = Type(TTOP).intern<Type>();
-Type* Type::CONTROL = Type(TCTRL).intern<Type>();
-Type* Type::XCONTROL = Type(TXCTRL).intern<Type>();
+Tomi::HashMap<Type *, Type *> Type::INTERN = Tomi::HashMap<Type *, Type *>();
+Type *Type::BOTTOM = Type(TBOT).intern<Type>();
+Type *Type::TOP = Type(TTOP).intern<Type>();
+Type *Type::CONTROL = Type(TCTRL).intern<Type>();
+Type *Type::XCONTROL = Type(TXCTRL).intern<Type>();
 
 Type::Type(unsigned int type) : type_(type) {}
 
@@ -45,40 +45,53 @@ Type *Type::xmeet(Type *t) {
   return ((type_ == TCTRL) || (t->type_ == TCTRL)) ? CONTROL : XCONTROL;
 }
 
-int Type::hash() {return type_;}
+int Type::hash() { return type_; }
+
 bool Type::operator==(Type *o) {
-  if(o == this) return true;
-  if(!dynamic_cast<Type*>(o)) return false;
-  if(type_ != o->type_) return false;
+  if (o == this)
+    return true;
+  if (!dynamic_cast<Type *>(o))
+    return false;
+  if (type_ != o->type_)
+    return false;
   return eq(o);
 }
 
-bool Type::eq(Type *t) {
-  return true;
-}
+bool Type::eq(Type *t) { return true; }
 
 int Type::hashCode() {
-  if(hash_ != 0) return hash_;
+  if (hash_ != 0)
+    return hash_;
   hash_ = hash();
-  if(hash_ == 0) hash_ = 0xDEADBEEF;
+  if (hash_ == 0)
+    hash_ = 0xDEADBEEF;
   return hash_;
 }
 
-bool Type::isa(Type *t) {
-  return meet(t) == t;
-}
+bool Type::isa(Type *t) { return meet(t) == t; }
 
-Type* Type::join(Type *t) {
-  if(this == t) return this;
+Type *Type::join(Type *t) {
+  if (this == t)
+    return this;
   return dual()->meet(t->dual())->dual();
 }
 
-Type* Type::dual() {
-  switch(type_) {
-  case TBOT: return TOP;
-  case TTOP: return BOTTOM;
-  case TCTRL: return XCONTROL;
-  case TXCTRL: return CONTROL;
-  default: {throw std::runtime_error("Should not reach here");}
+Type *Type::dual() {
+  switch (type_) {
+  case TBOT:
+    return TOP;
+  case TTOP:
+    return BOTTOM;
+  case TCTRL:
+    return XCONTROL;
+  case TXCTRL:
+    return CONTROL;
+  default: {
+    throw std::runtime_error("Should not reach here");
   }
+  }
+}
+
+unsigned long long Tomi::hash<Type *>::operator()(Type *val) {
+  return val->hashCode();
 }

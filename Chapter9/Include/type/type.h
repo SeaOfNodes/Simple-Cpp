@@ -1,13 +1,19 @@
 #ifndef TYPE_H
 #define TYPE_H
+#include "../tomi.h"
 #include <cassert>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
 
+class Type;
+
+template <> struct Tomi::hash<Type *> {
+  unsigned long long operator()(Type *val);
+};
 class Type {
 public:
-  static std::unordered_map<Type *, Type *> INTERN;
+  static Tomi::HashMap<Type *, Type *> INTERN;
   std::ostringstream builder;
   Type() = default;
   static constexpr unsigned int TBOT = 0;
@@ -43,14 +49,16 @@ public:
 
   // Factory method which interns "this"
   template <typename T> T *intern() {
-    T *nnn = dynamic_cast<T *>(INTERN[this]);
+    T *nnn = dynamic_cast<T *>(*INTERN.get(this));
     if (nnn == nullptr) {
-      INTERN[this] = this;
+      INTERN.put(this, this);
       return static_cast<T *>(this);
     }
     return nnn;
   }
   virtual bool eq(Type *t);
+
+  // to avoid collisions with INTERN
 
   bool operator==(Type *);
 
@@ -72,4 +80,5 @@ protected:
 private:
   int hash_; // Hash cache; not-zero when set.
 };
+
 #endif

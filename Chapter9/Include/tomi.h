@@ -1,4 +1,6 @@
 // Small Standard Lib for the Donsus project(c++23)
+#ifndef TOMI_H
+#define TOMI_H
 
 #include <cassert>
 #include <initializer_list>
@@ -388,7 +390,7 @@ template <typename K, typename V> struct HashNode {
   bool isTombStone{false};
   K getKey() const { return key; }
   V getValue() const { return val; };
-  const V *getPtrValue() const { return &val; }
+  V *getPtrValue() { return &val; }
   void setValue(V value_) { val = value_; }
   void setKey(K key_) { key = key_; }
 };
@@ -396,9 +398,15 @@ template <typename K, typename V> struct HashNode {
 
 template <typename T> struct hash {
   unsigned long long operator()(const T &val) {
+    throw std::runtime_error("Overload must be provided");
+  }
+};
+
+template <> struct hash<std::string> {
+  unsigned long long operator()(const std::string &val) {
     auto *begin = reinterpret_cast<const std::byte *>(&val[0]);
     return detail::fnv_algo({begin, val.size()});
-  }
+  };
 };
 
 template <typename K, typename V, size_t table_size = detail::TABLE_SIZE,
@@ -408,7 +416,7 @@ public:
   HashMap()
       : TableSize(table_size), table(new detail::HashNode<K, V>[table_size]) {}
   ~HashMap() { delete[] table; }
-  const V *get(const K &key) {
+  V *get(const K &key) {
     unsigned long hashValue = hashFunc(key) % table_size;
     auto &entry = table[hashValue];
     if (entry.hash != 0 && !entry.isTombStone) {
@@ -513,3 +521,5 @@ private:
   F hashFunc;
 };
 } // namespace Tomi
+
+#endif
