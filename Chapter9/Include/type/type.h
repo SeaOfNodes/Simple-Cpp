@@ -1,10 +1,7 @@
 #ifndef TYPE_H
 #define TYPE_H
 #include "../tomi.h"
-#include <cassert>
-#include <iostream>
 #include <sstream>
-#include <unordered_map>
 
 
 // Custom hashing for Type:

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <initializer_list>
 #include <iostream>
+#include <span>
 
 namespace Tomi {
 template <typename Type> class Vector {
