@@ -305,6 +305,38 @@ Tomi::HashMap<Node *, Node *> Node::GVN = Tomi::HashMap<Node *, Node *>();
 unsigned long long Tomi::hash<Node *>::operator()(Node *val) {
     return val->hashCode();
 }
+template <typename T>
+T* Node::walk(const std::function<Node*(T*)>& pred) {
+    assert(WVISIT.count() == 0);
+    T rez = walk_(pred);
+    WVISIT.reset();
+    return rez;
+}
 
+template <typename T>
+T* Node::walk_(const std::function<Node*(T*)>& pred) {
+    if(WVISIT.test(nid)) return nullptr; // been there done that
+    WVISIT[nid] = true;
+    T* x = pred(this);
+    if(x != nullptr) return x;
+
+    for(auto*def: inputs) {
+        if(def != nullptr) {
+            T* result = def->walk_(pred);
+            if(result != nullptr) return result;
+        }
+    }
+
+    for(Node* use: outputs) {
+        if(use!= nullptr) {
+            T* result = use->walk_(pred);
+            if(result != nullptr) return result;
+        }
+    }
+    return nullptr;
+}
+
+
+std::bitset<10> Node::WVISIT = std::bitset<10>();
 int Node::ITER_NOP_CNT = 0;
 int Node::ITER_CNT = 0;

@@ -59,18 +59,19 @@ void IterPeeps::addAll(std::vector<Node *> ary) { WORK.addAll(ary); }
 IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
 
 StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
+   assert(progressOnList(stop));
 }
-
-/*
-bool IterPeeps::progressOnList(Node *stop) {
-  MID_ASSERT = true;
-  int old_cnt = Node::ITER_CNT;
-}*/
 
 bool IterPeeps::MidAssert() { return MID_ASSERT; }
 
-bool IterPeeps::progressOnList(Node *stop) {
+bool IterPeeps::progressOnList(StopNode *stop) {
     MID_ASSERT = true;
+    int old_cnt = Node::ITER_CNT;
+    int old_nop = Node::ITER_NOP_CNT;
+
+
+    Node::ITER_CNT = old_cnt;
+    Node::ITER_NOP_CNT = old_nop;
 
     MID_ASSERT = false;
     return false;

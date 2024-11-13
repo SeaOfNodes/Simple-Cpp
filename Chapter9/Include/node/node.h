@@ -11,6 +11,7 @@
 #include <vector>
 #include <bitset>
 #include <random>
+#include <functional>
 
 #include "../../Include/type/type.h"
 #include "../../Include/tomi.h"
@@ -223,6 +224,14 @@ public:
   // Move the dependents onto a worklist, and clear for future dependents.
   void moveDepsToWorkList();
 
+ // Utility to walk the entire graph applying a function; return the first
+ // not-null result.
+  static std::bitset<10> WVISIT;
+  template <typename T>
+ T* walk(const std::function<Node*(T*)>& pred);
+ template <typename T>
+ T* walk_(const std::function<Node*(T*)>& pred);
+
   static void reset();
 };
 class StopNode;
@@ -278,7 +287,7 @@ public:
 
 private:
  static bool MID_ASSERT;
- static bool progressOnList(Node *stop);
+ static bool progressOnList(StopNode *stop);
 };
 
 #endif
