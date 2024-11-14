@@ -11,7 +11,7 @@ Node::Node(std::initializer_list<Node *> inputNodes) {
     }
 }
 
-Node::Node(std::vector<Node *> inputs_) {
+Node::Node(Tomi::Vector<Node *> inputs_) {
     nid = UNIQUE_ID++;
     for (Node *n: inputs_) {
         inputs.push_back(n);
@@ -46,7 +46,7 @@ std::string Node::to_string() {
 }
 
 std::ostringstream &Node::print_0(std::ostringstream &builder,
-                                  std::vector<bool> &visited) {
+                                  Tomi::Vector<bool> &visited) {
     if (nid >= visited.size()) {
         visited.resize(nid + 1, false);
     }
@@ -248,7 +248,7 @@ bool Node::isDead() { return isUnused() && nIns() == 0 && type_ == nullptr; }
 
 bool Node::disablePeephole = false;
 
-Node *Node::find(std::vector<bool> visit, int nid_) {
+Node *Node::find(Tomi::Vector<bool> visit, int nid_) {
     if (nid == nid_)
         return this;
     if (visit[nid])
@@ -305,14 +305,16 @@ Tomi::HashMap<Node *, Node *> Node::GVN = Tomi::HashMap<Node *, Node *>();
 unsigned long long Tomi::hash<Node *>::operator()(Node *val) {
     return val->hashCode();
 }
-template <typename T>
+// Todo: should not be a template OR should be defined in the header
+/*template <typename T>
 T* Node::walk(const std::function<Node*(T*)>& pred) {
     assert(WVISIT.count() == 0);
     T rez = walk_(pred);
     WVISIT.reset();
     return rez;
-}
+}*/
 
+/*
 template <typename T>
 T* Node::walk_(const std::function<Node*(T*)>& pred) {
     if(WVISIT.test(nid)) return nullptr; // been there done that
@@ -336,6 +338,7 @@ T* Node::walk_(const std::function<Node*(T*)>& pred) {
     return nullptr;
 }
 
+*/
 
 std::bitset<10> Node::WVISIT = std::bitset<10>();
 int Node::ITER_NOP_CNT = 0;

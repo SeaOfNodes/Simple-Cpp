@@ -1,13 +1,13 @@
 #include "../Include/utils.h"
 #include <iostream>
 
-template <typename E> int Utils::find(const std::vector<int> &ary, const E &x) {
+template <typename E> int Utils::find(const Tomi::Vector<int> &ary, const E &x) {
   for (int i = 0; i < ary.size(); i++) {
     if (ary[i] == x)
       return i;
   }
 }
-template <typename E> E Utils::del(std::vector<E> &array, int i) {
+template <typename E> E Utils::del(Tomi::Vector<E> &array, int i) {
 
   if (i >= 0 && i < array.size()) {
 

@@ -12,7 +12,7 @@ public:
   IfNode(Node *ctrl, Node *parent);
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool>& visited) override;
+                              Tomi::Vector<bool>& visited) override;
 
   bool isCFG() override;
   Node *ctrl();

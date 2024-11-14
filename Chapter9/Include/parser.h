@@ -77,7 +77,7 @@ public:
   ScopeNode *scope_node;
   static StartNode *START;
   StopNode *STOP;
-  std::vector<ScopeNode *> xScopes;
+  Tomi::Vector<ScopeNode *> xScopes;
 
   ScopeNode* continueScope;
   ScopeNode* breakScope;

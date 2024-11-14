@@ -1,4 +1,3 @@
-#include <vector>
 #include <unordered_map>
 
 #include "../Include/node/start_node.h"
@@ -17,12 +16,12 @@ public:
     ResultType type;
     long value;
   };
-  std::vector<bool> bitset;
+  Tomi::Vector<bool> bitset;
 
   /**
      * Find the start node from some node in the graph or null if there is no start node
    */
-   static StartNode* findStart(std::vector<bool>& visit, Node* node);
+   static StartNode* findStart(Tomi::Vector<bool>& visit, Node* node);
    /**
      * Find the control output from a control node
     */
@@ -45,7 +44,7 @@ public:
 
    static result evaluateWithResult(Node* graph, long parameter, int loops);
  private:
-   std::vector<int64_t> loopPhiCache;
+   Tomi::Vector<int64_t> loopPhiCache;
    long div(DivNode* div);
    /**
      * Calculate the value of a node

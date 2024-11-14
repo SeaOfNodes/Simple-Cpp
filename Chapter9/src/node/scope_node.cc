@@ -72,11 +72,11 @@ Node *ScopeNode::ctrl() { return in(0); }
 Node *ScopeNode::ctrl(Node *n) { return setDef(0, n); }
 
 std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
-                                       std::vector<bool> &visited) {
+                                       Tomi::Vector<bool> &visited) {
   builder << label();
   builder << "[";
   keys.reserve(scopes.size());
-  std::vector<std::string> names = reverseNames();
+  Tomi::Vector<std::string> names = reverseNames();
   for (int j = 0; j < nIns(); j++) {
     builder << names[j] << ":";
     Node *n = in(j);
@@ -96,7 +96,7 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
   RegionNode *r = dynamic_cast<RegionNode *>(
       ctrl((new RegionNode({nullptr, ctrl(), that->ctrl()}))->keep()));
 
-  std::vector<std::string> ns = reverseNames();
+  Tomi::Vector<std::string> ns = reverseNames();
   // Note that we skip i==0, which is bound to '$ctrl'
   for (int i = 1; i < nIns(); i++) {
     if (in(i) != that->in(i)) { // No need for redundant Phis
@@ -157,8 +157,8 @@ ScopeNode *ScopeNode::dup(bool loop) {
   }
   return dup;
 }
-std::vector<std::string> ScopeNode::reverseNames() {
-  std::vector<std::string> names(nIns());
+Tomi::Vector<std::string> ScopeNode::reverseNames() {
+  Tomi::Vector<std::string> names(nIns());
   for (const auto &syms : scopes) {
     for (const auto &pair : syms) {
       names[pair.second] = pair.first;

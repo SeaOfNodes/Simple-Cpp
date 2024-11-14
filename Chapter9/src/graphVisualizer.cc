@@ -68,7 +68,7 @@ GraphVisualizer::GraphVisualizer(bool separateControlCluster)
 GraphVisualizer::GraphVisualizer() : GraphVisualizer(false) {}
 
 std::string GraphVisualizer::generateDotOutput(Parser &parser) {
-  std::vector<Node *> all = findAll(parser);
+  Tomi::Vector<Node *> all = findAll(parser);
   std::ostringstream sb;
   sb << "digraph chapter09 {\n";
   sb << "/*\n";
@@ -100,7 +100,7 @@ std::string GraphVisualizer::generateDotOutput(Parser &parser) {
 }
 
 void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
-                                     const std::vector<Node *> &all) {
+                                     const Tomi::Vector<Node *> &all) {
   if (!separateControlCluster && doCtrl)
     return; // all nodes in 1 cluster
   sb << (doCtrl ? "\tsubgraph cluster_Controls {\n"
@@ -176,12 +176,12 @@ void GraphVisualizer::nodesByCluster(std::ostringstream &sb, bool doCtrl,
   sb << "\t}\n";
 }
 void GraphVisualizer::nodes(std::ostringstream &sb,
-                            const std::vector<Node *> &all) {
+                            const Tomi::Vector<Node *> &all) {
   nodesByCluster(sb, true, all);
   nodesByCluster(sb, false, all);
 }
 void GraphVisualizer::nodeEdges(std::ostringstream &sb,
-                                const std::vector<Node *> &all) {
+                                const Tomi::Vector<Node *> &all) {
   sb << "\tedge [ fontname=Helvetica, fontsize=8 ];\n";
   for (Node *n : all) {
     // Do not display the Constant->Start edge;
@@ -283,7 +283,7 @@ std::string GraphVisualizer::makePortName(std::string ScopeName,
   return ScopeName + "_" + varName;
 }
 
-std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
+Tomi::Vector<Node *> GraphVisualizer::findAll(Parser &parser) {
   std::unordered_map<int, Node *> all;
   for (Node *n : Parser::START->outputs) {
     walk(all, n);
@@ -292,7 +292,7 @@ std::vector<Node *> GraphVisualizer::findAll(Parser &parser) {
     // std::cout << n->uniqueName() << "\n";
     walk(all, n);
   }
-  std::vector<Node *> result;
+  Tomi::Vector<Node *> result;
   for (auto &entry : all) {
     result.push_back(entry.second);
   }

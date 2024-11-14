@@ -6,7 +6,7 @@ StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
 
 bool StartNode::isCFG() { return true; }
 
-std::ostringstream &StartNode::print_1(std::ostringstream &builder, std::vector<bool>& visited) {
+std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
   builder << label();
   return builder;
 }

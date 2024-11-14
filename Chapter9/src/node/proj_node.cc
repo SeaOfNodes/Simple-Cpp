@@ -8,7 +8,7 @@ std::string ProjNode::label() { return label_; }
 bool ProjNode::isMultiTail() { return in(0)->isMultiHead(); }
 
 std::ostringstream &ProjNode::print_1(std::ostringstream &builder,
-                                      std::vector<bool> &visited) {
+                                      Tomi::Vector<bool> &visited) {
   builder << label_;
   return builder;
 }

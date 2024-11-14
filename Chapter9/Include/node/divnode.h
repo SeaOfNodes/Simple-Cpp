@@ -8,7 +8,7 @@ public:
   std::string label();
   std::string glabel();
 
-  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;
+  std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
   Type *compute() override;
   Node *idealize() override;

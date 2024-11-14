@@ -22,7 +22,7 @@ public:
   std::string glabel() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool>&) override;
+                              Tomi::Vector<bool>&) override;
 
   /*
    * Computes a new type from the type_ field of its inputs.

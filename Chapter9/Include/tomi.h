@@ -39,6 +39,12 @@ public:
     }
     endPtr = array + current;
   }
+  Vector(std::size_t count) noexcept : capacity(count), current(0) {
+    array = new Type[capacity];
+    for (std::size_t i = 0; i < count; ++i) {
+      new (&array[i]) Type();
+    }
+  }
 
   Vector(const Vector &other) noexcept
       : capacity(other.capacity), current(other.current),

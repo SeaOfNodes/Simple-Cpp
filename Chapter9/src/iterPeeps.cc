@@ -1,4 +1,5 @@
 #include "../Include/node/node.h"
+#include "../Include/node/stop_node.h"
 
 IterPeeps::WorkList::WorkList() : WorkList(123) {
 }
@@ -7,8 +8,7 @@ IterPeeps::WorkList::WorkList(long seed)
     : seed(seed), totalWork(0), rng(seed) {
 }
 
-template<typename T>
-T IterPeeps::WorkList::push(T x) {
+T* IterPeeps::WorkList::push(Node* x) {
     if (x == nullptr)
         return nullptr;
     int idx = x->nid;
@@ -20,20 +20,17 @@ T IterPeeps::WorkList::push(T x) {
     return x;
 }
 
-template<typename T>
-void IterPeeps::WorkList::addAll(std::vector<T> e) {
+void IterPeeps::WorkList::addAll(std::vector<Node*> e) {
     for (T n: e) {
         push(n);
     }
 }
 
-template<typename T>
-bool IterPeeps::WorkList::on(T x) {
+bool IterPeeps::WorkList::on(Node* x) {
     return on_.test(x.nidA);
 }
 
-template<typename T>
-T IterPeeps::WorkList::pop() {
+Node* IterPeeps::WorkList::pop() {
     if (es.empty())
         return nullptr;
     std::uniform_int_distribution<int> gen(0, es.size());
@@ -51,30 +48,33 @@ void IterPeeps::WorkList::clear() {
 
 void IterPeeps::reset() { WORK.clear(); }
 
-template<typename T>
-T IterPeeps::add(T n) { return WORK.push(n); }
+Node* IterPeeps::add(Node* n) { return WORK.push(n); }
 
 void IterPeeps::addAll(std::vector<Node *> ary) { WORK.addAll(ary); }
 
 IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
 
 StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
-   assert(progressOnList(stop));
+/*   assert(progressOnList(stop));*/
 }
 
 bool IterPeeps::MidAssert() { return MID_ASSERT; }
 
+// Todo: Implement this later
+/*
 bool IterPeeps::progressOnList(StopNode *stop) {
     MID_ASSERT = true;
     int old_cnt = Node::ITER_CNT;
     int old_nop = Node::ITER_NOP_CNT;
 
-
+    // inner lambda here
+    Node* changed = stop->walk();
     Node::ITER_CNT = old_cnt;
     Node::ITER_NOP_CNT = old_nop;
 
     MID_ASSERT = false;
     return false;
 }
+*/
 
 bool IterPeeps::MID_ASSERT = false;

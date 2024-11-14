@@ -10,12 +10,12 @@ class PhiNode : public Node {
 public:
   std::string label_;
   PhiNode(std::string label, std::initializer_list<Node *> inputs);
-  PhiNode(std::string label, std::vector<Node *> inputs);
+  PhiNode(std::string label, Tomi::Vector<Node *> inputs);
 
   std::string label() override;
   std::string glabel() override;
 
-  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;
+  std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
   bool isMultiTail() override;
 
   Node *region();

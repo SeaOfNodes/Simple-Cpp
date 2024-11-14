@@ -7,7 +7,6 @@
 
 #include <stack>
 #include <unordered_map>
-#include <vector>
 class ScopeNode : public Node {
 public:
   /**
@@ -24,15 +23,15 @@ public:
   static std::string CTRL;
   static std::string ARG0;
 
-  std::vector<std::unordered_map<std::string, int>> scopes;
-  std::vector<std::string> keys;
+  Tomi::Vector<std::unordered_map<std::string, int>> scopes;
+  Tomi::Vector<std::string> keys;
 
   ScopeNode();
 
   std::string label() override;
   Type *compute() override;
   Node *idealize() override;
-  std::ostringstream &print_1(std::ostringstream &builder, std::vector<bool>& visited) override;
+  std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
     /*
    * * Lookup a name in all scopes starting from most deeply nested.
@@ -72,7 +71,7 @@ public:
    *
    * This is an expensive operation.
    */
-  std::vector<std::string> reverseNames();
+  Tomi::Vector<std::string> reverseNames();
   Node *ctrl();
   /**
    * The ctrl of a ScopeNode is always bound to the currently active

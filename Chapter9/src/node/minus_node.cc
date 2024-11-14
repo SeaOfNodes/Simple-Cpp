@@ -7,7 +7,7 @@ std::string MinusNode::label() { return "Minus"; }
 std::string MinusNode::glabel() { return "-"; }
 
 std::ostringstream &MinusNode::print_1(std::ostringstream &builder,
-                                       std::vector<bool> &visited) {
+                                       Tomi::Vector<bool> &visited) {
   builder << "(-";
   in(1)->print_0(builder, visited);
   builder << ")";

@@ -6,7 +6,7 @@ std::string AddNode::label() { return "Add"; }
 std::string AddNode::glabel() { return "+"; }
 
 std::ostringstream &AddNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool> &visited) {
+                                     Tomi::Vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << "+";
@@ -41,7 +41,7 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   // Note that this is the exact reverse of Phi pulling a common op down
   // to reduce total op-count.  We don't get in an endless push-up
   // push-down peephole cycle because the constants all fold first.
-  std::vector<Node *> ns(lphi->nIns());
+  Tomi::Vector<Node *> ns(lphi->nIns());
   ns[0] = lphi->in(0);
   // Push constant up through the phi: x + (phi con0+con0 con1+con1...)
   for (int i = 1; i < ns.size(); i++) {

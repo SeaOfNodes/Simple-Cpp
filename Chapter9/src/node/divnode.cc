@@ -7,7 +7,7 @@ std::string DivNode::label() { return "Div"; }
 std::string DivNode::glabel() { return "//"; }
 
 std::ostringstream &DivNode::print_1(std::ostringstream &builder,
-                                     std::vector<bool> &visited) {
+                                     Tomi::Vector<bool> &visited) {
   builder << "(";
   in(1)->print_0(builder, visited);
   builder << "/";

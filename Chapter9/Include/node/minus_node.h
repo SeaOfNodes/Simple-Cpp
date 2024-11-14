@@ -9,7 +9,7 @@ public:
   std::string label();
   std::string glabel();
 
-  std::ostringstream &print_1(std::ostringstream &, std::vector<bool>& visited) override;
+  std::ostringstream &print_1(std::ostringstream &, Tomi::Vector<bool>& visited) override;
 
   Type *compute();
   Node *idealize();

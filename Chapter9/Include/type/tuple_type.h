@@ -2,11 +2,10 @@
 #define TUPLE_TYPE_H
 #include "../../Include/type/type.h"
 #include <initializer_list>
-#include <vector>
 
 class TypeTuple : public Type {
 public:
-  std::vector<Type *> types_;
+  Tomi::Vector<Type *> types_;
 
   TypeTuple(std::initializer_list<Type *> types);
 

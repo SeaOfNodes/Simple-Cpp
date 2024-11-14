@@ -24,11 +24,11 @@ public:
   GraphVisualizer(bool separateControlCluster);
 private:
 
-    void nodesByCluster(std::ostringstream& sb, bool doCtrl, const std::vector<Node*> &all);
+    void nodesByCluster(std::ostringstream& sb, bool doCtrl, const Tomi::Vector<Node*> &all);
 
-    void nodes(std::ostringstream &sb, const std::vector<Node *> &all); // Add nodes to dot format
-    void nodeEdges(std::ostringstream &sb, const std::vector<Node *> &all); // Define node edges
-    std::vector<Node *> findAll(Parser &parser); // Find all nodes in the graph
+    void nodes(std::ostringstream &sb, const Tomi::Vector<Node *> &all); // Add nodes to dot format
+    void nodeEdges(std::ostringstream &sb, const Tomi::Vector<Node *> &all); // Define node edges
+    Tomi::Vector<Node *> findAll(Parser &parser); // Find all nodes in the graph
     void walk(std::unordered_map<int, Node *> &all, Node *n); // Recursive graph traversal
 
     void scopes(std::ostringstream &sb, ScopeNode *n);

@@ -3,12 +3,9 @@
 
 #include <cassert>
 #include <sstream>
-#include <vector>
 #include <algorithm>
 
 #include <bitset>
-
-#include <vector>
 #include <bitset>
 #include <random>
 #include <functional>
@@ -28,12 +25,12 @@ template <> struct Tomi::hash<Node *> {
  * The Node class provides common functionality used by all subtypes.
  * Subtypes of Node specialize by overriding methods.
  */
-
+/*
 template <typename T>
 typename std::vector<T>::Iterator find(std::vector<T> &vec, const T &value);
 
 template <typename T>
-void del(std::vector<T> &vec, typename std::vector<T>::iterator::pos);
+void del(std::vector<T> &vec, typename std::vector<T>::iterator::pos);*/
 
 class Node {
 public:
@@ -50,7 +47,7 @@ public:
    * Ordering is required because e.g. "a/b" is different from "b/a".
    * The first input (offset 0) is often a {@link #isCFG} node.
    */
-  std::vector<Node *> inputs;
+  Tomi::Vector<Node *> inputs;
   /**
    * Outputs reference Nodes that are not null and have this Node as an
    * input.  These nodes are users of this node, thus these are def-use
@@ -60,7 +57,7 @@ public:
    * walked in either direction.  These outputs are typically used for
    * efficient optimizations but otherwise have no semantics meaning.
    */
-  std::vector<Node *> outputs;
+  Tomi::Vector<Node *> outputs;
 
   /**
    * Current computed type for this Node.  This value changes as the graph
@@ -87,9 +84,9 @@ public:
 
   // Hash of opcode and inputs
   unsigned long long hashCode();
-  std::vector<Node*> deps_;
+  Tomi::Vector<Node*> deps_;
 private:
-  std::vector<bool> bitset;
+  Tomi::Vector<bool> bitset;
   /**
    * A private Global Static mutable counter, for unique node id generation.
    * To make the compiler multithreaded, this field will have to move into a
@@ -103,7 +100,7 @@ public:
   Node() = default;
 
   Node(std::initializer_list<Node *> inputNodes);
-  Node(std::vector<Node *> inputs);
+  Node(Tomi::Vector<Node *> inputs);
 
   virtual ~Node() = default;
 
@@ -131,11 +128,11 @@ public:
   // This is the common print: check for DEAD and print "DEAD" else call the
   // per-Node print1.
   virtual std::ostringstream &print_0(std::ostringstream &builder,
-                                      std::vector<bool> &visited);
+                                      Tomi::Vector<bool> &visited);
 
   // Every Node implements this.
   virtual std::ostringstream &print_1(std::ostringstream &builder,
-                                      std::vector<bool>&) = 0;
+                                      Tomi::Vector<bool>&) = 0;
 
   virtual int hash();
 
@@ -219,7 +216,7 @@ public:
 
   virtual Node *copy(Node *lhs, Node *rhs);
 
-  Node *find(std::vector<bool> visit, int nid_);
+  Node *find(Tomi::Vector<bool> visit, int nid_);
 
   // Move the dependents onto a worklist, and clear for future dependents.
   void moveDepsToWorkList();
@@ -242,9 +239,9 @@ class IterPeeps {
   * The Node's nid is used to check membership in the worklist.
   */
 public:
- template <typename T> static T add(T n);
+static Node* add(Node* n);
 
- static void addAll(std::vector<Node *> ary);
+ static void addAll(Tomi::Vector<Node *> ary);
  /**
   * Iterate peepholes to a fixed point
   */
@@ -262,24 +259,24 @@ public:
   int totalWork;
   std::bitset<10> on_;
   std::mt19937 rng; // For randomising pull from the WorkList
-  std::vector<Node *> es;
+  Tomi::Vector<Node *> es;
   long seed{};
 
   /*
     Pushes a Node on the WorkList, ensuring no duplicates
     If Node is null it will not be added.
    */
-  template <typename T> T push(T x);
+  Node* push(Node* x);
 
-  template <typename T> void addAll(std::vector<T>);
+  void addAll(Tomi::Vector<Node*>);
   /*
    * True if Node is on the WorkList
    */
-  template <typename T> bool on(T x);
+  bool on(Node* x);
   /*
     Removes a random Node from the WorkList; null if WorkList is empty
    */
-  template <typename T> T pop();
+  Node* pop();
 
   void clear();
  };
@@ -287,7 +284,7 @@ public:
 
 private:
  static bool MID_ASSERT;
- static bool progressOnList(StopNode *stop);
+ // static bool progressOnList(StopNode *stop);
 };
 
 #endif

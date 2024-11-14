@@ -12,7 +12,7 @@ public:
   bool isMultiTail() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
-                              std::vector<bool>& visited) override;
+                              Tomi::Vector<bool>& visited) override;
   std::string label() override;
   std::string uniqueName() override;
   Type *compute() override;
