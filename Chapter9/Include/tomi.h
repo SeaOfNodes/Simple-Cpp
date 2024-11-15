@@ -39,11 +39,9 @@ public:
     }
     endPtr = array + current;
   }
-  Vector(std::size_t count) noexcept : capacity(count), current(0) {
+  Vector(std::size_t count) noexcept : capacity(count), current(count) {
     array = new Type[capacity];
-    for (std::size_t i = 0; i < count; ++i) {
-      new (&array[i]) Type();
-    }
+    endPtr = array + current;
   }
 
   Vector(const Vector &other) noexcept
@@ -267,27 +265,40 @@ public:
   };
 
   //  Removes the elements in the range [first, last).
+  //  Removes the elements in the range [first, last).
   iterator erase(iterator pos) noexcept {
     // TBD
     --current;
+    for(iterator it = pos; it < endPtr; ++it) {
+      *it = *(it + 1);
+    }
     endPtr = array + current;
-    return array + pos;
-  };
+    return pos;
+  }
 
   iterator erase(const_iterator pos) noexcept {
     // TBD
+    --current;
+    // cursed shit
+    iterator mutablePos = const_cast<iterator>(pos);
+    for(iterator it = mutablePos; it < endPtr; ++it) {
+      *it = *(it + 1);
+    }
     endPtr = array + current;
-  };
+    return pos;
+  }
 
   iterator erase(iterator first, iterator last) noexcept {
     // TBD
-    endPtr = array + current;
-  };
+    // endPtr = array + current;
+    throw std::runtime_error("Not implemented yet");
+  }
 
   iterator erase(const_iterator first, const_iterator last) noexcept {
     // TBD
-    endPtr = array + current;
-  };
+    // endPtr = array + current;
+    throw std::runtime_error("Not implemented yet");;
+  }
 
   void clear() {
     current = 0;

@@ -8,7 +8,7 @@ IterPeeps::WorkList::WorkList(long seed)
     : seed(seed), totalWork(0), rng(seed) {
 }
 
-T* IterPeeps::WorkList::push(Node* x) {
+Node* IterPeeps::WorkList::push(Node* x) {
     if (x == nullptr)
         return nullptr;
     int idx = x->nid;
@@ -20,14 +20,14 @@ T* IterPeeps::WorkList::push(Node* x) {
     return x;
 }
 
-void IterPeeps::WorkList::addAll(std::vector<Node*> e) {
-    for (T n: e) {
+void IterPeeps::WorkList::addAll(Tomi::Vector<Node*> e) {
+    for (auto n: e) {
         push(n);
     }
 }
 
 bool IterPeeps::WorkList::on(Node* x) {
-    return on_.test(x.nidA);
+    return on_.test(x->nid);
 }
 
 Node* IterPeeps::WorkList::pop() {
@@ -35,8 +35,8 @@ Node* IterPeeps::WorkList::pop() {
         return nullptr;
     std::uniform_int_distribution<int> gen(0, es.size());
     int idx = gen(rng);
-    T x = es[idx];
-    on_.reset(x.id);
+    Node* x = es[idx];
+    on_.reset(x->nid);
     return x;
 }
 
@@ -50,7 +50,7 @@ void IterPeeps::reset() { WORK.clear(); }
 
 Node* IterPeeps::add(Node* n) { return WORK.push(n); }
 
-void IterPeeps::addAll(std::vector<Node *> ary) { WORK.addAll(ary); }
+void IterPeeps::addAll(Tomi::Vector<Node *> ary) { WORK.addAll(ary); }
 
 IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
 

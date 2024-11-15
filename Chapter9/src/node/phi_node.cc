@@ -6,7 +6,7 @@ std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
 std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
-                                     Tomi::vector<bool>& visited) {
+                                     Tomi::Vector<bool>& visited) {
   if (dynamic_cast<RegionNode *>(region())->inProgress()) {
     builder << "Z";
   }
