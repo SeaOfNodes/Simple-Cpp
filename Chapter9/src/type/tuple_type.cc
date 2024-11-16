@@ -21,11 +21,30 @@ std::ostringstream &TypeTuple::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-TypeTuple *TypeTuple::IF_BOTH = new TypeTuple({Type::CONTROL, Type::CONTROL});
+int TypeTuple::hash() {
+  int sum = 0;
+  for (Type *type : types_)
+    sum ^= type->hashCode();
+  return sum;
+}
+TypeTuple *TypeTuple::make(std::initializer_list<Type *> types) {
+  return static_cast<TypeTuple *>((new TypeTuple(types))->intern<Type>());
+}
 
-TypeTuple *TypeTuple::IF_NEITHER =
-    new TypeTuple({Type::XCONTROL, Type::XCONTROL});
+bool TypeTuple::eq(Type *t) {
+  TypeTuple *tt = (TypeTuple *)(t);
+  if (types_.size() != tt->types_.size())
+    return false;
+  for (int i = 0; i < types_.size(); i++) {
+    if (types_[i] != tt->types_[i])
+      return false;
+  }
+  return true;
+}
+TypeTuple *TypeTuple::IF_BOTH = make({Type::CONTROL, Type::CONTROL});
 
-TypeTuple *TypeTuple::IF_TRUE = new TypeTuple({Type::CONTROL, Type::XCONTROL});
+TypeTuple *TypeTuple::IF_NEITHER = make({Type::XCONTROL, Type::XCONTROL});
 
-TypeTuple *TypeTuple::IF_FALSE = new TypeTuple({Type::XCONTROL, Type::CONTROL});
+TypeTuple *TypeTuple::IF_TRUE = make({Type::CONTROL, Type::XCONTROL});
+
+TypeTuple *TypeTuple::IF_FALSE = make({Type::XCONTROL, Type::CONTROL});

@@ -12,6 +12,10 @@ public:
   Type *xmeet(Type *other);
 
   std::ostringstream &print_1(std::ostringstream &builder) override;
+  static TypeTuple* make(std::initializer_list<Type*>);
+
+  bool eq(Type*t) override;
+  int hash() override;
 
   static TypeTuple *IF_BOTH;
   static TypeTuple *IF_NEITHER;
