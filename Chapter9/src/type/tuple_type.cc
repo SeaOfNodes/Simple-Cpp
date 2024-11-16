@@ -28,7 +28,7 @@ int TypeTuple::hash() {
   return sum;
 }
 TypeTuple *TypeTuple::make(std::initializer_list<Type *> types) {
-  return static_cast<TypeTuple *>((new TypeTuple(types))->intern<Type>());
+  return static_cast<TypeTuple *>((new TypeTuple(types))->intern());
 }
 
 bool TypeTuple::eq(Type *t) {

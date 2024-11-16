@@ -11,11 +11,19 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
 }
 
 Tomi::HashMap<Type *, Type *> Type::INTERN = Tomi::HashMap<Type *, Type *>();
-Type *Type::BOTTOM = Type(TBOT).intern<Type>();
-Type *Type::TOP = Type(TTOP).intern<Type>();
-Type *Type::CONTROL = Type(TCTRL).intern<Type>();
-Type *Type::XCONTROL = Type(TXCTRL).intern<Type>();
+Type *Type::BOTTOM = Type(TBOT).intern();
+Type *Type::TOP = Type(TTOP).intern();
+Type *Type::CONTROL = Type(TCTRL).intern();
+Type *Type::XCONTROL = Type(TXCTRL).intern();
 
+Type *Type::intern() {
+  Type *nnn = *INTERN.get(this);
+  if (nnn == nullptr) {
+    INTERN.put(this, this);
+    return this;
+  }
+  return nnn;
+}
 Type::Type(unsigned int type) : type_(type) {}
 
 Type *Type::meet(Type *other) {

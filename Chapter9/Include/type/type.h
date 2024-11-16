@@ -48,14 +48,8 @@ public:
   // ----------------------------------------------------------
 
   // Factory method which interns "this"
-  template <typename T> T *intern() {
-    T *nnn = dynamic_cast<T *>(*INTERN.get(this));
-    if (nnn == nullptr) {
-      INTERN.put(this, this);
-      return static_cast<T *>(this);
-    }
-    return nnn;
-  }
+  Type *intern();
+
   virtual bool eq(Type *t);
 
   // to avoid collisions with INTERN
