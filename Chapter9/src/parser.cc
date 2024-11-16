@@ -6,6 +6,8 @@ StartNode *Parser::START = nullptr;
 
 Parser::Parser(std::string source, TypeInteger *arg) {
   Node::reset();
+  IterPeeps::reset();
+
   lexer = new Lexer(source);
   scope_node = new ScopeNode();
   continueScope = nullptr;
@@ -87,7 +89,7 @@ ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
   // toScope is either the break scope, or a scope that was created here
   assert(toScope->scopes.size() <= breakScope->scopes.size());
   std::ostringstream builder;
-  toScope->mergeScopes(cur);
+  toScope->ctrl(toScope->mergeScopes(cur));
   return toScope;
 }
 Node *Parser::parseContinue() {
@@ -149,9 +151,9 @@ Node *Parser::parseWhile() {
   // IfNode takes current control and predicate
   auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode(ifNode, 0, "True"))->peephole();
+  Node *ifT = (new ProjNode((IfNode*)ifNode->keep(), 0, "True"))->peephole();
   ifNode->unkeep();
-  Node *ifF = (new ProjNode(ifNode, 1, "False"))->peephole();
+  Node *ifF = (new ProjNode((IfNode*)ifNode->unkeep(), 1, "False"))->peephole();
 
   // Clone the body Scope to create the exit Scope
   // which accounts for any side effects in the predicate
@@ -166,7 +168,7 @@ Node *Parser::parseWhile() {
 
   // Parse the true side, which corresponds to loop body
   // Our current scope is the body Scope
-  ctrl(ifT); // set ctrl token to ifTrue projection
+  ctrl(ifT->unkeep()); // set ctrl token to ifTrue projection
   parseStatement();
   // Continue scope
 
@@ -202,11 +204,12 @@ Node *Parser::parseIf() {
   // IfNode takes current control and predicate
   auto *ifNode = ((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode((IfNode *)ifNode, 0, "True"))->peephole();
+  Node *ifT = (new ProjNode((IfNode *)ifNode->keep(), 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
 
-  Node *ifF = (new ProjNode((IfNode *)ifNode, 1, "False"))->peephole();
+  Node *ifF =
+      (new ProjNode((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
 
@@ -215,12 +218,12 @@ Node *Parser::parseIf() {
   xScopes.push_back(fScope); // For graph visualisation we need all scopes
 
   // Parse the true side
-  ctrl(ifT);        // set ctrl token to ifTrue projection
-  parseStatement(); // Parse true-side
+  ctrl(ifT->unkeep()); // set ctrl token to ifTrue projection
+  parseStatement();    // Parse true-side
   ScopeNode *tScope = scope_node;
 
   scope_node = fScope;
-  ctrl(ifF);
+  ctrl(ifF->unkeep());
   if (matchx("else")) {
     parseStatement();
     fScope = scope_node;
@@ -297,50 +300,86 @@ Node *Parser::parseExpression() { return parseComparison(); }
 
 Node *Parser::parseComparison() {
   auto lhs = parseAddition(); // Parse the left-hand side
+  while (true) {
+    int idx = 0;
+    bool negate = false;
+    if (false)
+      ;
+    else if (match("==")) {
+      idx = 2;
+      lhs = new EQ(lhs, nullptr);
+    }
 
-  if (match("==")) {
-    return (new EQ(lhs, parseComparison()))->peephole();
+    else if (match("!=")) {
+      idx = 2;
+      lhs = new EQ(lhs, nullptr);
+      negate = true;
+    }
+
+    else if (match("<=")) {
+      idx = 2;
+      lhs = new LE(lhs, nullptr);
+    }
+
+    else if (match("<")) {
+      int idx = 2;
+      lhs = new LT(lhs, nullptr);
+    }
+
+    else if (match(">=")) {
+      int idx = 1;
+      lhs = new LE(nullptr, lhs);
+    }
+
+    else if (match(">")) {
+      int idx = 1;
+      lhs = new LT(nullptr, lhs);
+    } else
+      break;
+    lhs->setDef(idx, parseAddition());
+    lhs = lhs->peephole();
+    if (negate) {
+      lhs = (new NotNode(lhs))->peephole();
+    }
   }
-
-  if (match("!=")) {
-    return (new NotNode((new EQ(lhs, parseComparison()))->peephole()))
-        ->peephole();
-  }
-
-  if (match("<=")) {
-    return (new LE(lhs, parseComparison()))->peephole();
-  }
-
-  if (match("<")) {
-    return (new LT(lhs, parseComparison()))->peephole();
-  }
-
-  if (match(">=")) {
-    return (new LE(parseComparison(), lhs))->peephole();
-  }
-
-  if (match(">")) {
-    return (new LT(parseComparison(), lhs))->peephole();
-  }
-
   return lhs;
 }
 
 Node *Parser::parseAddition() {
   Node *lhs = parseMultiplication();
-  if (match("+"))
-    return (new AddNode(lhs, parseAddition()))->peephole();
-  if (match("-"))
-    return (new SubNode(lhs, parseAddition()))->peephole();
+  while (true) {
+    if (false)
+      ;
+    else if (match("+")) {
+      lhs = new AddNode(lhs, nullptr);
+    }
+
+    else if (match("-")) {
+      lhs = new SubNode(lhs, nullptr);
+    } else
+      break;
+    lhs->setDef(2, parseMultiplication());
+    lhs = lhs->peephole();
+  }
   return lhs;
 }
 
 Node *Parser::parseMultiplication() {
   Node *lhs = parseUnary();
-  if (match("*"))
-    return (new MulNode(lhs, parseMultiplication()))->peephole();
-  if (match("/"))
-    return (new DivNode(lhs, parseMultiplication()))->peephole();
+  while (true) {
+    if (false)
+      ;
+    else if (match("*")) {
+      lhs = new MulNode(lhs, nullptr);
+    }
+
+    else if (match("/")) {
+      lhs = new DivNode(lhs, nullptr);
+    } else
+      break;
+    lhs->setDef(2, parseUnary());
+    lhs = lhs->peephole();
+  }
   return lhs;
 }
 

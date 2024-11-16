@@ -17,6 +17,13 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
+StopNode* StopNode::iterate() {
+  return IterPeeps::iterate(this, false);
+}
+StopNode* StopNode::iterate(bool show) {
+  return IterPeeps::iterate(this, show);
+}
+
 bool StopNode::isCFG() { return true; }
 ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;

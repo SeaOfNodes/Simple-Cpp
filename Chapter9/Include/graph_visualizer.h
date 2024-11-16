@@ -20,6 +20,7 @@ public:
    */
   bool separateControlCluster = false;
   std::string generateDotOutput(Parser &parser); // Generate the dot file as a string
+/*  std::string generateDotOutput(StopNode* stop, Node* scope, S)*/
   GraphVisualizer();
   GraphVisualizer(bool separateControlCluster);
 private:

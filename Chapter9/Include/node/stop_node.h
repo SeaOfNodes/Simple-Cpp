@@ -21,5 +21,7 @@ public:
   Node *idealize() override;
 
   Node *addReturn(Node *node);
+  StopNode* iterate();
+  StopNode* iterate(bool show);
 };
 #endif
