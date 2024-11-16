@@ -7,9 +7,9 @@ std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
 std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
                                      Tomi::Vector<bool> &visited) {
-  if (dynamic_cast<RegionNode *>(region())->inProgress()) {
+  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
     builder << "Z";
-  }
+
   builder << "Phi(";
   for (Node *in : inputs) {
     if (in == nullptr)
@@ -24,22 +24,25 @@ std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
 }
 Node *PhiNode::region() { return in(0); }
 Type *PhiNode::compute() {
-  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+  auto *r = dynamic_cast<RegionNode *>(region());
+  if (!r || r->inProgress())
     return Type::BOTTOM;
   Type *t = Type::TOP;
   for (int i = 1; i < nIns(); i++) {
+    if(r->in(i)->addDep(this)->type_ != Type::XCONTROL && in(i) != this)
     t = t->meet(in(i)->type_);
   }
   return t;
 }
 
 Node *PhiNode::singleUniqueInput() {
+  if (auto *loop = dynamic_cast<LoopNode *>(region());
+      loop && (loop->entry()->type_ == Type::XCONTROL))
+    return nullptr;
+
   Node *live = nullptr;
   for (int i = 1; i < nIns(); i++) {
-    if (auto *loop = dynamic_cast<LoopNode *>(region());
-        loop && (loop->entry()->type_ == Type::XCONTROL))
-      return nullptr;
-    if (region()->in(i)->type_ != Type::XCONTROL && in(i) != this) {
+    if (region()->in(i)->addDep(this)->type_ != Type::XCONTROL && in(i) != this) {
       if (live == nullptr || live == in(i)) {
         live = in(i);
       } else {
@@ -51,7 +54,10 @@ Node *PhiNode::singleUniqueInput() {
 }
 bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {
-  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+  auto *r = dynamic_cast<RegionNode *>(region());
+  if(!r) return in(1);
+
+  if (r->inProgress() || r->nIns() <= 1)
     return nullptr;
   // Remove a "junk" Phi: Phi(x,x) is just x
   Node *live = singleUniqueInput();
@@ -114,4 +120,7 @@ bool PhiNode::same_op() {
   return true;
 }
 
+bool PhiNode::eq(Node*) {
+  return !inProgress();
+}
 bool PhiNode::inProgress() { return in(nIns() - 1) == nullptr; }

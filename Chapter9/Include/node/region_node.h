@@ -22,6 +22,8 @@ public:
   bool isMultiHead() override;
   // True if last input is null
   bool inProgress();
+  bool hashPhi();
+  bool eq(Node* n) override;
 };
 
 class LoopNode : public RegionNode {

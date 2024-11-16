@@ -166,7 +166,7 @@ public:
   // Remove the numbered input, compressing the inputs in-place. This
   // shuffles the order deterministically - which is suitable for Region and
   // Phi, but not for every Node.
-  void delDef(int idx);
+  Node* delDef(int idx);
 
   bool delUse(Node *use);
 

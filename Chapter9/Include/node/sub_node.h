@@ -2,7 +2,6 @@
 #define SUB_NODE_H
 
 #include "../../Include/node/node.h"
-
 class SubNode : public Node {
 public:
   SubNode(Node *lhs, Node *rhs);

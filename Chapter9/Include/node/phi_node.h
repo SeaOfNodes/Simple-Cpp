@@ -30,5 +30,6 @@ public:
   bool allCons(Node*) override;
 private:
   bool same_op();
+  bool eq(Node* n) override;
 };
 #endif

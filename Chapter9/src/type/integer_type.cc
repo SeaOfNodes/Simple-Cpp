@@ -11,6 +11,8 @@ bool TypeInteger::isHighOrConst() { return is_con_ || con_ == 0; }
 std::string TypeInteger::toString() { return print_1(builder).str(); }
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
+  if(this == TOP) builder << "IntTop";
+  if(this == BOT) builder << "IntBot";
   builder << con_;
   return builder;
 }
@@ -47,6 +49,10 @@ Type *TypeInteger::xmeet(Type *other) {
   return BOT;
 }
 
+Type *TypeInteger::dual() {
+  if(isConstant()) return this; // Constants are a self-dual
+  return con_ == 0? BOT : TOP;
+}
 TypeInteger *TypeInteger::make(bool is_con, long con) {
   return (new TypeInteger(is_con, con))->intern<TypeInteger>();
 }

@@ -233,7 +233,7 @@ Node *Node::idom() {
     return idom;
 }
 
-void Node::delDef(int idx) {
+Node* Node::delDef(int idx) {
     unlock();
     Node *old_def = in(idx);
     if (old_def != nullptr && // If the old def exists, remove a def->use edge
@@ -241,6 +241,7 @@ void Node::delDef(int idx) {
             this)) // If we removed the last use, the old def is now dead
         old_def->kill(); // Kill old def
     inputs.erase(std::next(inputs.begin(), idx));
+    return this;
 }
 
 Node *Node::copy(Node *lhs, Node *rhs) {

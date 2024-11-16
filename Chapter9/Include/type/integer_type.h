@@ -26,6 +26,8 @@ public:
   std::string toString();
   Type *xmeet(Type *other) override;
 
+  Type* dual() override;
+
   long value();
   bool equals(TypeInteger *);
 

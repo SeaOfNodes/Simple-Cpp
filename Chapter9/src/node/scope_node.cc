@@ -130,6 +130,8 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
   for (int i = 1; i < nIns(); i++) {
     if (auto *phi = dynamic_cast<PhiNode *>(in(i))) {
       Node *in = phi->peephole();
+      IterPeeps::addAll(phi->outputs);
+      phi->moveDepsToWorkList();
       if (in != phi) {
         phi->subsume(in);
         setDef(i, in); // Set the Update back into Scope
