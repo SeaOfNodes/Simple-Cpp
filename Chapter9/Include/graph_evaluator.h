@@ -34,7 +34,7 @@ public:
      * Cache values for phi and parameter projection nodes.
     */
 
-   std::unordered_map<Node*, int64_t> cacheValues;
+   Tomi::HashMap<Node*, long> cacheValues;
    /**
      * Cache for loop phis as they can depend on itself or other loop phis
     */

@@ -462,6 +462,18 @@ public:
    * an empty cell or a cell whose stored key is x.
    * The new key–value pair is then placed into that cell.[
    */
+  // Iterator interface for looping through the hashmap
+  auto*begin() {
+    return table;
+  }
+  auto*end() {
+    return table + n_elements;
+  }
+
+  V* operator[](std::string key) {
+    return get(key);
+  }
+
   void repopulate() {
     size_t oldTableSize = TableSize;
     TableSize *= 2;
@@ -547,6 +559,10 @@ public:
       node.reset();
     }
     TableSize = Tomi::detail::TABLE_SIZE;
+  }
+
+  size_t size() {
+    return n_elements;
   }
 
 private:

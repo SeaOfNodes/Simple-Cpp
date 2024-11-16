@@ -23,7 +23,7 @@ public:
   static std::string CTRL;
   static std::string ARG0;
 
-  Tomi::Vector<std::unordered_map<std::string, int>> scopes;
+  Tomi::Vector<Tomi::HashMap<std::string, int>> scopes;
   Tomi::Vector<std::string> keys;
 
   ScopeNode();

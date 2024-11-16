@@ -19,10 +19,10 @@ Node *ScopeNode::define(std::string name, Node *n) {
   if (!scopes.empty()) {
     auto &sysm = scopes.back();
 
-    if (sysm.find(name) != sysm.end())
+    if (sysm.get(name) != nullptr)
       return nullptr; // double define
 
-    sysm[name] = static_cast<int>(nIns());
+    *sysm[name] = static_cast<int>(nIns());
   }
   return addDef(n);
 }
@@ -41,30 +41,30 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
     return nullptr;
 
   auto syms = scopes[nestingLevel]; // Get the symbol table for nesting level
-  auto idx = syms.find(name);
+  auto idx = syms.get(name);
   // Not found in this scope, recursively look in parent scope
-  if (idx == syms.end())
+  if (idx == nullptr)
     return update(name, n, nestingLevel - 1);
-  Node *old = in(idx->second);
+  Node *old = in(*idx);
   if (auto *loop = dynamic_cast<ScopeNode *>(old)) {
     // Lazy Phi!
     auto *phi = dynamic_cast<PhiNode *>(
-        loop->in(static_cast<std::size_t>(idx->second)));
+        loop->in(static_cast<std::size_t>(*idx)));
     if (phi && loop->ctrl() == phi->region()) {
-      old = loop->in(static_cast<std::size_t>(idx->second));
+      old = loop->in(static_cast<std::size_t>(*idx));
     } else {
       old = loop->setDef(
-          idx->second,
+          *idx,
           (new PhiNode(name,
                        {loop->ctrl(), loop->update(name, nullptr, nestingLevel),
                         nullptr}))
               ->peephole());
     }
-    setDef(idx->second, old);
+    setDef(*idx, old);
   }
   // If n is null we are looking up rather than updating, hence return existing
   // value
-  return n == nullptr ? old : setDef(idx->second, n);
+  return n == nullptr ? old : setDef(*idx, n);
 }
 
 Node *ScopeNode::ctrl() { return in(0); }
@@ -161,9 +161,9 @@ ScopeNode *ScopeNode::dup(bool loop) {
 }
 Tomi::Vector<std::string> ScopeNode::reverseNames() {
   Tomi::Vector<std::string> names(nIns());
-  for (const auto &syms : scopes) {
-    for (const auto &pair : syms) {
-      names[pair.second] = pair.first;
+  for (auto &syms : scopes) {
+    for (auto pair : syms) {
+      names[pair.val] = pair.key;
     }
   }
   return names;

@@ -228,7 +228,7 @@ void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
     sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << scopeLevel << "</TD>\n";
 
     for (const auto &pair : sysms) {
-      const std::string &name = pair.first;
+      const std::string &name = pair.key;
       sb << "<TD PORT=\"" << makePortName(scopeName, name) << "\">" << name
          << "</TD>";
     }
@@ -252,8 +252,8 @@ void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
     auto syms = n->scopes[i];
     std::string scopeName = makeScopeName(n, level);
     for (const auto &pair : syms) {
-      std::string name = pair.first;
-      int idx = syms[name];
+      std::string name = pair.key;
+      int idx = *syms[name];
       Node *def = n->in(idx);
       std::string unique_name = def->uniqueName();
       while (auto *lazy = dynamic_cast<ScopeNode *>(def))
@@ -284,7 +284,7 @@ std::string GraphVisualizer::makePortName(std::string ScopeName,
 }
 
 Tomi::Vector<Node *> GraphVisualizer::findAll(Parser &parser) {
-  std::unordered_map<int, Node *> all;
+  Tomi::HashMap<int, Node *> all;
   for (Node *n : Parser::START->outputs) {
     walk(all, n);
   }
@@ -294,7 +294,7 @@ Tomi::Vector<Node *> GraphVisualizer::findAll(Parser &parser) {
   }
   Tomi::Vector<Node *> result;
   for (auto &entry : all) {
-    result.push_back(entry.second);
+    result.push_back(entry.val);
   }
   // is the order going to be different here?
   /*  for(const auto& pair: all) {
@@ -304,13 +304,13 @@ Tomi::Vector<Node *> GraphVisualizer::findAll(Parser &parser) {
   return result;
 }
 
-void GraphVisualizer::walk(std::unordered_map<int, Node *> &all, Node *n) {
+void GraphVisualizer::walk(Tomi::HashMap<int, Node *> &all, Node *n) {
   if (!n)
     return;
-  if (all.find(n->nid) != all.end())
+  if (all.get(n->nid) != nullptr)
     return;
 
-  all[n->nid] = n;
+  all.put(n->nid, n);
 
   for (Node *c : n->inputs) {
     walk(all, c);

@@ -40,11 +40,11 @@ StopNode *Parser::parse(bool show) {
   parseBlock();
   // before pop
   for (const auto &pair : scope_node->scopes[1]) {
-    std::string name = pair.first;
+    std::string name = pair.key;
   }
   scope_node->pop();
   for (const auto &pair : scope_node->scopes[1]) {
-    std::string name = pair.first;
+    std::string name = pair.key;
   }
   xScopes.pop_back();
 
