@@ -4,6 +4,7 @@
 #include "../../Include/type/integer_type.h"
 #include "../type/tuple_type.h"
 
+#include "../../Include/node/constant_node.h"
 #include "multi_node.h"
 #include "node.h"
 

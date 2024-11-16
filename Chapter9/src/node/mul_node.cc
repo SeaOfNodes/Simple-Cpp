@@ -27,7 +27,7 @@ Type *MulNode::compute() {
       return TypeInteger::constant(i0->value() * i1->value());
     }
   }
-  return Type::BOTTOM;
+  return in(1)->type_->meet(in(2)->type_);
 }
 
 Node *MulNode::idealize() {

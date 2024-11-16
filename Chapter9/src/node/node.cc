@@ -73,7 +73,13 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 
 std::size_t Node::nOuts() const { return outputs.size(); }
 
+void Node::unlock() {
+    if(hash_ == 0) return;
+    GVN.remove(this);
+    hash_ = 0;
+}
 Node *Node::setDef(int idx, Node *new_def) {
+    unlock();
     Node *old_def = in(idx);
     if (old_def == new_def)
         return this;
@@ -90,7 +96,15 @@ Node *Node::addUse(Node *n) {
     return this;
 }
 
+Node* Node::addDep(Node *dep) {
+    if(std::find(deps_.begin(), deps_.end(), dep) != deps_.end()) return this;
+    if(std::find(inputs.begin(), inputs.end(), dep) != inputs.end()) return this;
+    if(std::find(outputs.begin(), outputs.end(), dep) != outputs.end()) return this;
+    deps_.push_back(dep);
+    return this;
+}
 Node *Node::addDef(Node *new_def) {
+    unlock();
     inputs.push_back(new_def);
     if (new_def != nullptr)
         new_def->addUse(this);
@@ -111,6 +125,7 @@ void Node::subsume(Node *nnn) {
     while (nOuts() > 0) {
         Node *n = outputs.back();
         outputs.pop_back();
+        n->unlock();
         auto it = std::find(n->inputs.begin(), n->inputs.end(), this);
 
         if (it != n->inputs.end()) {
@@ -190,6 +205,7 @@ Node *Node::peephole() {
  * each of the individual elements.
  * */
 void Node::popN(std::size_t n) {
+    unlock();
     for (int i = 0; i < n; i++) {
         Node *old_def = inputs.back();
         inputs.pop_back();
@@ -197,10 +213,13 @@ void Node::popN(std::size_t n) {
     }
 }
 
-bool Node::allCons() {
+bool Node::allCons(Node* dep) {
     for (int i = 1; i < nIns(); i++) {
-        if (!((in(i))->type_->isConstant()))
+        if (!((in(i))->type_->isConstant())) {
+            in(i)->addDep(dep);  // If in(i) becomes a constant later, will trigger some peephole
             return false;
+        }
+
     }
     return true;
 }
@@ -215,6 +234,7 @@ Node *Node::idom() {
 }
 
 void Node::delDef(int idx) {
+    unlock();
     Node *old_def = in(idx);
     if (old_def != nullptr && // If the old def exists, remove a def->use edge
         old_def->delUse(
@@ -231,6 +251,7 @@ bool Node::isUnused() const { return outputs.empty(); }
 bool Node::isCFG() { return false; }
 
 void Node::kill() {
+    unlock();
     assert(isUnused()); // has no uses so it is dead
     popN(nIns());
     inputs.clear(); // flag as dead
@@ -241,6 +262,8 @@ void Node::kill() {
 void Node::reset() {
     UNIQUE_ID = 1;
     disablePeephole = false;
+    // clear the hashmap
+    ITER_CNT = ITER_NOP_CNT = 0;
 }
 
 int Node::UNIQUE_ID = 1;
@@ -287,6 +310,7 @@ Node *Node::deadCodeElim(Node *m) {
 }
 
 Node *Node::swap12() {
+    unlock();
     Node *tmp = in(1);
     inputs[1] = in(2);
     inputs[2] = tmp;
@@ -296,14 +320,34 @@ Node *Node::swap12() {
 int Node::hash() { return 0; }
 
 unsigned long long Node::hashCode() {
-    return 1;
-}
+  if(hash_ != 0) return hash_;
+  int hashc = hash();
+  for(Node* n : inputs) {
+        if (n!= nullptr) {
+        hashc = hash_ ^ (hash_<<17) ^ (hash_>>13) ^ n->nid;
+        }
+  }
+  // if hash is still zero
+  if(hashc == 0) hash_ = 0xDEADBEEF;
+  hash_ = hashc;
+  return hash_;
+  }
 
 Tomi::HashMap<Node *, Node *> Node::GVN = Tomi::HashMap<Node *, Node *>();
 
 // Part of hashmap interface see in header.
 unsigned long long Tomi::hash<Node *>::operator()(Node *val) {
     return val->hashCode();
+}
+
+bool Node::operator==(Node *o) {
+  if(o == this) return true;
+  int len = inputs.size();
+  if(len != o->inputs.size()) return false;
+  for(int i = 0; i < len; i++) {
+        if(in(i) != o->in(i)) return false;
+  }
+  return eq(o);
 }
 // Todo: should not be a template OR should be defined in the header
 /*template <typename T>

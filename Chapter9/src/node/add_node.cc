@@ -20,18 +20,18 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   Node *rhs = op->in(2);
 
   // LHS is either a Phi of constants, or another op with Phi of constants
-  PhiNode *lphi = pcon(lhs);
+  PhiNode *lphi = pcon(lhs, op);
   if (rotate && (lphi == nullptr) && lhs->nIns() > 2) {
     // Only valid to rotate constants if both are same associative ops
     if (typeid(*lhs) != typeid(*op))
       return nullptr;
-    lphi = pcon(lhs->in(2));
+    lphi = pcon(lhs->in(2), op);
   }
   if (lphi == nullptr)
     return nullptr;
   // RHS is a constant or a Phi of constants
   if (auto *con = dynamic_cast<ConstantNode *>(rhs);
-      !con && pcon(rhs) == nullptr)
+      !con && pcon(rhs, op) == nullptr)
     return nullptr;
   // If both are Phis, must be same Region
 
@@ -57,9 +57,9 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   return lhs == lphi ? phi : op->copy(lhs->in(1), phi);
 }
 
-PhiNode *AddNode::pcon(Node *op) {
+PhiNode *AddNode::pcon(Node *op, Node* dep) {
   PhiNode *phi = dynamic_cast<PhiNode *>(op);
-  return (phi && phi->allCons()) ? phi : nullptr;
+  return (phi && phi->allCons(dep)) ? phi : nullptr;
 }
 Type *AddNode::compute() {
   auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
@@ -107,6 +107,7 @@ Node *AddNode::idealize() {
   if (!i1 && i2)
     return swap12();
 
+  // x(-y) becomes x - y
   if (auto *minus = dynamic_cast<MinusNode *>(rhs)) {
     return new SubNode(lhs, minus->in(1));
   }
@@ -124,7 +125,7 @@ Node *AddNode::idealize() {
   // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
   if (!i1) {
-    return spline_cmp(lhs, rhs) ? swap12() : phiCon(this, true);
+    return spine_cmp(lhs, rhs, this) ? swap12() : phiCon(this, true);
   }
 
   // Now we only see (add add non)
@@ -134,7 +135,11 @@ Node *AddNode::idealize() {
 
   // Do we have (x + con1) + con2?
   // Replace with (x + (con1+con2) which then fold the constants
-  if (lhs->in(2)->type_->isConstant() && t2->isConstant()) {
+  // lhs.in(2) is con1 here
+  // If lhs.in(2) is not a constant, we add ourselves as a dependency
+  // because if it later became a constant then we could make this
+  // transformation.
+  if (lhs->in(2)->addDep(this)->type_->isConstant() && t2->isConstant()) {
     auto lhsFirst = lhs->in(1);
     auto lhsSecond = lhs->in(2);
     auto innerNode = (new AddNode(lhsSecond, rhs))->peephole();
@@ -153,7 +158,7 @@ Node *AddNode::idealize() {
 
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
-  if (spline_cmp(lhs->in(2), rhs))
+  if (spine_cmp(lhs->in(2), rhs, this))
     return new AddNode(((new AddNode(lhs->in(1), rhs))->peephole()),
                        lhs->in(2));
   return nullptr;
@@ -163,14 +168,18 @@ Node *AddNode::idealize() {
 // Do we rotate ((x + hi) + lo) into ((x + lo) + hi) ?
 // Generally constants always go right, then Phi-of-constants, then muls, then
 // others. Ties with in a category sort by node ID. TRUE if swapping hi and lo.
-bool AddNode::spline_cmp(Node *hi, Node *lo) {
+bool AddNode::spine_cmp(Node *hi, Node *lo, Node*dep) {
   if (lo->type_->isConstant())
     return false;
   if (hi->type_->isConstant())
     return true;
-  if (dynamic_cast<PhiNode *>(lo) && lo->allCons())
+
+  if(auto lphi = dynamic_cast<PhiNode*>(lo); lphi && lphi->region()->type_ == Type::XCONTROL) return false;
+  if(auto hphi = dynamic_cast<PhiNode*>(lo); hphi && hphi->region()->type_ == Type::XCONTROL) return false;
+
+  if (dynamic_cast<PhiNode *>(lo) && lo->allCons(dep))
     return false;
-  if (dynamic_cast<PhiNode *>(hi) && hi->allCons())
+  if (dynamic_cast<PhiNode *>(hi) && hi->allCons(dep))
     return true;
 
   if (dynamic_cast<PhiNode *>(lo) && !(dynamic_cast<PhiNode *>(hi)))

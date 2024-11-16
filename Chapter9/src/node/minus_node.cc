@@ -19,7 +19,7 @@ Type *MinusNode::compute() {
   if (i0) {
     return i0->isConstant() ? TypeInteger::constant(-i0->value()) : i0;
   }
-  return Type::BOTTOM;
+  return TypeInteger::TOP->meet(in(1)->type_);
 }
 
 Node *MinusNode::idealize() { return nullptr; }

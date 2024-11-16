@@ -6,7 +6,7 @@ std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
 std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
-                                     Tomi::Vector<bool>& visited) {
+                                     Tomi::Vector<bool> &visited) {
   if (dynamic_cast<RegionNode *>(region())->inProgress()) {
     builder << "Z";
   }
@@ -93,10 +93,15 @@ Node *PhiNode::idealize() {
   }
   return nullptr;
 }
-bool PhiNode::allCons() {
-  if (auto *r = dynamic_cast<RegionNode *>(region()); !r || r->inProgress())
+bool PhiNode::allCons(Node *dep) {
+  auto *r = dynamic_cast<RegionNode *>(region());
+
+  if (!r || r->inProgress())
     return false;
-  return Node::allCons();
+  addDep(dep);
+  if (r->inProgress())
+    return false;
+  return Node::allCons(dep);
 }
 
 PhiNode::PhiNode(std::string label, Tomi::Vector<Node *> inputs)
@@ -106,6 +111,7 @@ bool PhiNode::same_op() {
     if (typeid(*in(1)) != typeid(*in(i)))
       return false;
   }
-
   return true;
 }
+
+bool PhiNode::inProgress() { return in(nIns() - 1) == nullptr; }

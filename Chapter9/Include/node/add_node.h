@@ -40,9 +40,9 @@ public:
    *
    * */
   static Node *phiCon(Node *op, bool rotate);
-  static PhiNode *pcon(Node *op);
+  static PhiNode *pcon(Node *op, Node* dep);
 
-  static bool spline_cmp(Node *hi, Node *lo);
+  static bool spine_cmp(Node *hi, Node *lo, Node* dep);
 };
 
 #endif

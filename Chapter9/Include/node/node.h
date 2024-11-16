@@ -102,6 +102,7 @@ public:
   Node(std::initializer_list<Node *> inputNodes);
   Node(Tomi::Vector<Node *> inputs);
 
+  bool operator==(Node*);
   virtual ~Node() = default;
 
   // Easy reading label for debugger, e.g. "Add" or "Region" or "EQ"
@@ -153,6 +154,12 @@ public:
   Node *addUse(Node *n);
 
   Node *setDef(int idx, Node *new_def);
+  /**
+     * Add a node to the list o dependencies. Only add it if its not
+     * an input or output of this node, that is, it is at least one step
+     * away. The node being added must benefit from this node being peepholed.
+   */
+  Node* addDep(Node* dep);
 
   Node *addDef(Node *new_def);
 
@@ -187,6 +194,8 @@ public:
 
   Node *peephole();
 
+  void unlock();
+
   // Unlike peephole above, this explicitly returns null for no-change, or not-null
   // for a better replacement
   Node* peepholeOpt();
@@ -209,7 +218,7 @@ public:
 
   // does this node contain all constants
   // Ignores i(0), as is usually control.
-  virtual bool allCons();
+  virtual bool allCons(Node* dep);
 
   // Return the immediate dominator of this Node and compute dom tree depth.
   virtual Node *idom();

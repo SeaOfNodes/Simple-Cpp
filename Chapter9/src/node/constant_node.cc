@@ -21,3 +21,7 @@ bool ConstantNode::eq(Node *n) {
 Node* ConstantNode::idom() {
   return nullptr;
 }
+
+int ConstantNode::hash() {
+  return con_->hashCode();
+}

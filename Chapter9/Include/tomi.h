@@ -402,7 +402,7 @@ static unsigned long long fnv_algo(std::span<const std::byte> data) {
 }
 // keep the node flat
 template <typename K, typename V> struct HashNode {
-  unsigned long long hash{};
+  int long long hash{-1};
   K key;
   V val;
   bool isTombStone{false};
@@ -411,6 +411,10 @@ template <typename K, typename V> struct HashNode {
   V *getPtrValue() { return &val; }
   void setValue(V value_) { val = value_; }
   void setKey(K key_) { key = key_; }
+  void reset() {
+    hash = -1;
+    isTombStone = false;
+  }
 };
 } // namespace detail
 
@@ -437,12 +441,12 @@ public:
   V *get(const K &key) {
     unsigned long hashValue = hashFunc(key) % table_size;
     auto &entry = table[hashValue];
-    if (entry.hash != 0 && !entry.isTombStone) {
+    if (entry.hash != -1 && !entry.isTombStone) {
       if (entry.getKey() == key) {
         return entry.getPtrValue();
       }
     }
-    while (table[hashValue].hash != 0 && !table[hashValue].isTombStone) {
+    while (table[hashValue].hash != -1 && !table[hashValue].isTombStone) {
       if (table[hashValue].getKey() == key)
         return table[hashValue].getPtrValue();
       hashValue = (hashValue + 1) % table_size;
@@ -462,28 +466,28 @@ public:
     size_t oldTableSize = TableSize;
     TableSize *= 2;
     auto oldTable = table;
+    delete[] table;
     table = new detail::HashNode<K, V>[TableSize];
     n_elements = 0;
 
-    for (size_t i = 0; i < oldTableSize; ++i) {
+    // ignore the 20% percent of table size because it never got added
+    for (size_t i = 0; i < oldTableSize - (oldTableSize * 8 / 10); ++i) {
       auto &node = oldTable[i];
-      if (node.hash != 0 && !node.isTombStone) {
+      if (!node.isTombStone) {
         put(node.key, node.val);
       }
     }
-
-    delete[] oldTable;
   }
   void put(const K &key, const V &value) {
-    size_t seventyFivePercentOfTableSize = TableSize * 8 / 10;
-    if (n_elements == seventyFivePercentOfTableSize) {
+    size_t eightyPercentOfTableSize = TableSize * 8 / 10;
+    if (n_elements == eightyPercentOfTableSize) {
       repopulate();
     }
     unsigned long hashValue = hashFunc(key) % table_size;
     auto &entry = table[hashValue];
     unsigned long originalHashValue = hashValue;
-
-    if (entry.hash == 0) {
+    // -1 in variant holds if the hash is not set yet
+    if (entry.hash == -1) {
       entry.hash = hashValue;
       entry.key = key;
       entry.val = value;
@@ -491,7 +495,7 @@ public:
 
     } else {
       // linear probing loop
-      while (table[hashValue].hash != 0) {
+      while (table[hashValue].hash != -1) {
         if (table[hashValue].isTombStone) {
           auto &old = table[hashValue];
           old.key = key;
@@ -521,12 +525,11 @@ public:
   void remove(const K &key) {
     unsigned long hashValue = hashFunc(key) % table_size;
     auto &entry = table[hashValue];
-
-    if (entry.hash == 0) {
+    if (entry.hash == -1) {
       return;
     } else {
       n_elements--;
-      while (table[hashValue].hash != 0) {
+      while (table[hashValue].hash != -1) {
         if (table[hashValue].getKey() == key) {
           auto &old = table[hashValue];
           old.isTombStone = true;
@@ -535,6 +538,15 @@ public:
         hashValue = (hashValue + 1) % table_size;
       }
     }
+  }
+  // Clearing the Table - set the hash to -1 and reset the tombstone field
+  // O(n)
+  void clear() {
+    for (size_t i = 0; i < TableSize; ++i) {
+      auto &node = table[i];
+      node.reset();
+    }
+    TableSize = Tomi::detail::TABLE_SIZE;
   }
 
 private:

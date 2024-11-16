@@ -25,7 +25,7 @@ Type *DivNode::compute() {
                  : TypeInteger::constant(i0->value() / i1->value());
     }
   }
-  return Type::BOTTOM;
+  return in(1)->type_->meet(in(2)->type_);
 }
 
 Node *DivNode::idealize() { return nullptr; }

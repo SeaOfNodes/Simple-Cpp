@@ -25,7 +25,9 @@ public:
 
   Node *singleUniqueInput();
 
-  bool allCons() override;
+  bool inProgress();
+
+  bool allCons(Node*) override;
 private:
   bool same_op();
 };
