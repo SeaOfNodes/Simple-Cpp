@@ -1,5 +1,7 @@
 #include "../../Include/type/type.h"
+#include <iostream>
 
+int Type::get_hash() { return hash_; }
 bool Type::isHighOrConst() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isConstant() { return false; }
 
@@ -10,22 +12,21 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-Tomi::HashMap<Type *, Type *> Type::INTERN = Tomi::HashMap<Type *, Type *>();
 Type *Type::BOTTOM = Type(TBOT).intern();
 Type *Type::TOP = Type(TTOP).intern();
 Type *Type::CONTROL = Type(TCTRL).intern();
 Type *Type::XCONTROL = Type(TXCTRL).intern();
 
 Type *Type::intern() {
-  Type *nnn = *INTERN.get(this);
+  static Tomi::HashMap<Type *, Type *> INTERN;
+  Type **nnn = INTERN.get(this);
   if (nnn == nullptr) {
     INTERN.put(this, this);
     return this;
   }
-  return nnn;
+  return *nnn;
 }
 Type::Type(unsigned int type) : type_(type) {}
-
 Type *Type::meet(Type *other) {
   // Shortcut for the self case
   if (other == this)
@@ -40,7 +41,36 @@ Type *Type::meet(Type *other) {
     return other->xmeet(this);
   return BOTTOM;
 }
-std::string Type::toString() { return print_1(builder).str(); }
+// O(1)
+std::string Type::ToString() {
+  std::ostringstream os;
+  os << "hash: " << get_hash();
+  os << "type: ";
+  switch (type_) {
+  case 0:
+    os << "TBOT";
+    break;
+  case 1:
+    os << "TTOP";
+    break;
+  case 2:
+    os << "TCTRL";
+    break;
+  case 3:
+    os << "TXCTRL";
+    break;
+  case 4:
+    os << "TSIMPLE";
+    break;
+  case 5:
+    os << "TINT";
+    break;
+  case 6:
+    os << "TTUPLE";
+    break;
+  }
+  return os.str();
+}
 
 Type *Type::xmeet(Type *t) {
   assert(isSimple());
@@ -53,7 +83,10 @@ Type *Type::xmeet(Type *t) {
   return ((type_ == TCTRL) || (t->type_ == TCTRL)) ? CONTROL : XCONTROL;
 }
 
-int Type::hash() { return type_; }
+int Type::hash() {
+  std::cerr << "hash of type";
+  return type_;
+}
 
 bool Type::operator==(Type *o) {
   if (o == this)

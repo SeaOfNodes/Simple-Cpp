@@ -1,5 +1,9 @@
 #include "../../Include/type/integer_type.h"
 
+std::ostream &operator<<(std::ostream &os, TypeInteger &type_integer) {
+  os << "TypeInteger: " << type_integer.value();
+  return os;
+}
 TypeInteger::TypeInteger(bool is_con, long con)
     : con_(con), is_con_(is_con), Type(TINT) {}
 
@@ -8,11 +12,17 @@ TypeInteger *TypeInteger::constant(long con) { return make(true, con); }
 bool TypeInteger::isConstant() { return is_con_; }
 bool TypeInteger::isHighOrConst() { return is_con_ || con_ == 0; }
 
-std::string TypeInteger::toString() { return print_1(builder).str(); }
+std::string TypeInteger::ToString() {
+  std::ostringstream os;
+  os << "TypeInteger: " << value();
+  return os.str();
+}
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
-  if(this == TOP) builder << "IntTop";
-  if(this == BOT) builder << "IntBot";
+  if (this == TOP)
+    builder << "IntTop";
+  if (this == BOT)
+    builder << "IntBot";
   builder << con_;
   return builder;
 }
@@ -50,11 +60,12 @@ Type *TypeInteger::xmeet(Type *other) {
 }
 
 Type *TypeInteger::dual() {
-  if(isConstant()) return this; // Constants are a self-dual
-  return con_ == 0? BOT : TOP;
+  if (isConstant())
+    return this; // Constants are a self-dual
+  return con_ == 0 ? BOT : TOP;
 }
 TypeInteger *TypeInteger::make(bool is_con, long con) {
-  return static_cast<TypeInteger*>((new TypeInteger(is_con, con))->intern());
+  return static_cast<TypeInteger *>((new TypeInteger(is_con, con))->intern());
 }
 
 long TypeInteger::value() { return con_; }

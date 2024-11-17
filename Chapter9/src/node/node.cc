@@ -40,7 +40,7 @@ Node *Node::unkeep() {
     return this;
 }
 
-std::string Node::to_string() {
+std::string Node::ToString() {
     std::ostringstream builder;
     return print(builder).str();
 }

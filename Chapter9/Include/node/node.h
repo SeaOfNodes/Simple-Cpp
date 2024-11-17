@@ -114,7 +114,7 @@ public:
   // Graphical label, e.g. "+" or "Region" or "=="
   virtual std::string glabel();
 
-  std::string to_string();
+  std::string ToString();
 
   // ------------------------------------------------
 

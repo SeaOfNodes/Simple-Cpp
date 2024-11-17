@@ -1,4 +1,6 @@
 #include "../../Include/type/tuple_type.h"
+#include <iostream>
+
 
 TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
   for (auto type : types) {
@@ -6,6 +8,15 @@ TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
   }
 }
 
+// O(N)
+std::string TypeTuple::ToString() {
+  std::ostringstream os;
+  os << "Types of the tuple: ";
+  for (Type *type : types_) {
+    os << type->ToString();
+  }
+  return os.str();
+}
 Type *TypeTuple::xmeet(Type *other) {
   throw std::runtime_error("Meet on Tuple type not yet implemented!");
 }
@@ -23,8 +34,9 @@ std::ostringstream &TypeTuple::print_1(std::ostringstream &builder) {
 
 int TypeTuple::hash() {
   int sum = 0;
-  for (Type *type : types_)
+  for (Type *type : types_) {
     sum ^= type->hashCode();
+  }
   return sum;
 }
 TypeTuple *TypeTuple::make(std::initializer_list<Type *> types) {

@@ -436,10 +436,11 @@ template <typename K, typename V, size_t table_size = detail::TABLE_SIZE,
 class HashMap {
 public:
   HashMap()
-      : TableSize(table_size), table(new detail::HashNode<K, V>[table_size]) {}
-  ~HashMap() { delete[] table; }
+      : TableSize(table_size), table(new detail::HashNode<K, V>[TableSize]) {
+  }
+  ~HashMap() {delete[] table; }
   V *get(const K &key) {
-    unsigned long hashValue = hashFunc(key) % table_size;
+    unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
     if (entry.hash != -1 && !entry.isTombStone) {
       if (entry.getKey() == key) {
@@ -449,7 +450,7 @@ public:
     while (table[hashValue].hash != -1 && !table[hashValue].isTombStone) {
       if (table[hashValue].getKey() == key)
         return table[hashValue].getPtrValue();
-      hashValue = (hashValue + 1) % table_size;
+      hashValue = (hashValue + 1) % TableSize;
     }
     // not in the table
     return nullptr;
@@ -478,24 +479,25 @@ public:
     size_t oldTableSize = TableSize;
     TableSize *= 2;
     auto oldTable = table;
-    delete[] table;
+
     table = new detail::HashNode<K, V>[TableSize];
     n_elements = 0;
 
     // ignore the 20% percent of table size because it never got added
-    for (size_t i = 0; i < oldTableSize - (oldTableSize * 8 / 10); ++i) {
+    for (size_t i = 0; i < oldTableSize; ++i) {
       auto &node = oldTable[i];
-      if (!node.isTombStone) {
+      if (!node.isTombStone && node.hash != -1) {
         put(node.key, node.val);
       }
     }
+    delete[] oldTable;
   }
   void put(const K &key, const V &value) {
     size_t eightyPercentOfTableSize = TableSize * 8 / 10;
     if (n_elements == eightyPercentOfTableSize) {
-      repopulate();
+     repopulate();
     }
-    unsigned long hashValue = hashFunc(key) % table_size;
+    unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
     unsigned long originalHashValue = hashValue;
     // -1 in variant holds if the hash is not set yet
@@ -520,7 +522,7 @@ public:
           return;
         }
 
-        hashValue = (hashValue + 1) % table_size;
+        hashValue = (hashValue + 1) % TableSize;
         if (hashValue == originalHashValue) {
           // resize
           // hopefully never get here
@@ -535,7 +537,7 @@ public:
   }
   // Lazy Deletion(https://en.wikipedia.org/wiki/Lazy_deletion)
   void remove(const K &key) {
-    unsigned long hashValue = hashFunc(key) % table_size;
+    unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
     if (entry.hash == -1) {
       return;
@@ -547,7 +549,7 @@ public:
           old.isTombStone = true;
           return;
         }
-        hashValue = (hashValue + 1) % table_size;
+        hashValue = (hashValue + 1) % TableSize;
       }
     }
   }

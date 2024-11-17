@@ -13,7 +13,6 @@ template <> struct Tomi::hash<Type *> {
 
 class Type {
 public:
-  static Tomi::HashMap<Type *, Type *> INTERN;
   std::ostringstream builder;
   Type() = default;
   static constexpr unsigned int TBOT = 0;
@@ -27,7 +26,7 @@ public:
   // Tuples; finite collections of unrelated Types, kept in parallel
   static constexpr unsigned int TTUPLE = 6;
 
-  unsigned int type_;
+  unsigned int type_{};
 
   static Type *BOTTOM;
   static Type *TOP;
@@ -53,11 +52,12 @@ public:
   virtual bool eq(Type *t);
 
   // to avoid collisions with INTERN
-
+  int get_hash();
   bool operator==(Type *);
 
   bool isSimple();
-  std::string toString();
+  // DEBUG INFO FOR DEBUGGER
+  virtual std::string ToString();
 
   bool isa(Type *t);
   // Our lattice is defined with a MEET and a DUAL.
@@ -72,7 +72,7 @@ protected:
   explicit Type(unsigned int type);
 
 private:
-  int hash_; // Hash cache; not-zero when set.
+  int hash_{}; // Hash cache; not-zero when set.
 };
 
 #endif

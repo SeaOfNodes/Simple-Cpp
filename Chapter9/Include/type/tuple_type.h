@@ -11,6 +11,9 @@ public:
 
   Type *xmeet(Type *other);
 
+  // DEBUG INFO FOR DEBUGGER
+  std::string ToString() override;
+
   std::ostringstream &print_1(std::ostringstream &builder) override;
   static TypeTuple* make(std::initializer_list<Type*>);
 

@@ -23,7 +23,9 @@ public:
   bool isHighOrConst() override;
 
   std::ostringstream &print_1(std::ostringstream &builder) override;
-  std::string toString();
+
+  // DEBUG INFO FOR DEBUGGER
+  std::string ToString() override;
   Type *xmeet(Type *other) override;
 
   Type* dual() override;
