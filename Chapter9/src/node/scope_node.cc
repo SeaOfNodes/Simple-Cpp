@@ -22,7 +22,7 @@ Node *ScopeNode::define(std::string name, Node *n) {
     if (sysm.get(name) != nullptr)
       return nullptr; // double define
 
-    *sysm[name] = static_cast<int>(nIns());
+    sysm.put(name, static_cast<int>(nIns()));
   }
   return addDef(n);
 }

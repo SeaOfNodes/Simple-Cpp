@@ -168,10 +168,11 @@ Node *Node::peepholeOpt() {
     // Global Value Numbering
     if (hash_ == 0) {
         // calls HashCode for hashing
-        Node *n = *GVN.get(this); // Will set _hash as a side effect
-        if (n == nullptr) {
+        Node **nPtr = GVN.get(this); // Will set _hash as a side effect
+        if (nPtr == nullptr) {
             GVN.put(this, this);
         } else {
+            Node*n = *nPtr;
             // Because of random worklist ordering, the two equal nodes
             // might have different types.  Because of monotonicity, both
             // types are valid.  To preserve monotonicity, the resulting

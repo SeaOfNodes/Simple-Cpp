@@ -103,7 +103,6 @@ Type *Type::xmeet(Type *t) {
 }
 
 int Type::hash() {
-  std::cerr << "hash of type";
   return type_;
 }
 
