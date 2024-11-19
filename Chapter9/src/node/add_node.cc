@@ -57,7 +57,7 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   return lhs == lphi ? phi : op->copy(lhs->in(1), phi);
 }
 
-PhiNode *AddNode::pcon(Node *op, Node* dep) {
+PhiNode *AddNode::pcon(Node *op, Node *dep) {
   PhiNode *phi = dynamic_cast<PhiNode *>(op);
   return (phi && phi->allCons(dep)) ? phi : nullptr;
 }
@@ -70,7 +70,7 @@ Type *AddNode::compute() {
       return TypeInteger::constant(i0->value() + i1->value());
     }
   }
-  return Type::BOTTOM;
+  return Type::BOTTOM();
 }
 
 Node *AddNode::idealize() {
@@ -168,14 +168,18 @@ Node *AddNode::idealize() {
 // Do we rotate ((x + hi) + lo) into ((x + lo) + hi) ?
 // Generally constants always go right, then Phi-of-constants, then muls, then
 // others. Ties with in a category sort by node ID. TRUE if swapping hi and lo.
-bool AddNode::spine_cmp(Node *hi, Node *lo, Node*dep) {
+bool AddNode::spine_cmp(Node *hi, Node *lo, Node *dep) {
   if (lo->type_->isConstant())
     return false;
   if (hi->type_->isConstant())
     return true;
 
-  if(auto lphi = dynamic_cast<PhiNode*>(lo); lphi && lphi->region()->type_ == Type::XCONTROL) return false;
-  if(auto hphi = dynamic_cast<PhiNode*>(lo); hphi && hphi->region()->type_ == Type::XCONTROL) return false;
+  if (auto lphi = dynamic_cast<PhiNode *>(lo);
+      lphi && lphi->region()->type_ == Type::XCONTROL())
+    return false;
+  if (auto hphi = dynamic_cast<PhiNode *>(lo);
+      hphi && hphi->region()->type_ == Type::XCONTROL())
+    return false;
 
   if (dynamic_cast<PhiNode *>(lo) && lo->allCons(dep))
     return false;

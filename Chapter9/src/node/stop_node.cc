@@ -3,7 +3,7 @@
 StopNode::StopNode(std::initializer_list<Node *> inputs) : Node(inputs) {}
 std::string StopNode::label() { return "Stop"; }
 std::ostringstream &StopNode::print_1(std::ostringstream &builder,
-                                      Tomi::Vector<bool>& visited) {
+                                      Tomi::Vector<bool> &visited) {
   if (ret() != nullptr) {
     return ret()->print_0(builder, visited);
   }
@@ -17,10 +17,8 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
-StopNode* StopNode::iterate() {
-  return IterPeeps::iterate(this, false);
-}
-StopNode* StopNode::iterate(bool show) {
+StopNode *StopNode::iterate() { return IterPeeps::iterate(this, false); }
+StopNode *StopNode::iterate(bool show) {
   return IterPeeps::iterate(this, show);
 }
 
@@ -29,7 +27,7 @@ ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
 }
 
-Type *StopNode::compute() { return Type::BOTTOM; }
+Type *StopNode::compute() { return Type::BOTTOM(); }
 
 Node *StopNode::idealize() {
   int len = static_cast<int>(nIns());
@@ -38,7 +36,7 @@ Node *StopNode::idealize() {
     std::ostringstream b;
     if (!in(i)->type_)
       std::cout << "Type is not set";
-    if (in(i)->type_ == Type::XCONTROL) {
+    if (in(i)->type_ == Type::XCONTROL()) {
       delDef(i--);
     }
   }

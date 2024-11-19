@@ -1,9 +1,9 @@
 #include "../../Include/node/scope_node.h"
 #include <cassert>
 
-ScopeNode::ScopeNode() : Node({}) { type_ = Type::BOTTOM; }
+ScopeNode::ScopeNode() : Node({}) { type_ = Type::BOTTOM(); }
 std::string ScopeNode::label() { return "Scope"; }
-Type *ScopeNode::compute() { return Type::BOTTOM; }
+Type *ScopeNode::compute() { return Type::BOTTOM(); }
 Node *ScopeNode::idealize() { return nullptr; }
 
 void ScopeNode::push() { scopes.emplace_back(); }
@@ -48,17 +48,16 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
   Node *old = in(*idx);
   if (auto *loop = dynamic_cast<ScopeNode *>(old)) {
     // Lazy Phi!
-    auto *phi = dynamic_cast<PhiNode *>(
-        loop->in(static_cast<std::size_t>(*idx)));
+    auto *phi =
+        dynamic_cast<PhiNode *>(loop->in(static_cast<std::size_t>(*idx)));
     if (phi && loop->ctrl() == phi->region()) {
       old = loop->in(static_cast<std::size_t>(*idx));
     } else {
       old = loop->setDef(
-          *idx,
-          (new PhiNode(name,
-                       {loop->ctrl(), loop->update(name, nullptr, nestingLevel),
-                        nullptr}))
-              ->peephole());
+          *idx, (new PhiNode(name, {loop->ctrl(),
+                                    loop->update(name, nullptr, nestingLevel),
+                                    nullptr}))
+                    ->peephole());
     }
     setDef(*idx, old);
   }

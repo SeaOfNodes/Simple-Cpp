@@ -20,9 +20,9 @@ public:
   bool eq(Type*t) override;
   int hash() override;
 
-  static TypeTuple *IF_BOTH;
-  static TypeTuple *IF_NEITHER;
-  static TypeTuple *IF_TRUE;
-  static TypeTuple *IF_FALSE;
+  static TypeTuple *IF_BOTH();
+  static TypeTuple *IF_NEITHER();
+  static TypeTuple *IF_TRUE();
+  static TypeTuple *IF_FALSE();
 };
 #endif

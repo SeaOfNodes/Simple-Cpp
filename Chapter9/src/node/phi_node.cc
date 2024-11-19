@@ -26,23 +26,24 @@ Node *PhiNode::region() { return in(0); }
 Type *PhiNode::compute() {
   auto *r = dynamic_cast<RegionNode *>(region());
   if (!r || r->inProgress())
-    return Type::BOTTOM;
-  Type *t = Type::TOP;
+    return Type::BOTTOM();
+  Type *t = Type::TOP();
   for (int i = 1; i < nIns(); i++) {
-    if(r->in(i)->addDep(this)->type_ != Type::XCONTROL && in(i) != this)
-    t = t->meet(in(i)->type_);
+    if (r->in(i)->addDep(this)->type_ != Type::XCONTROL() && in(i) != this)
+      t = t->meet(in(i)->type_);
   }
   return t;
 }
 
 Node *PhiNode::singleUniqueInput() {
   if (auto *loop = dynamic_cast<LoopNode *>(region());
-      loop && (loop->entry()->type_ == Type::XCONTROL))
+      loop && (loop->entry()->type_ == Type::XCONTROL()))
     return nullptr;
 
   Node *live = nullptr;
   for (int i = 1; i < nIns(); i++) {
-    if (region()->in(i)->addDep(this)->type_ != Type::XCONTROL && in(i) != this) {
+    if (region()->in(i)->addDep(this)->type_ != Type::XCONTROL() &&
+        in(i) != this) {
       if (live == nullptr || live == in(i)) {
         live = in(i);
       } else {
@@ -55,7 +56,8 @@ Node *PhiNode::singleUniqueInput() {
 bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {
   auto *r = dynamic_cast<RegionNode *>(region());
-  if(!r) return in(1);
+  if (!r)
+    return in(1);
 
   if (r->inProgress() || r->nIns() <= 1)
     return nullptr;
@@ -120,7 +122,5 @@ bool PhiNode::same_op() {
   return true;
 }
 
-bool PhiNode::eq(Node*) {
-  return !inProgress();
-}
+bool PhiNode::eq(Node *) { return !inProgress(); }
 bool PhiNode::inProgress() { return in(nIns() - 1) == nullptr; }

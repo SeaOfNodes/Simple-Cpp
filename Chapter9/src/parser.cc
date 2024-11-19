@@ -13,7 +13,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
   continueScope = nullptr;
   breakScope = nullptr;
 
-  START = new StartNode({Type::CONTROL, arg});
+  START = new StartNode({Type::CONTROL(), arg});
   STOP = new StopNode({});
 
   START->peephole();
@@ -73,7 +73,7 @@ Node *Parser::parseBreak() {
 
 ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
   ScopeNode *cur = scope_node->dup();
-  ctrl((new ConstantNode(Type::XCONTROL, Parser::START))
+  ctrl((new ConstantNode(Type::XCONTROL(), Parser::START))
            ->peephole()); // Kill current scope
   // Prune nested lexical scopes that have depth > than the loop head.
   while (cur->scopes.size() > breakScope->scopes.size()) {
@@ -151,9 +151,10 @@ Node *Parser::parseWhile() {
   // IfNode takes current control and predicate
   auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode((IfNode*)ifNode->keep(), 0, "True"))->peephole();
+  Node *ifT = (new ProjNode((IfNode *)ifNode->keep(), 0, "True"))->peephole();
   ifNode->unkeep();
-  Node *ifF = (new ProjNode((IfNode*)ifNode->unkeep(), 1, "False"))->peephole();
+  Node *ifF =
+      (new ProjNode((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
 
   // Clone the body Scope to create the exit Scope
   // which accounts for any side effects in the predicate
@@ -269,7 +270,7 @@ Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
   Node *bpeep = (new ReturnNode(ctrl(), expr))->peephole();
   auto *ret = STOP->addReturn(bpeep);
-  ctrl((new ConstantNode(Type::XCONTROL, Parser::START))
+  ctrl((new ConstantNode(Type::XCONTROL(), Parser::START))
            ->peephole()); // kill control
   return ret;
 }

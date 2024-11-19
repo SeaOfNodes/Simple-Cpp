@@ -15,8 +15,8 @@ bool RegionNode::isCFG() { return true; }
 
 Type *RegionNode::compute() {
   if (inProgress())
-    return Type::CONTROL;
-  Type *t = Type::XCONTROL;
+    return Type::CONTROL();
+  Type *t = Type::XCONTROL();
   for (int i = 1; i < nIns(); i++) {
     t = t->meet(in(i)->type_);
   }
@@ -50,14 +50,16 @@ Node *RegionNode::idealize() {
       }
     }
     idom_ = nullptr;
-    if(isDead()) return new ConstantNode(Type::XCONTROL, Parser::START);
-    else return delDef(path);
+    if (isDead())
+      return new ConstantNode(Type::XCONTROL(), Parser::START);
+    else
+      return delDef(path);
+  }
+  for (Node *phi : outputs) {
+    if (dynamic_cast<PhiNode *>(phi)) {
+      phi->delDef(path);
     }
-    for (Node *phi : outputs) {
-      if (dynamic_cast<PhiNode *>(phi)) {
-        phi->delDef(path);
-      }
-    }
+  }
 
   // If down to a single input, become that input - but also make all
   // Phis an identity on *their* single input.
@@ -70,7 +72,7 @@ Node *RegionNode::idealize() {
 
 int RegionNode::findDeadInput() {
   for (int i = 1; i < nIns(); i++) {
-    if (in(i)->type_ == Type::XCONTROL) {
+    if (in(i)->type_ == Type::XCONTROL()) {
       return i;
     }
   }

@@ -53,10 +53,23 @@ bool TypeTuple::eq(Type *t) {
   }
   return true;
 }
-TypeTuple *TypeTuple::IF_BOTH = make({Type::CONTROL, Type::CONTROL});
+TypeTuple* TypeTuple::IF_BOTH() {
+  static TypeTuple IF_BOTH_INSTANCE({Type::CONTROL(), Type::CONTROL()});
+  return &IF_BOTH_INSTANCE;
+}
 
-TypeTuple *TypeTuple::IF_NEITHER = make({Type::XCONTROL, Type::XCONTROL});
+TypeTuple* TypeTuple::IF_NEITHER() {
+  static TypeTuple IF_NEITHER_INSTANCE({Type::XCONTROL(), Type::XCONTROL()});
+  return &IF_NEITHER_INSTANCE;
+}
 
-TypeTuple *TypeTuple::IF_TRUE = make({Type::CONTROL, Type::XCONTROL});
+TypeTuple* TypeTuple::IF_TRUE() {
+  static TypeTuple IF_TRUE({Type::CONTROL(), Type::XCONTROL()});
+  return &IF_TRUE;
+}
 
-TypeTuple *TypeTuple::IF_FALSE = make({Type::XCONTROL, Type::CONTROL});
+TypeTuple* TypeTuple::IF_FALSE() {
+  static TypeTuple IF_FALSE({Type::XCONTROL(), Type::CONTROL()});
+  return &IF_FALSE;
+}
+

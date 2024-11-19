@@ -483,7 +483,6 @@ public:
     table = new detail::HashNode<K, V>[TableSize];
     n_elements = 0;
 
-    // ignore the 20% percent of table size because it never got added
     for (size_t i = 0; i < oldTableSize; ++i) {
       auto &node = oldTable[i];
       if (!node.isTombStone && node.hash != -1) {

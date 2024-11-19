@@ -28,10 +28,10 @@ public:
 
   unsigned int type_{};
 
-  static Type *BOTTOM;
-  static Type *TOP;
-  static Type *CONTROL;
-  static Type *XCONTROL;
+  static Type *BOTTOM();
+  static Type *TOP();
+  static Type *CONTROL();
+  static Type *XCONTROL();
 
   int hashCode();
   virtual int hash();

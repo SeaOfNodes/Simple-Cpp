@@ -12,10 +12,29 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-Type *Type::BOTTOM = Type(TBOT).intern();
-Type *Type::TOP = Type(TTOP).intern();
-Type *Type::CONTROL = Type(TCTRL).intern();
-Type *Type::XCONTROL = Type(TXCTRL).intern();
+Type* Type::CONTROL() {
+  static Type CONTROL = Type(TCTRL);
+  // intern on the persistent object
+  return CONTROL.intern();
+}
+
+Type* Type::XCONTROL() {
+  static Type XCONTROL = Type(TXCTRL);
+  // intern on the persistent object
+  return XCONTROL.intern();
+}
+
+Type* Type::TOP() {
+  static Type TOP = Type(TTOP);
+  // intern on the persistent object
+  return TOP.intern();
+}
+
+Type* Type::BOTTOM() {
+  static Type BOTTOM = Type(TTOP);
+  // intern on the persistent object
+  return BOTTOM.intern();
+}
 
 Type *Type::intern() {
   static Tomi::HashMap<Type *, Type *> INTERN;
@@ -39,7 +58,7 @@ Type *Type::meet(Type *other) {
     return xmeet(other);
   if (other->isSimple())
     return other->xmeet(this);
-  return BOTTOM;
+  return BOTTOM();
 }
 // O(1)
 std::string Type::ToString() {
@@ -79,8 +98,8 @@ Type *Type::xmeet(Type *t) {
   if (type_ == TTOP || t->type_ == TBOT)
     return t;
   if (!t->isSimple())
-    return BOTTOM;
-  return ((type_ == TCTRL) || (t->type_ == TCTRL)) ? CONTROL : XCONTROL;
+    return BOTTOM();
+  return ((type_ == TCTRL) || (t->type_ == TCTRL)) ? CONTROL() : XCONTROL();
 }
 
 int Type::hash() {
@@ -120,13 +139,13 @@ Type *Type::join(Type *t) {
 Type *Type::dual() {
   switch (type_) {
   case TBOT:
-    return TOP;
+    return TOP();
   case TTOP:
-    return BOTTOM;
+    return BOTTOM();
   case TCTRL:
-    return XCONTROL;
+    return XCONTROL();
   case TXCTRL:
-    return CONTROL;
+    return CONTROL();
   default: {
     throw std::runtime_error("Should not reach here");
   }

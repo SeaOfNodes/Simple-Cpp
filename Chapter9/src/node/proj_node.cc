@@ -22,12 +22,12 @@ Type *ProjNode::compute() {
   if (auto tt = dynamic_cast<TypeTuple *>(t)) {
     return tt->types_[idx_];
   }
-  return Type::BOTTOM;
+  return Type::BOTTOM();
 }
 
 Node *ProjNode::idealize() {
   if (auto *tt = dynamic_cast<TypeTuple *>(ctrl()->type_);
-      tt && tt->types_[1 - idx_] == Type::XCONTROL) {
+      tt && tt->types_[1 - idx_] == Type::XCONTROL()) {
     return ctrl()->in(0); // We become our input control
   }
   return nullptr;

@@ -7,7 +7,7 @@ Node *LoopNode::back() { return in(2); }
 
 std::string LoopNode::label() { return "Loop"; }
 Type *LoopNode::compute() {
-  return inProgress() ? Type::CONTROL : entry()->type_;
+  return inProgress() ? Type::CONTROL() : entry()->type_;
 }
 
 Node *LoopNode::idealize() {

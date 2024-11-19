@@ -1,6 +1,6 @@
 #include "../../Include/node/return_node.h"
 
-#include <type/tuple_type.h>
+#include "../../Include/type/tuple_type.h"
 
 ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {}
 
@@ -9,7 +9,8 @@ ReturnNode::ReturnNode(Node *ctrl, Node *data) : Node({ctrl, data}) {}
 
 bool ReturnNode::isCFG() { return true; }
 
-std::ostringstream &ReturnNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
+std::ostringstream &ReturnNode::print_1(std::ostringstream &builder,
+                                        Tomi::Vector<bool> &visited) {
   builder << "return ";
   Node *expr1 = expr();
   expr1->print_0(builder, visited);
@@ -25,7 +26,7 @@ std::string ReturnNode::label() { return "Return"; }
 
 // for some reasons instead of getting ~ctrl im getting #
 Node *ReturnNode::idealize() {
-  if (ctrl()->type_ == Type::XCONTROL) {
+  if (ctrl()->type_ == Type::XCONTROL()) {
     return ctrl();
   }
 
