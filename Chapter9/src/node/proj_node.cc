@@ -18,7 +18,7 @@ bool ProjNode::isCFG() { return idx_ == 0 || dynamic_cast<IfNode *>(ctrl()); }
 MultiNode *ProjNode::ctrl() { return (MultiNode *)in(0); }
 
 Type *ProjNode::compute() {
-  Type *t = ctrl()->type_;
+  Type *t = in(0)->type_;
   if (auto tt = dynamic_cast<TypeTuple *>(t)) {
     return tt->types_[idx_];
   }

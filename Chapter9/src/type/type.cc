@@ -31,7 +31,7 @@ Type* Type::TOP() {
 }
 
 Type* Type::BOTTOM() {
-  static Type BOTTOM = Type(TTOP);
+  static Type BOTTOM = Type(TBOT);
   // intern on the persistent object
   return BOTTOM.intern();
 }
