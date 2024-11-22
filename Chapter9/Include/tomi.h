@@ -17,7 +17,7 @@ public:
   using iterator = Type *;
   using const_iterator = const Type *;
 
-  Vector() noexcept : capacity(1), current(0) {
+  Vector() noexcept : capacity(0), current(0) {
     array = new Type[capacity];
     endPtr = array + current;
   };

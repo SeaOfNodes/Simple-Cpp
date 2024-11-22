@@ -63,7 +63,7 @@ public:
    * Current computed type for this Node.  This value changes as the graph
    * changes and more knowledge is gained about the program
    */
-  Type *type_;
+  Type *type_ = nullptr;
 
   /**
    * Immediate dominator tree depth, used to approximate a real IDOM during
