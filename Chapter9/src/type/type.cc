@@ -12,25 +12,25 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
   return builder;
 }
 
-Type* Type::CONTROL() {
+Type *Type::CONTROL() {
   static Type CONTROL = Type(TCTRL);
   // intern on the persistent object
   return CONTROL.intern();
 }
 
-Type* Type::XCONTROL() {
+Type *Type::XCONTROL() {
   static Type XCONTROL = Type(TXCTRL);
   // intern on the persistent object
   return XCONTROL.intern();
 }
 
-Type* Type::TOP() {
+Type *Type::TOP() {
   static Type TOP = Type(TTOP);
   // intern on the persistent object
   return TOP.intern();
 }
 
-Type* Type::BOTTOM() {
+Type *Type::BOTTOM() {
   static Type BOTTOM = Type(TBOT);
   // intern on the persistent object
   return BOTTOM.intern();
@@ -58,7 +58,7 @@ Type *Type::meet(Type *other) {
     return xmeet(other);
   if (other->isSimple())
     return other->xmeet(this);
-  return BOTTOM();
+  return xmeet(other);
 }
 // O(1)
 std::string Type::ToString() {
@@ -102,9 +102,7 @@ Type *Type::xmeet(Type *t) {
   return ((type_ == TCTRL) || (t->type_ == TCTRL)) ? CONTROL() : XCONTROL();
 }
 
-int Type::hash() {
-  return type_;
-}
+int Type::hash() { return type_; }
 
 bool Type::operator==(Type *o) {
   if (o == this)

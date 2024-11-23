@@ -19,7 +19,7 @@ std::ostringstream &ReturnNode::print_1(std::ostringstream &builder,
 }
 
 Type *ReturnNode::compute() {
-  return new TypeTuple({ctrl()->type_, expr()->type_});
+  return TypeTuple::make({ctrl()->type_, expr()->type_});
 }
 
 std::string ReturnNode::label() { return "Return"; }

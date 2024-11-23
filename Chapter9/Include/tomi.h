@@ -17,10 +17,12 @@ public:
   using iterator = Type *;
   using const_iterator = const Type *;
 
-  Vector() noexcept : capacity(0), current(0) {
-    array = new Type[capacity];
-    endPtr = array + current;
-  };
+  Vector() noexcept
+      : capacity(0), current(0), array(nullptr),
+        endPtr(nullptr){
+            /*    array = new Type[capacity];*/
+            /*    endPtr = array + current;*/
+        };
 
   Vector(std::initializer_list<Type> init) noexcept
       : capacity(init.size()), current(0) {
@@ -269,7 +271,7 @@ public:
   iterator erase(iterator pos) noexcept {
     // TBD
     --current;
-    for(iterator it = pos; it < endPtr; ++it) {
+    for (iterator it = pos; it < endPtr - 1; ++it) {
       *it = *(it + 1);
     }
     endPtr = array + current;
@@ -281,7 +283,7 @@ public:
     --current;
     // cursed shit
     iterator mutablePos = const_cast<iterator>(pos);
-    for(iterator it = mutablePos; it < endPtr; ++it) {
+    for (iterator it = mutablePos; it <= (endPtr - 1); ++it) {
       *it = *(it + 1);
     }
     endPtr = array + current;
@@ -297,7 +299,8 @@ public:
   iterator erase(const_iterator first, const_iterator last) noexcept {
     // TBD
     // endPtr = array + current;
-    throw std::runtime_error("Not implemented yet");;
+    throw std::runtime_error("Not implemented yet");
+    ;
   }
 
   void clear() {
@@ -329,7 +332,12 @@ public:
 
 private:
   void realloc(std::size_t new_capacity) noexcept {
-    Type *tmp = new Type[2 * new_capacity];
+    if (capacity == 0) {
+      capacity = 1;
+      array = new Type[capacity];
+      return;
+    }
+    Type *tmp = new Type[new_capacity];
     for (std::size_t i = 0; i < capacity; i++) {
       tmp[i] = array[i];
     }
@@ -436,9 +444,63 @@ template <typename K, typename V, size_t table_size = detail::TABLE_SIZE,
 class HashMap {
 public:
   HashMap()
-      : TableSize(table_size), table(new detail::HashNode<K, V>[TableSize]) {
+      : TableSize(table_size), table(new detail::HashNode<K, V>[TableSize]) {}
+  ~HashMap() { delete[] table; }
+
+  HashMap(const HashMap &other)
+      : TableSize(other.TableSize), n_elements(other.n_elements),
+        table(new detail::HashNode<K, V>[other.TableSize]),
+        hashFunc(other.hashFunc) {
+    for (size_t i = 0; i < other.TableSize; ++i) {
+      table[i] = other.table[i];
+    }
   }
-  ~HashMap() {delete[] table; }
+
+  HashMap(HashMap &&other) noexcept
+      : TableSize(other.TableSize), n_elements(other.n_elements),
+        table(other.table), hashFunc(std::move(other.hashFunc)) {
+    other.TableSize = 0;
+    other.n_elements = 0;
+    other.table = nullptr;
+  }
+
+  HashMap &operator=(const HashMap &other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    delete[] table;
+
+    TableSize = other.TableSize;
+    n_elements = other.n_elements;
+    hashFunc = other.hashFunc;
+
+    table = new detail::HashNode<K, V>[other.TableSize];
+    for (size_t i = 0; i < other.TableSize; ++i) {
+      table[i] = other.table[i];
+    }
+
+    return *this;
+  }
+
+  HashMap &operator=(HashMap &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+
+    delete[] table;
+
+    TableSize = other.TableSize;
+    n_elements = other.n_elements;
+    hashFunc = std::move(other.hashFunc);
+    table = other.table;
+
+    other.TableSize = 0;
+    other.n_elements = 0;
+    other.table = nullptr;
+
+    return *this;
+  }
   V *get(const K &key) {
     unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
@@ -464,16 +526,10 @@ public:
    * The new key–value pair is then placed into that cell.[
    */
   // Iterator interface for looping through the hashmap
-  auto*begin() {
-    return table;
-  }
-  auto*end() {
-    return table + n_elements;
-  }
+  auto *begin() { return table; }
+  auto *end() { return table + n_elements; }
 
-  V* operator[](std::string key) {
-    return get(key);
-  }
+  V *operator[](std::string key) { return get(key); }
 
   void repopulate() {
     size_t oldTableSize = TableSize;
@@ -494,7 +550,7 @@ public:
   void put(const K &key, const V &value) {
     size_t eightyPercentOfTableSize = TableSize * 8 / 10;
     if (n_elements == eightyPercentOfTableSize) {
-     repopulate();
+      repopulate();
     }
     unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
@@ -514,7 +570,7 @@ public:
           old.key = key;
           old.val = value;
           n_elements++;
-          continue;
+          return;
         }
         if (table[hashValue].getKey() == key) {
           table[hashValue].setValue(value);
@@ -562,14 +618,12 @@ public:
     TableSize = Tomi::detail::TABLE_SIZE;
   }
 
-  size_t size() {
-    return n_elements;
-  }
+  size_t size() { return n_elements; }
 
 private:
   size_t TableSize;
   size_t n_elements{};
-  detail::HashNode<K, V> *table;
+  detail::HashNode<K, V> *table = nullptr;
   F hashFunc;
 };
 } // namespace Tomi

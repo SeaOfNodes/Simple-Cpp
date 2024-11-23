@@ -323,17 +323,17 @@ Node *Parser::parseComparison() {
     }
 
     else if (match("<")) {
-      int idx = 2;
+      idx = 2;
       lhs = new LT(lhs, nullptr);
     }
 
     else if (match(">=")) {
-      int idx = 1;
+      idx = 1;
       lhs = new LE(nullptr, lhs);
     }
 
     else if (match(">")) {
-      int idx = 1;
+      idx = 1;
       lhs = new LT(nullptr, lhs);
     } else
       break;
