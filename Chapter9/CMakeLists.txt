@@ -23,7 +23,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 
-
 # Add the include directory to the search path
 include_directories(${PROJECT_SOURCE_DIR}/Include)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

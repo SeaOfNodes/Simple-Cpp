@@ -104,14 +104,14 @@ Type *Type::xmeet(Type *t) {
 
 int Type::hash() { return type_; }
 
-bool Type::operator==(Type *o) {
-  if (o == this)
+bool Type::operator==(Type& o) {
+  if (&o == this)
     return true;
-  if (!dynamic_cast<Type *>(o))
+  if (!dynamic_cast<Type *>(&o))
     return false;
-  if (type_ != o->type_)
+  if (type_ != o.type_)
     return false;
-  return eq(o);
+  return eq(&o);
 }
 
 bool Type::eq(Type *t) { return true; }

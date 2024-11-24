@@ -501,16 +501,25 @@ public:
 
     return *this;
   }
+
+   bool compareKeys(const K &a, const K &b) {
+    if constexpr (std::is_pointer_v<K>) {
+      return *a == *b;
+    } else {
+      return a == b;
+    }
+  }
+
   V *get(const K &key) {
     unsigned long hashValue = hashFunc(key) % TableSize;
     auto &entry = table[hashValue];
     if (entry.hash != -1 && !entry.isTombStone) {
-      if (entry.getKey() == key) {
+      if (compareKeys(entry.getKey(), key)) {
         return entry.getPtrValue();
       }
     }
     while (table[hashValue].hash != -1 && !table[hashValue].isTombStone) {
-      if (table[hashValue].getKey() == key)
+      if (compareKeys(table[hashValue].getKey(), key))
         return table[hashValue].getPtrValue();
       hashValue = (hashValue + 1) % TableSize;
     }
@@ -572,7 +581,7 @@ public:
           n_elements++;
           return;
         }
-        if (table[hashValue].getKey() == key) {
+        if (compareKeys(table[hashValue].getKey(), key)) {
           table[hashValue].setValue(value);
           return;
         }
@@ -599,7 +608,7 @@ public:
     } else {
       n_elements--;
       while (table[hashValue].hash != -1) {
-        if (table[hashValue].getKey() == key) {
+        if (compareKeys(table[hashValue].getKey(), key)) {
           auto &old = table[hashValue];
           old.isTombStone = true;
           return;

@@ -53,7 +53,7 @@ public:
 
   // to avoid collisions with INTERN
   int get_hash();
-  bool operator==(Type *);
+  bool operator==(Type&);
 
   bool isSimple();
   // DEBUG INFO FOR DEBUGGER

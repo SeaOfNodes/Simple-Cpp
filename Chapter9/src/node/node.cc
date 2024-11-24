@@ -1,5 +1,6 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/constant_node.h"
+#include <typeinfo> // For typeid
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
   nid = UNIQUE_ID++;
@@ -144,7 +145,7 @@ void Node::subsume(Node *nnn) {
 Type *Node::setType(Type *type) {
   Type *old = type_;
   // Todo: Monotonicity should hold here.
-  // assert(old == nullptr || type->isa(old));
+  assert(old == nullptr || type->isa(old));
   if (old == type)
     return old;
   type_ = type;
@@ -350,17 +351,19 @@ unsigned long long Tomi::hash<Node *>::operator()(Node *val) {
   return val->hashCode();
 }
 
-bool Node::operator==(Node *o) {
-  if (o == this)
+bool Node::operator==(Node &o) {
+  if (&o == this)
     return true;
-  int len = inputs.size();
-  if (len != o->inputs.size())
+  if (typeid(o) != typeid(*this))
+    return false;
+  size_t len = inputs.size();
+  if (len != o.inputs.size())
     return false;
   for (int i = 0; i < len; i++) {
-    if (in(i) != o->in(i))
+    if (in(i) != o.in(i))
       return false;
   }
-  return eq(o);
+  return eq(&o);
 }
 // Todo: should not be a template OR should be defined in the header
 /*template <typename T>

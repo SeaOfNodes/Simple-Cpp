@@ -28,8 +28,8 @@ std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
 }
 
 // Why the values the way they are is this because idealise optimisation
-TypeInteger *TypeInteger::BOT = make(false, 1);
 TypeInteger *TypeInteger::TOP = make(false, 0);
+TypeInteger *TypeInteger::BOT = make(false, 1);
 TypeInteger *TypeInteger::ZERO = make(true, 0);
 
 bool TypeInteger::equals(TypeInteger *o) {
@@ -42,7 +42,7 @@ bool TypeInteger::equals(TypeInteger *o) {
 
 Type *TypeInteger::xmeet(Type *other) {
   // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
-  TypeInteger *i = dynamic_cast<TypeInteger *>(other);
+  auto *i = dynamic_cast<TypeInteger *>(other);
   if (this == BOT)
     return this;
 

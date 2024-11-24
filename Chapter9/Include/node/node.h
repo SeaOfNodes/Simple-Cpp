@@ -1,17 +1,16 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include <algorithm>
 #include <cassert>
 #include <sstream>
-#include <algorithm>
 
 #include <bitset>
-#include <bitset>
-#include <random>
 #include <functional>
+#include <random>
 
-#include "../../Include/type/type.h"
 #include "../../Include/tomi.h"
+#include "../../Include/type/type.h"
 
 // Custom hashing for Node:
 class Node;
@@ -80,11 +79,12 @@ public:
 
   // Global Value Numbering.  Hash over opcode and inputs; hits in this table
   // are structurally equal.
-  static Tomi::HashMap<Node*, Node*> GVN;
+  static Tomi::HashMap<Node *, Node *> GVN;
 
   // Hash of opcode and inputs
   unsigned long long hashCode();
-  Tomi::Vector<Node*> deps_;
+  Tomi::Vector<Node *> deps_;
+
 private:
   Tomi::Vector<bool> bitset;
   /**
@@ -102,7 +102,7 @@ public:
   Node(std::initializer_list<Node *> inputNodes);
   Node(Tomi::Vector<Node *> inputs);
 
-  bool operator==(Node*);
+  bool operator==(Node &);
   virtual ~Node() = default;
 
   // Easy reading label for debugger, e.g. "Add" or "Region" or "EQ"
@@ -133,7 +133,7 @@ public:
 
   // Every Node implements this.
   virtual std::ostringstream &print_1(std::ostringstream &builder,
-                                      Tomi::Vector<bool>&) = 0;
+                                      Tomi::Vector<bool> &) = 0;
 
   virtual int hash();
 
@@ -155,18 +155,18 @@ public:
 
   Node *setDef(int idx, Node *new_def);
   /**
-     * Add a node to the list o dependencies. Only add it if its not
-     * an input or output of this node, that is, it is at least one step
-     * away. The node being added must benefit from this node being peepholed.
+   * Add a node to the list o dependencies. Only add it if its not
+   * an input or output of this node, that is, it is at least one step
+   * away. The node being added must benefit from this node being peepholed.
    */
-  Node* addDep(Node* dep);
+  Node *addDep(Node *dep);
 
   Node *addDef(Node *new_def);
 
   // Remove the numbered input, compressing the inputs in-place. This
   // shuffles the order deterministically - which is suitable for Region and
   // Phi, but not for every Node.
-  Node* delDef(int idx);
+  Node *delDef(int idx);
 
   bool delUse(Node *use);
 
@@ -196,9 +196,9 @@ public:
 
   void unlock();
 
-  // Unlike peephole above, this explicitly returns null for no-change, or not-null
-  // for a better replacement
-  Node* peepholeOpt();
+  // Unlike peephole above, this explicitly returns null for no-change, or
+  // not-null for a better replacement
+  Node *peepholeOpt();
 
   /*
    * Find a node by index.
@@ -209,16 +209,16 @@ public:
 
   // Set the type.  Assert monotonic progress.
   // If changing, add users to worklist.
-  Type* setType(Type* type);
+  Type *setType(Type *type);
 
   virtual Node *idealize();
 
-  virtual bool eq(Node* n);
+  virtual bool eq(Node *n);
   Node *swap12();
 
   // does this node contain all constants
   // Ignores i(0), as is usually control.
-  virtual bool allCons(Node* dep);
+  virtual bool allCons(Node *dep);
 
   // Return the immediate dominator of this Node and compute dom tree depth.
   virtual Node *idom();
@@ -230,70 +230,68 @@ public:
   // Move the dependents onto a worklist, and clear for future dependents.
   void moveDepsToWorkList();
 
- // Utility to walk the entire graph applying a function; return the first
- // not-null result.
+  // Utility to walk the entire graph applying a function; return the first
+  // not-null result.
   static std::bitset<10> WVISIT;
-  template <typename T>
- T* walk(const std::function<Node*(T*)>& pred);
- template <typename T>
- T* walk_(const std::function<Node*(T*)>& pred);
+  template <typename T> T *walk(const std::function<Node *(T *)> &pred);
+  template <typename T> T *walk_(const std::function<Node *(T *)> &pred);
 
   static void reset();
 };
 class StopNode;
 
 class IterPeeps {
- /*
-  * * Classic WorkList, with a fast add/remove, dup removal, random pull.
-  * The Node's nid is used to check membership in the worklist.
-  */
+  /*
+   * * Classic WorkList, with a fast add/remove, dup removal, random pull.
+   * The Node's nid is used to check membership in the worklist.
+   */
 public:
-static Node* add(Node* n);
+  static Node *add(Node *n);
 
- static void addAll(Tomi::Vector<Node *> ary);
- /**
-  * Iterate peepholes to a fixed point
-  */
-
- static StopNode *iterate(StopNode *stop, bool show);
- static bool MidAssert();
- static void reset();
-
- class WorkList {
- public:
-  WorkList();
-  WorkList(long seed);
-  /* Useful stat - how many nodes are processed in the post parse iterative
-   * opt */
-  int totalWork;
-  std::bitset<10> on_;
-  std::mt19937 rng; // For randomising pull from the WorkList
-  Tomi::Vector<Node *> es;
-  long seed{};
-
-  /*
-    Pushes a Node on the WorkList, ensuring no duplicates
-    If Node is null it will not be added.
+  static void addAll(Tomi::Vector<Node *> ary);
+  /**
+   * Iterate peepholes to a fixed point
    */
-  Node* push(Node* x);
 
-  void addAll(Tomi::Vector<Node*>);
-  /*
-   * True if Node is on the WorkList
-   */
-  bool on(Node* x);
-  /*
-    Removes a random Node from the WorkList; null if WorkList is empty
-   */
-  Node* pop();
+  static StopNode *iterate(StopNode *stop, bool show);
+  static bool MidAssert();
+  static void reset();
 
-  void clear();
- };
- static WorkList WORK;
+  class WorkList {
+  public:
+    WorkList();
+    WorkList(long seed);
+    /* Useful stat - how many nodes are processed in the post parse iterative
+     * opt */
+    int totalWork;
+    std::bitset<10> on_;
+    std::mt19937 rng; // For randomising pull from the WorkList
+    Tomi::Vector<Node *> es;
+    long seed{};
+
+    /*
+      Pushes a Node on the WorkList, ensuring no duplicates
+      If Node is null it will not be added.
+     */
+    Node *push(Node *x);
+
+    void addAll(Tomi::Vector<Node *>);
+    /*
+     * True if Node is on the WorkList
+     */
+    bool on(Node *x);
+    /*
+      Removes a random Node from the WorkList; null if WorkList is empty
+     */
+    Node *pop();
+
+    void clear();
+  };
+  static WorkList WORK;
 
 private:
- static bool MID_ASSERT;
- // static bool progressOnList(StopNode *stop);
+  static bool MID_ASSERT;
+  // static bool progressOnList(StopNode *stop);
 };
 
 #endif
