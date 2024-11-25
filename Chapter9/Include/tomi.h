@@ -557,8 +557,8 @@ public:
     delete[] oldTable;
   }
   void put(const K &key, const V &value) {
-    size_t eightyPercentOfTableSize = TableSize * 8 / 10;
-    if (n_elements == eightyPercentOfTableSize) {
+    size_t eightyPercentOfTableSize = (TableSize * 8) / 10;
+    if (n_elements >= eightyPercentOfTableSize) {
       repopulate();
     }
     unsigned long hashValue = hashFunc(key) % TableSize;
