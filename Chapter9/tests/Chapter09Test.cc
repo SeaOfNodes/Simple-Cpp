@@ -26,7 +26,7 @@ return 0;
 
 TEST(SimpleTest, testGVN1) {
   std::string source = R"(
-    int x = arg + arg;
+int x = arg + arg;
 if(arg < 10) {
 return arg + arg;
 }
@@ -36,15 +36,14 @@ x = x + 1;
 return x;
 )";
   auto *parser = new Parser(source);
-  StopNode *ret = parser->parse();
+ StopNode *ret = parser->parse();
   std::ostringstream builder;
-  std::string result = ret->print(builder).str();
+ std::string result = ret->print(builder).str();
 
   EXPECT_EQ("Stop[ return (arg*2); return (Mul+1); ]", result);
   EXPECT_EQ(2, GraphEvaluator::evaluate(ret, 1));
   EXPECT_EQ(23, GraphEvaluator::evaluate(ret, 11));
 }
-/*
 
 TEST(SimpleTest, testGVN2) {
   std::string source = R"(
@@ -76,6 +75,7 @@ return arg;
   EXPECT_EQ(11, GraphEvaluator::evaluate(ret, 1));
 }
 
+/*
 
 TEST(SimpleTest, testWorklist2) {
   std::string source = R"(
@@ -358,4 +358,5 @@ TEST(SimpleTest, testMeet) {
 
   EXPECT_EQ(Type::BOTTOM, t1->meet(t2));
   EXPECT_EQ(Type::BOTTOM, t2->meet(t1));
-}*/
+}
+*/

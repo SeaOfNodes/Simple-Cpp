@@ -38,7 +38,7 @@ public:
    * The ID is useful for debugging, for using as an offset in a bitvector,
    * as well as for computing equality of nodes (to be implemented later).
    */
-  int nid;
+  int nid{};
   /**
    * Inputs to the node. These are use-def references to Nodes.
    * <p>
@@ -264,7 +264,8 @@ public:
     /* Useful stat - how many nodes are processed in the post parse iterative
      * opt */
     int totalWork;
-    std::bitset<10> on_;
+    // TOdo: fixed sized replace it with custom one
+    std::bitset<100> on_;
     std::mt19937 rng; // For randomising pull from the WorkList
     Tomi::Vector<Node *> es;
     long seed{};
