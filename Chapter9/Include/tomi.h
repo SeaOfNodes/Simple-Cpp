@@ -428,7 +428,7 @@ template <typename K, typename V> struct HashNode {
 
 template <typename T> struct hash {
   unsigned long long operator()(const T &val) {
-    throw std::runtime_error("Overload must be provided");
+    throw std::runtime_error("Overload must be provided1");
   }
 };
 
@@ -436,6 +436,38 @@ template <> struct hash<std::string> {
   unsigned long long operator()(const std::string &val) {
     auto *begin = reinterpret_cast<const std::byte *>(&val[0]);
     return detail::fnv_algo({begin, val.size()});
+  };
+};
+
+template <typename K, typename V>
+class HashMapIterator {
+  detail::HashNode<K, V> *current;
+  detail::HashNode<K, V> *end;
+  void skipEmptyNodes() {
+    while (current != end && current->hash == -1) {
+      ++current;
+    }
+  }
+
+public:
+  HashMapIterator(detail::HashNode<K, V> *start, detail::HashNode<K, V> *end_)
+      : current(start), end(end_) {
+    skipEmptyNodes();
+  }
+  bool operator==(const HashMapIterator &other) const {
+    return current == other.current;
+  }
+  bool operator!=(const HashMapIterator &other) const {
+    return current != other.current;
+  }
+
+  detail::HashNode<K, V> &operator*() const { return *current; };
+  detail::HashNode<K, V> *operator->() const { return current; }
+
+  HashMapIterator &operator++() {
+    ++current;
+    skipEmptyNodes();
+    return *this;
   };
 };
 
@@ -502,7 +534,7 @@ public:
     return *this;
   }
 
-   bool compareKeys(const K &a, const K &b) {
+  bool compareKeys(const K &a, const K &b) {
     if constexpr (std::is_pointer_v<K>) {
       return *a == *b;
     } else {
@@ -535,8 +567,10 @@ public:
    * The new key–value pair is then placed into that cell.[
    */
   // Iterator interface for looping through the hashmap
-  auto *begin() { return table; }
-  auto *end() { return table + n_elements; }
+  HashMapIterator<K,V> begin() { return HashMapIterator<K, V>(table, table + TableSize); }
+  HashMapIterator<K, V> end() {
+    return HashMapIterator<K, V>(table + TableSize, table + TableSize);
+  }
 
   V *operator[](std::string key) { return get(key); }
 
