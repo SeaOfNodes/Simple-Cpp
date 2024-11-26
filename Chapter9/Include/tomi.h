@@ -439,6 +439,13 @@ template <> struct hash<std::string> {
   };
 };
 
+template <> struct hash<int> {
+  unsigned long long operator()(const int &val) {
+    const unsigned long long A = 0x9e3779b97f4a7c15; // Golden ratio constant
+    return val * A;
+  };
+};
+
 template <typename K, typename V>
 class HashMapIterator {
   detail::HashNode<K, V> *current;
