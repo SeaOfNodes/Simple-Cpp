@@ -352,6 +352,41 @@ private:
   Type *array;
 };
 
+template <size_t SIZE>
+class BitArray {
+  public:
+    Tomi::Vector<bool> bits;
+    // Initialise the array with a given size
+    BitArray() : bits(SIZE, false) {}
+    void set(size_t idx) {
+      if (idx < bits.size()) {
+        bits[idx] = true;
+      } else {
+        throw std::runtime_error("Out of bounds");
+      }
+    }
+
+  // Test if a bit at a given index is true
+  bool test(size_t index) const {
+      if (index < bits.size()) {
+        return bits[index];
+      } else {
+        throw std::runtime_error("Out of bounds");
+      }
+    }
+  // Reset a bit at a given index to false (or all bits if no index provided)
+  void reset(size_t index) {
+      if (index < bits.size()) {
+        bits[index] = false;
+      } else {
+        throw std::runtime_error("Out of bounds");
+      }
+    }
+    void reset() {
+      std::fill(bits.begin(), bits.end(), false);
+    }
+};
+
 template <typename T, class Container = Vector<T>> class Stack {
 public:
   Stack() : stack(Container()) {}

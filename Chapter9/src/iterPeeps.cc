@@ -5,7 +5,8 @@
 IterPeeps::WorkList::WorkList() : WorkList(123) {}
 
 IterPeeps::WorkList::WorkList(long seed)
-    : seed(seed), totalWork(0), rng(seed) {}
+  : seed(seed), totalWork(0), on_(), rng(seed) {
+}
 
 Node *IterPeeps::WorkList::push(Node *x) {
   if (x == nullptr)
