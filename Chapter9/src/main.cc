@@ -42,6 +42,9 @@ std::string handle_file(const char*path_base) {
   return result;
 }
 
+// Todo: use iterate here to reflect the test cases in
+// Chapter09Test.cc
+
 int main(int argc, char const **argv) {
   if (argc <= 1)
     print_usage();

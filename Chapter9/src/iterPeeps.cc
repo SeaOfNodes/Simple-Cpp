@@ -30,10 +30,11 @@ bool IterPeeps::WorkList::on(Node *x) { return on_.test(x->nid); }
 Node *IterPeeps::WorkList::pop() {
   if (es.empty())
     return nullptr;
-  std::uniform_int_distribution<int> gen(0, es.size());
-  int idx = gen(rng);
+  std::uniform_int_distribution<size_t> gen(0, es.size() - 1);
+  size_t idx = gen(rng);
   Node *x = es[idx];
   on_.reset(x->nid);
+  es.erase(&x); // compress array making sure algorithm will terminate
   return x;
 }
 
