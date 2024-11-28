@@ -265,7 +265,7 @@ public:
      * opt */
     int totalWork;
     // TOdo: fixed sized replace it with custom one
-    std::bitset<100> on_;
+    Tomi::BitArray<100> on_;
     std::mt19937 rng; // For randomising pull from the WorkList
     Tomi::Vector<Node *> es;
     long seed{};
