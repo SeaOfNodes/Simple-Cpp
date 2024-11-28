@@ -57,7 +57,7 @@ Node *IfNode::idealize() {
       if (iff && iff->pred()->addDep(this) == pred() && prj) {
         int value = (prj->idx_ == 0) ? 1 : 0;
         setDef(1,
-               (new ConstantNode(TypeInteger::make(true, value), Parser::START))
+               (alloc.new_object<ConstantNode>(TypeInteger::make(true, value), Parser::START))
                    ->peephole());
         return this;
       }

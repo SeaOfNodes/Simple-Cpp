@@ -65,7 +65,7 @@ Type *TypeInteger::dual() {
   return con_ == 0 ? BOT : TOP;
 }
 TypeInteger *TypeInteger::make(bool is_con, long con) {
-  return static_cast<TypeInteger *>((new TypeInteger(is_con, con))->intern());
+  return static_cast<TypeInteger *>((alloc.new_object<TypeInteger>(is_con, con))->intern());
 }
 
 long TypeInteger::value() { return con_; }

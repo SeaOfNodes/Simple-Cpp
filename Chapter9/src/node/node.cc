@@ -170,7 +170,7 @@ Node *Node::peepholeOpt() {
 
   auto *a = dynamic_cast<ConstantNode *>(this);
   if (!(a) && type_->isHighOrConst()) {
-    auto peepholedNode = (new ConstantNode(type_, Parser::START));
+    auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
     return peepholedNode->peepholeOpt();
   }
   // Global Value Numbering

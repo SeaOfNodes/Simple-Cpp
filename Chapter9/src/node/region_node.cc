@@ -51,7 +51,7 @@ Node *RegionNode::idealize() {
     }
     idom_ = nullptr;
     if (isDead())
-      return new ConstantNode(Type::XCONTROL(), Parser::START);
+      return alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START);
     else
       return delDef(path);
   }

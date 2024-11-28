@@ -8,13 +8,13 @@ Parser::Parser(std::string source, TypeInteger *arg) {
   Node::reset();
   IterPeeps::reset();
 
-  lexer = new Lexer(source);
-  scope_node = new ScopeNode();
+  lexer = alloc.new_object<Lexer>(source);
+  scope_node = alloc.new_object<ScopeNode>();
   continueScope = nullptr;
   breakScope = nullptr;
 
-  START = new StartNode({Type::CONTROL(), arg});
-  STOP = new StopNode({});
+  START = alloc.new_object<StartNode>(std::initializer_list<Type*>{Type::CONTROL(), arg});
+  STOP = alloc.new_object<StopNode>();
 
   START->peephole();
 }
@@ -34,9 +34,9 @@ StopNode *Parser::parse(bool show) {
   xScopes.push_back(scope_node);
   scope_node->push();
   scope_node->define(ScopeNode::CTRL,
-                     (new ProjNode(START, 0, ScopeNode::CTRL))->peephole());
+                     (alloc.new_object<ProjNode>(START, 0, ScopeNode::CTRL))->peephole());
   scope_node->define(ScopeNode::ARG0,
-                     (new ProjNode(START, 1, ScopeNode::ARG0))->peephole());
+                     (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
   parseBlock();
   // before pop
   for (const auto &pair : scope_node->scopes[1]) {
@@ -73,7 +73,7 @@ Node *Parser::parseBreak() {
 
 ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
   ScopeNode *cur = scope_node->dup();
-  ctrl((new ConstantNode(Type::XCONTROL(), Parser::START))
+  ctrl((alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START))
            ->peephole()); // Kill current scope
   // Prune nested lexical scopes that have depth > than the loop head.
   while (cur->scopes.size() > breakScope->scopes.size()) {
@@ -149,12 +149,12 @@ Node *Parser::parseWhile() {
   // Parse predicate
   auto pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  auto *ifNode = (IfNode *)((new IfNode(ctrl(), pred))->keep())->peephole();
+  auto *ifNode = (IfNode *)((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode((IfNode *)ifNode->keep(), 0, "True"))->peephole();
+  Node *ifT = (alloc.new_object<ProjNode>((IfNode *)ifNode->keep(), 0, "True"))->peephole();
   ifNode->unkeep();
   Node *ifF =
-      (new ProjNode((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
+      (alloc.new_object<ProjNode>((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
 
   // Clone the body Scope to create the exit Scope
   // which accounts for any side effects in the predicate
@@ -203,14 +203,14 @@ Node *Parser::parseIf() {
   // Parse predicate
   Node *pred = require(parseExpression(), ")");
   // IfNode takes current control and predicate
-  auto *ifNode = ((new IfNode(ctrl(), pred))->keep())->peephole();
+  auto *ifNode = ((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (new ProjNode((IfNode *)ifNode->keep(), 0, "True"))->peephole();
+  Node *ifT = (alloc.new_object<IfNode>((IfNode *)ifNode->keep(), 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
 
   Node *ifF =
-      (new ProjNode((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
+      (alloc.new_object<ProjNode>((IfNode *)ifNode->unkeep(), 1, "False"))->peephole();
   // In if true branch, the ifT proj node becomes the ctrl
   // But first clone the scope and set it as current
 
@@ -268,9 +268,9 @@ Node *Parser::parseExpressionStatement() {
 
 Node *Parser::parseReturn() {
   Node *expr = require(parseExpression(), ";");
-  Node *bpeep = (new ReturnNode(ctrl(), expr))->peephole();
+  Node *bpeep = (alloc.new_object<ReturnNode>(ctrl(), expr))->peephole();
   auto *ret = STOP->addReturn(bpeep);
-  ctrl((new ConstantNode(Type::XCONTROL(), Parser::START))
+  ctrl((alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START))
            ->peephole()); // kill control
   return ret;
 }
@@ -280,7 +280,7 @@ Node *Parser::ctrl() { return scope_node->ctrl(); }
 Node *Parser::ctrl(Node *n) { return scope_node->ctrl(n); }
 
 Node *Parser::parseIntegerLiteral() {
-  return (new ConstantNode(lexer->parseNumber(), START))->peephole();
+  return (alloc.new_object<ConstantNode>(lexer->parseNumber(), START))->peephole();
 }
 
 Type *Lexer::parseNumber() {
@@ -308,39 +308,39 @@ Node *Parser::parseComparison() {
       ;
     else if (match("==")) {
       idx = 2;
-      lhs = new EQ(lhs, nullptr);
+      lhs = alloc.new_object<EQ>(lhs, nullptr);
     }
 
     else if (match("!=")) {
       idx = 2;
-      lhs = new EQ(lhs, nullptr);
+      lhs =   alloc.new_object<EQ>(lhs, nullptr);
       negate = true;
     }
 
     else if (match("<=")) {
       idx = 2;
-      lhs = new LE(lhs, nullptr);
+      lhs =  alloc.new_object<LE>(lhs, nullptr);
     }
 
     else if (match("<")) {
       idx = 2;
-      lhs = new LT(lhs, nullptr);
+      lhs =  alloc.new_object<LT>(lhs, nullptr);
     }
 
     else if (match(">=")) {
       idx = 1;
-      lhs = new LE(nullptr, lhs);
+      lhs =  alloc.new_object<LE>(nullptr, lhs);
     }
 
     else if (match(">")) {
       idx = 1;
-      lhs = new LT(nullptr, lhs);
+      lhs =  alloc.new_object<LT>(nullptr, lhs);
     } else
       break;
     lhs->setDef(idx, parseAddition());
     lhs = lhs->peephole();
     if (negate) {
-      lhs = (new NotNode(lhs))->peephole();
+      lhs = (alloc.new_object<NotNode>(lhs))->peephole();
     }
   }
   return lhs;
@@ -352,11 +352,11 @@ Node *Parser::parseAddition() {
     if (false)
       ;
     else if (match("+")) {
-      lhs = new AddNode(lhs, nullptr);
+      lhs = alloc.new_object<AddNode>(lhs, nullptr);
     }
 
     else if (match("-")) {
-      lhs = new SubNode(lhs, nullptr);
+      lhs = alloc.new_object<SubNode>(lhs, nullptr);
     } else
       break;
     lhs->setDef(2, parseMultiplication());
@@ -371,11 +371,11 @@ Node *Parser::parseMultiplication() {
     if (false)
       ;
     else if (match("*")) {
-      lhs = new MulNode(lhs, nullptr);
+      lhs = alloc.new_object<MulNode>(lhs, nullptr);
     }
 
     else if (match("/")) {
-      lhs = new DivNode(lhs, nullptr);
+      lhs = alloc.new_object<DivNode>(lhs, nullptr);
     } else
       break;
     lhs->setDef(2, parseUnary());
@@ -386,7 +386,7 @@ Node *Parser::parseMultiplication() {
 
 Node *Parser::parseUnary() {
   if (match("-"))
-    return (new MinusNode(parseUnary()))->peephole();
+    return (alloc.new_object<MinusNode>(parseUnary()))->peephole();
   return parsePrimary();
 }
 
@@ -397,9 +397,9 @@ Node *Parser::parsePrimary() {
   if (match("("))
     return require(parseExpression(), ")");
   if (matchx("true"))
-    return (new ConstantNode(TypeInteger::constant(1), START))->peephole();
+    return (alloc.new_object<ConstantNode>(TypeInteger::constant(1), START))->peephole();
   if (matchx("true"))
-    return (new ConstantNode(TypeInteger::constant(0), START))->peephole();
+    return (alloc.new_object<ConstantNode>(TypeInteger::constant(0), START))->peephole();
   std::string name = lexer->matchId();
   if (name == "")
     errorSyntax("an identifier or expression");

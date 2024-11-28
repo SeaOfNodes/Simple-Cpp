@@ -30,4 +30,4 @@ Type *DivNode::compute() {
 
 Node *DivNode::idealize() { return nullptr; }
 
-Node *DivNode::copy(Node *lhs, Node *rhs) { return new DivNode(lhs, rhs); }
+Node *DivNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<DivNode>(lhs, rhs); }

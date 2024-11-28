@@ -48,10 +48,10 @@ int TypeTuple::hash() {
   return sum;
 }
 TypeTuple *TypeTuple::make(std::initializer_list<Type *> types) {
-  return static_cast<TypeTuple *>((new TypeTuple(types))->intern());
+  return static_cast<TypeTuple *>((alloc.new_object<TypeTuple>(types))->intern());
 }
 TypeTuple *TypeTuple::make(Tomi::Vector<Type *> types) {
-  return static_cast<TypeTuple *>((new TypeTuple(types))->intern());
+  return static_cast<TypeTuple *>((alloc.new_object<TypeTuple>(types))->intern());
 }
 
 bool TypeTuple::eq(Type *t) {

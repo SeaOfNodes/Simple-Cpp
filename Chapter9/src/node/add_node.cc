@@ -52,7 +52,8 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   std::string label = lphi->label_ + (dynamic_cast<PhiNode *>(rhs)
                                           ? dynamic_cast<PhiNode *>(rhs)->label_
                                           : "");
-  Node *phi = (new PhiNode(label, ns))->peephole();
+  Node* phi = alloc.new_object<PhiNode>(label, ns);
+  phi = phi->peephole();
   // Rotate needs another op, otherwise just the phi
   return lhs == lphi ? phi : op->copy(lhs->in(1), phi);
 }
@@ -94,8 +95,8 @@ Node *AddNode::idealize() {
 
   // Add of same to a multiply by 2
   if (lhs == rhs) {
-    return new MulNode(
-        lhs, (new ConstantNode(TypeInteger::constant(2), Parser::START))
+    return  alloc.new_object<MulNode>(
+        lhs, (alloc.new_object<ConstantNode>(TypeInteger::constant(2), Parser::START))
                  ->peephole());
   }
   // Goal: a left-spine set of adds, with constants on the rhs (which then
@@ -109,7 +110,7 @@ Node *AddNode::idealize() {
 
   // x(-y) becomes x - y
   if (auto *minus = dynamic_cast<MinusNode *>(rhs)) {
-    return new SubNode(lhs, minus->in(1));
+    return alloc.new_object<SubNode>(lhs, minus->in(1));
   }
   // Now we might see (add add non) or (add non non) or (add add add) but never
   // (add non add)
@@ -118,9 +119,9 @@ Node *AddNode::idealize() {
   // Swap to    (x + y) + z
   // Rotate (add add add) to remove the add on RHS
   if (i2) {
-    auto innerNode = new AddNode(lhs, rhs->in(1));
+    auto innerNode = alloc.new_object<AddNode>(lhs, rhs->in(1));
     auto simplifiedNode = innerNode->peephole();
-    return new AddNode(simplifiedNode, rhs->in(2));
+    return alloc.new_object<AddNode>(simplifiedNode, rhs->in(2));
   }
   // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
@@ -142,8 +143,8 @@ Node *AddNode::idealize() {
   if (lhs->in(2)->addDep(this)->type_->isConstant() && t2->isConstant()) {
     auto lhsFirst = lhs->in(1);
     auto lhsSecond = lhs->in(2);
-    auto innerNode = (new AddNode(lhsSecond, rhs))->peephole();
-    return new AddNode(lhsFirst, innerNode);
+    auto innerNode = (alloc.new_object<AddNode>(lhsSecond, rhs))->peephole();
+    return alloc.new_object<AddNode>(lhsFirst, innerNode);
   }
 
   // Do we have ((x + (phi cons)) + con) ?
@@ -159,7 +160,7 @@ Node *AddNode::idealize() {
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
   if (spine_cmp(lhs->in(2), rhs, this))
-    return new AddNode(((new AddNode(lhs->in(1), rhs))->peephole()),
+    return alloc.new_object<AddNode>(((alloc.new_object<AddNode>(lhs->in(1), rhs))->peephole()),
                        lhs->in(2));
   return nullptr;
 }
@@ -194,4 +195,4 @@ bool AddNode::spine_cmp(Node *hi, Node *lo, Node *dep) {
   return lo->nid > hi->nid;
 }
 
-Node *AddNode::copy(Node *lhs, Node *rhs) { return new AddNode(lhs, rhs); }
+Node *AddNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<AddNode>(lhs, rhs); }

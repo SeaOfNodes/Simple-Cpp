@@ -29,4 +29,4 @@ Type *SubNode::compute() {
 }
 
 Node *SubNode::idealize() { return nullptr; }
-Node *SubNode::copy(Node *lhs, Node *rhs) { return new SubNode(lhs, rhs); }
+Node *SubNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<SubNode>(lhs, rhs); }

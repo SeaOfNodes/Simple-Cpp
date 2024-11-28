@@ -15,7 +15,7 @@ bool ConstantNode::isMultiTail() { return true; }
 std::string ConstantNode::uniqueName() { return "Con_" + std::to_string(nid); }
 Node *ConstantNode::idealize() { return nullptr; }
 bool ConstantNode::eq(Node *n) {
-  ConstantNode* con = dynamic_cast<ConstantNode*>(n);
+  auto* con = dynamic_cast<ConstantNode*>(n);
   return con_ == con->con_;
 }
 Node* ConstantNode::idom() {
