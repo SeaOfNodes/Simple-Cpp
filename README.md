@@ -13,3 +13,5 @@ Custom Arena allocator comes in chapter 8.
 TODO:
  - Implement Pretty Print for IR
  - Fix Graphviz generation for ch8
+ - Add bump alloc for ch9
+ - Fix everything in chapter9
