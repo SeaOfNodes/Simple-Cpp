@@ -33,10 +33,11 @@ Node *IterPeeps::WorkList::pop() {
     return nullptr;
   std::uniform_int_distribution<size_t> gen(0, es.size() - 1);
   size_t idx = gen(rng);
-  Node *x = es[idx];
-  on_.reset(x->nid);
-  es.erase(&x); // compress array making sure algorithm will terminate
-  return x;
+  Node **x = &es[idx];
+  auto* Ptr = *x;
+  on_.reset(Ptr->nid);
+  es.erase(x); // compress array making sure algorithm will terminate
+  return Ptr;
 }
 
 void IterPeeps::WorkList::clear() {

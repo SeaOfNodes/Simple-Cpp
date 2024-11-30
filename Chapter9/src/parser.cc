@@ -205,7 +205,7 @@ Node *Parser::parseIf() {
   // IfNode takes current control and predicate
   auto *ifNode = ((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
   // Setup projection nodes
-  Node *ifT = (alloc.new_object<IfNode>((IfNode *)ifNode->keep(), 0, "True"))->peephole();
+  Node *ifT = (alloc.new_object<ProjNode>((IfNode *)ifNode->keep(), 0, "True"))->peephole();
   // should be the if statement itself
   ifNode->unkeep();
 

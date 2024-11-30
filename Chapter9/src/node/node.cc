@@ -78,6 +78,7 @@ void Node::unlock() {
   if (hash_ == 0)
     return;
   GVN.remove(this);
+
   hash_ = 0;
 }
 Node *Node::setDef(int idx, Node *new_def) {
@@ -262,9 +263,22 @@ bool Node::isCFG() { return false; }
 void Node::kill() {
   unlock();
   assert(isUnused()); // has no uses so it is dead
-  popN(nIns());
-  inputs.clear(); // flag as dead
   type_ = nullptr;
+  while (nIns() >
+         0) { // Set all inputs to null, recursively killing unused Nodes
+    Node *old_def = inputs.back();
+    inputs.pop_back();
+    if (old_def != nullptr) {
+      IterPeeps::add(old_def);
+      if (old_def->delUse(this))
+        old_def->kill();
+    }
+  }
+  /*
+    popN(nIns());
+    inputs.clear(); // flag as dead
+  */
+
   assert(isDead()); // Really dead now
 }
 

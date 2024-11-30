@@ -127,7 +127,7 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
   back->kill(); // Loop backedge is dead
   // Now one-time do a useless-phi removal
   for (int i = 1; i < nIns(); i++) {
-    if (auto *phi = dynamic_cast<PhiNode *>(in(i))) {
+    if (auto *phi = dynamic_cast<PhiNode *>(in(i)); phi) {
       Node *in = phi->peephole();
       IterPeeps::addAll(phi->outputs);
       phi->moveDepsToWorkList();

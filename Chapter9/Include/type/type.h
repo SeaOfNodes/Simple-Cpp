@@ -44,7 +44,7 @@ public:
   static Type *CONTROL();
   static Type *XCONTROL();
 
-  int hashCode();
+  unsigned int hashCode();
   virtual int hash();
 
   // Is high or on the lattice centerline.

@@ -50,7 +50,8 @@ int main(int argc, char const **argv) {
     print_usage();
   auto *parser = new Parser(handle_file(argv[1]));
   std::ostringstream builder;
-  StopNode *ret = parser->parse(true);
+  StopNode *ret = parser->parse(true)->iterate();
   ret->print(builder).str();
+  mem.reset();
   return 0;
 }

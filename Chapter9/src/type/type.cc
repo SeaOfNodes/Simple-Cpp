@@ -40,7 +40,7 @@ Type *Type::intern() {
   static Tomi::HashMap<Type *, Type *> INTERN;
   Type **nnn = INTERN.get(this);
   if (nnn == nullptr) {
-    INTERN.put(this, this);
+    INTERN.put(this, this); // call hashCode as a side-effect
     return this;
   }
   return *nnn;
@@ -116,7 +116,7 @@ bool Type::operator==(Type& o) {
 
 bool Type::eq(Type *t) { return true; }
 
-int Type::hashCode() {
+unsigned int Type::hashCode() {
   if (hash_ != 0)
     return hash_;
   hash_ = hash();

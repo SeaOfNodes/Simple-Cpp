@@ -25,7 +25,7 @@ return 0;
   std::string result = ret->print(builder).str();
 }*/
 
-/*TEST(SimpleTest, testGVN1) {
+TEST(SimpleTest, testGVN1) {
   std::string source = R"(
 int x = arg + arg;
 if(arg < 10) {
@@ -57,7 +57,7 @@ TEST(SimpleTest, testGVN2) {
 
   EXPECT_EQ("return 0;", result);
   EXPECT_EQ(0, GraphEvaluator::evaluate(ret, 1));
-}*/
+}
 
 /*// Todo: still need fix
 TEST(SimpleTest, testWorklist1) {
@@ -79,7 +79,7 @@ return arg;
 
 
 // Todo: Still need fix
-/*TEST(SimpleTest, testWorklist2) {
+TEST(SimpleTest, testWorklist2) {
   std::string source = R"(
 int cond = 0;
 int one = 1;
@@ -97,9 +97,9 @@ return arg;
 
   EXPECT_EQ("return Phi(Loop8,arg,(Phi_arg+4));", result);
   EXPECT_EQ(13, GraphEvaluator::evaluate(ret, 1));
-}*/
+}
 
-/*TEST(SimpleTest, testWorklist3) {
+TEST(SimpleTest, testWorklist3) {
   std::string source = R"(
 int v1 = 0;
 int v2 = 0;
@@ -127,8 +127,7 @@ return arg;
   std::string result = ret->print(builder).str();
 
   EXPECT_EQ("return Phi(Loop14,arg,(Phi_arg+1));", result);
-}*/
-/*
+}
 
 TEST(SimpleTest, testRegionPeepBug) {
   std::string source = R"(
@@ -351,16 +350,15 @@ while(arg) arg = arg - 1;  return arg;
 
 
 TEST(SimpleTest, testMeet) {
-  Type*t1 = Type::TOP;
+  Type*t1 = Type::TOP();
   Type*t2 = TypeInteger::TOP;
 
   EXPECT_EQ(TypeInteger::TOP, t1->meet(t2));
   EXPECT_EQ(TypeInteger::TOP, t2->meet(t1));
 
-  t1 = Type::BOTTOM;
+  t1 = Type::BOTTOM();
   t2 = TypeInteger::BOT;
 
-  EXPECT_EQ(Type::BOTTOM, t1->meet(t2));
-  EXPECT_EQ(Type::BOTTOM, t2->meet(t1));
+  EXPECT_EQ(Type::BOTTOM(), t1->meet(t2));
+  EXPECT_EQ(Type::BOTTOM(), t2->meet(t1));
 }
-*/

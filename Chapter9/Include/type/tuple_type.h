@@ -8,8 +8,9 @@ public:
   Tomi::Vector<Type *> types_;
 
   TypeTuple(std::initializer_list<Type *> types);
-  TypeTuple(Tomi::Vector<Type *> &types);
-  Type *xmeet(Type *other);
+  explicit TypeTuple(Tomi::Vector<Type *> &types);
+
+  Type *xmeet(Type *other) override;
 
   // DEBUG INFO FOR DEBUGGER
   std::string ToString() override;
