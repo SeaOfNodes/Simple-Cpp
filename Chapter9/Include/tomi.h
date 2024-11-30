@@ -359,6 +359,9 @@ class BitArray {
     // Initialise the array with a given size
     BitArray() : bits(SIZE, false) {}
     void set(size_t idx) {
+      if(idx >= bits.size()) {
+      bits.resize(idx + 1, false);
+      }
       if (idx < bits.size()) {
         bits[idx] = true;
       } else {
@@ -371,7 +374,8 @@ class BitArray {
       if (index < bits.size()) {
         return bits[index];
       } else {
-        throw std::runtime_error("Out of bounds: test");
+        return false;
+/*        throw std::runtime_error("Out of bounds: test");*/
       }
     }
   // Reset a bit at a given index to false (or all bits if no index provided)
