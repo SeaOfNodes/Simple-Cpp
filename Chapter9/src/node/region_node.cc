@@ -110,7 +110,7 @@ Node *RegionNode::idom() {
   return idom_;
 }
 bool RegionNode::inProgress() {
-  return nIns() > 1 && in(nIns() - 1) == nullptr;
+  return (nIns() > 1) && (in(nIns() - 1) == nullptr);
 }
 bool RegionNode::hashPhi() {
   for (Node *phi : outputs) {

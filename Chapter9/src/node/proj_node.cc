@@ -19,7 +19,7 @@ MultiNode *ProjNode::ctrl() { return (MultiNode *)in(0); }
 
 Type *ProjNode::compute() {
   Type *t = in(0)->type_;
-  if (auto tt = dynamic_cast<TypeTuple *>(t)) {
+  if (auto tt = dynamic_cast<TypeTuple *>(t); tt) {
     return tt->types_[idx_];
   }
   return Type::BOTTOM();

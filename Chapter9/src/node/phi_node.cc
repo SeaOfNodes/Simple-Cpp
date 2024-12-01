@@ -25,11 +25,16 @@ std::ostringstream &PhiNode::print_1(std::ostringstream &builder,
 Node *PhiNode::region() { return in(0); }
 Type *PhiNode::compute() {
   auto *r = dynamic_cast<RegionNode *>(region());
-  if (!r || r->inProgress())
-    return Type::BOTTOM();
+  if(!r) {
+      if(region()->type_ == Type::XCONTROL()) {
+          return Type::TOP();
+      }
+      return type_;
+  }
+  if(r->inProgress()) return Type::BOTTOM();
   Type *t = Type::TOP();
   for (int i = 1; i < nIns(); i++) {
-    if (r->in(i)->addDep(this)->type_ != Type::XCONTROL() && in(i) != this)
+    if ((r->in(i)->addDep(this)->type_ != Type::XCONTROL()) && (in(i) != this))
       t = t->meet(in(i)->type_);
   }
   return t;
