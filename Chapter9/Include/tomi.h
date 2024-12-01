@@ -353,6 +353,8 @@ private:
 };
 
 template <size_t SIZE>
+// dense-bit array
+// non-sparse array of bits
 class BitArray {
   public:
     Tomi::Vector<bool> bits;
@@ -370,12 +372,11 @@ class BitArray {
     }
 
   // Test if a bit at a given index is true
-  bool test(size_t index) const {
+  [[nodiscard]] bool test(size_t index) const {
       if (index < bits.size()) {
         return bits[index];
       } else {
         return false;
-/*        throw std::runtime_error("Out of bounds: test");*/
       }
     }
   // Reset a bit at a given index to false (or all bits if no index provided)

@@ -353,7 +353,7 @@ unsigned long long Node::hashCode() {
   }
   // if hash is still zero
   if (hashc == 0)
-    hash_ = 0xDEADBEEF;
+    hashc = 0xDEADBEEF;
   hash_ = hashc;
   return hash_;
 }

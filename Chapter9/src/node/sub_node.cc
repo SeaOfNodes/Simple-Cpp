@@ -19,7 +19,7 @@ std::ostringstream &SubNode::print_1(std::ostringstream &builder,
 
 Type *SubNode::compute() {
   if (in(1) == in(2))
-    return TypeInteger::ZERO;
+    return TypeInteger::ZERO();
   auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
   auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
   if (i0->isConstant() && i1->isConstant()) {

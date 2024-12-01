@@ -351,13 +351,13 @@ while(arg) arg = arg - 1;  return arg;
 
 TEST(SimpleTest, testMeet) {
   Type*t1 = Type::TOP();
-  Type*t2 = TypeInteger::TOP;
+  Type*t2 = TypeInteger::TOP();
 
-  EXPECT_EQ(TypeInteger::TOP, t1->meet(t2));
-  EXPECT_EQ(TypeInteger::TOP, t2->meet(t1));
+  EXPECT_EQ(TypeInteger::TOP(), t1->meet(t2));
+  EXPECT_EQ(TypeInteger::TOP(), t2->meet(t1));
 
   t1 = Type::BOTTOM();
-  t2 = TypeInteger::BOT;
+  t2 = TypeInteger::BOT();
 
   EXPECT_EQ(Type::BOTTOM(), t1->meet(t2));
   EXPECT_EQ(Type::BOTTOM(), t2->meet(t1));

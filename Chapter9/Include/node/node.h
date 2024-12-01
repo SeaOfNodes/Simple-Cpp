@@ -264,6 +264,7 @@ public:
     /* Useful stat - how many nodes are processed in the post parse iterative
      * opt */
     int totalWork;
+    int trackWork; // track how many nodes are left to process
     // TOdo: fixed sized replace it with custom one
     Tomi::BitArray<100> on_;
     std::mt19937 rng; // For randomising pull from the WorkList

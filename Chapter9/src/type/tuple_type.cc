@@ -27,7 +27,6 @@ Type *TypeTuple::xmeet(Type *other) {
     cnt++;
   }
   TypeTuple* smt = make(ts);
-  std::cerr << "intern: " << smt << "\n";
   return make(ts);
 }
 

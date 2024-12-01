@@ -26,15 +26,15 @@ Type *IfNode::compute() {
   // High types mean NEITHER side is reachable.
   // Wait until the type falls to decide which way to go.
 
-  if (t == Type::TOP() || t == TypeInteger::TOP)
+  if (t == Type::TOP() || t == TypeInteger::TOP())
     return TypeTuple::IF_NEITHER();
 
   // If constant is 0 then false branch is reachable
   // Else true branch is reachable
-  if (TypeInteger *ti = dynamic_cast<TypeInteger *>(pred()->type_)) {
+  if (auto *ti = dynamic_cast<TypeInteger *>(pred()->type_); ti) {
     if (ti->isConstant()) {
       // Your code here
-      if (ti->value() == 0)
+      if (ti == TypeInteger::ZERO())
         return TypeTuple::IF_FALSE();
       else
         return TypeTuple::IF_TRUE();

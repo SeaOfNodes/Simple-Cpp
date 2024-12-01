@@ -5,7 +5,7 @@
 IterPeeps::WorkList::WorkList() : WorkList(123) {}
 
 IterPeeps::WorkList::WorkList(long seed)
-  : seed(seed), totalWork(0), on_(), rng(seed) {
+  : seed(seed), totalWork(0), trackWork(0),  on_(), rng(seed) {
 }
 
 Node *IterPeeps::WorkList::push(Node *x) {
@@ -16,6 +16,7 @@ Node *IterPeeps::WorkList::push(Node *x) {
     on_.set(idx);
     es.push_back(x);
     totalWork++;
+    trackWork++;
   }
   return x;
 }
@@ -36,7 +37,8 @@ Node *IterPeeps::WorkList::pop() {
   Node **x = &es[idx];
   auto* Ptr = *x;
   on_.reset(Ptr->nid);
-  es.erase(x); // compress array making sure algorithm will terminate
+  es.erase(x); // compress raray making sure algorithm will terminate
+  trackWork--;
   return Ptr;
 }
 
@@ -44,6 +46,7 @@ void IterPeeps::WorkList::clear() {
   on_.reset();
 
   totalWork = 0;
+  trackWork = 0;
 }
 
 void IterPeeps::reset() { WORK.clear(); }
@@ -56,10 +59,10 @@ IterPeeps::WorkList IterPeeps::WORK = IterPeeps::WorkList();
 
 StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
   /*   assert(progressOnList(stop));*/
-  int cnt;
+  int cnt{};
   Node *n;
   while (true) {
-    auto n = WORK.pop();
+     n = WORK.pop();
     if (n == nullptr) {
       break;
     }
@@ -77,16 +80,18 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
       // Changes require neighbors onto the worklist
       if (x != n || !(dynamic_cast<ConstantNode *>(x))) {
         // All outputs of n (changing node) not x (prior existing node).
-        for (Node *z : n->outputs)
-          WORK.push(z);
+        for (Node *z : n->outputs) {
+            WORK.push(z);
+        }
         // Everybody gets a free "go again" in case they didn't get
         // made in their final form.
         WORK.push(x);
         // If the result is not self, revisit all inputs (because
         // there's a new user), and replace in the graph.
         if (x != n) {
-          for (Node *z : n->inputs)
-            WORK.push(z);
+          for (Node *z : n->inputs) {
+              WORK.push(z);
+          }
           n->subsume(x);
         }
       }

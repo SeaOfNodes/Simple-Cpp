@@ -5,9 +5,9 @@
 
 class TypeInteger : public Type {
 public:
-  static TypeInteger* ZERO;
-  static TypeInteger* TOP;
-  static TypeInteger* BOT;
+  static TypeInteger* ZERO();
+  static TypeInteger* TOP();
+  static TypeInteger* BOT();
   static TypeInteger* constant(long con);
 
   /*

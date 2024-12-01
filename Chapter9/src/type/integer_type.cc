@@ -19,18 +19,24 @@ std::string TypeInteger::ToString() {
 }
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
-  if (this == TOP)
+  if (this == TOP())
     builder << "IntTop";
-  if (this == BOT)
+  if (this == BOT())
     builder << "IntBot";
   builder << con_;
   return builder;
 }
 
 // Why the values the way they are is this because idealise optimisation
-TypeInteger *TypeInteger::TOP = make(false, 0);
-TypeInteger *TypeInteger::BOT = make(false, 1);
-TypeInteger *TypeInteger::ZERO = make(true, 0);
+TypeInteger *TypeInteger::TOP() {
+   return make(false, 0);
+}
+TypeInteger *TypeInteger::BOT() {
+    return make(false, 1);
+}
+TypeInteger *TypeInteger::ZERO () {
+    return make(true, 0);
+}
 
 bool TypeInteger::equals(TypeInteger *o) {
   if (o == this)
@@ -43,26 +49,26 @@ bool TypeInteger::equals(TypeInteger *o) {
 Type *TypeInteger::xmeet(Type *other) {
   // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
   auto *i = dynamic_cast<TypeInteger *>(other);
-  if (this == BOT)
+  if (this == BOT())
     return this;
 
-  if (i == BOT)
+  if (i == BOT())
     return i;
   // TOP loses
-  if (i == TOP)
+  if (i == TOP())
     return this;
-  if (this == TOP)
+  if (this == TOP())
     return i;
 
   // Since both are constants, and are never equals (contract) unequals
   // constants fall to bottom
-  return BOT;
+  return BOT();
 }
 
 Type *TypeInteger::dual() {
   if (isConstant())
     return this; // Constants are a self-dual
-  return con_ == 0 ? BOT : TOP;
+  return con_ == 0 ? BOT() : TOP();
 }
 TypeInteger *TypeInteger::make(bool is_con, long con) {
   return static_cast<TypeInteger *>((alloc.new_object<TypeInteger>(is_con, con))->intern());

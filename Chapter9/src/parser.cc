@@ -19,7 +19,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
   START->peephole();
 }
 
-Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT) {}
+Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT()) {}
 
 Parser::~Parser() {
   delete lexer;
