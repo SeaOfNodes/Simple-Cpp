@@ -39,7 +39,7 @@ Node *RegionNode::idealize() {
     // shuffles the output array, and we might miss iterating an
     // unrelated Phi. So on rare occasions we repeat the loop to get
     // all the Phis.
-    int nouts = 0;
+    std::size_t nouts = 0;
     while (nouts != nOuts()) {
       nouts = nOuts();
       for (int i = 0; i < nouts; i++) {

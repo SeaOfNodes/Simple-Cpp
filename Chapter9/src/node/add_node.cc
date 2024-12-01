@@ -159,9 +159,10 @@ Node *AddNode::idealize() {
 
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
-  if (spine_cmp(lhs->in(2), rhs, this))
-    return alloc.new_object<AddNode>(((alloc.new_object<AddNode>(lhs->in(1), rhs))->peephole()),
-                       lhs->in(2));
+  if (spine_cmp(lhs->in(2), rhs, this)) {
+      return alloc.new_object<AddNode>(((alloc.new_object<AddNode>(lhs->in(1), rhs))->peephole()),
+                                       lhs->in(2));
+  }
   return nullptr;
 }
 
@@ -178,7 +179,7 @@ bool AddNode::spine_cmp(Node *hi, Node *lo, Node *dep) {
   if (auto lphi = dynamic_cast<PhiNode *>(lo);
       lphi && lphi->region()->type_ == Type::XCONTROL())
     return false;
-  if (auto hphi = dynamic_cast<PhiNode *>(lo);
+  if (auto hphi = dynamic_cast<PhiNode *>(hi);
       hphi && hphi->region()->type_ == Type::XCONTROL())
     return false;
 
@@ -190,8 +191,9 @@ bool AddNode::spine_cmp(Node *hi, Node *lo, Node *dep) {
   if (dynamic_cast<PhiNode *>(lo) && !(dynamic_cast<PhiNode *>(hi)))
     return true;
   if (dynamic_cast<PhiNode *>(hi) && !(dynamic_cast<PhiNode *>(lo)))
-    return false;
+      return false;
 
+    // Same category of "others"
   return lo->nid > hi->nid;
 }
 

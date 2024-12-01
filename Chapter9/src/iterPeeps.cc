@@ -64,12 +64,15 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
   while (true) {
      n = WORK.pop();
     if (n == nullptr) {
+      std::cerr << "Issue solved";
       break;
     }
     if (n->isDead())
       continue;
     cnt++;
-    // Introduce local variable
+    if(cnt == 100) {
+        int stop123 = 1;
+    }
     Node *x = n->peepholeOpt();
     if (x != nullptr) {
       if (x->isDead())

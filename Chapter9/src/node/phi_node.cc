@@ -66,6 +66,7 @@ Node *PhiNode::idealize() {
 
   if (r->inProgress() || r->nIns() <= 1)
     return nullptr;
+
   // Remove a "junk" Phi: Phi(x,x) is just x
   Node *live = singleUniqueInput();
   if (live != nullptr)
@@ -109,7 +110,7 @@ Node *PhiNode::idealize() {
 bool PhiNode::allCons(Node *dep) {
   auto *r = dynamic_cast<RegionNode *>(region());
 
-  if (!r || r->inProgress())
+  if (!r)
     return false;
   addDep(dep);
   if (r->inProgress())

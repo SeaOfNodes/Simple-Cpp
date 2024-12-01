@@ -196,6 +196,7 @@ Node *Node::peepholeOpt() {
     return n;
   if (old == type_)
     ITER_NOP_CNT++;
+  // returns this if type is mutated
   return old == type_ ? nullptr : this;
 }
 

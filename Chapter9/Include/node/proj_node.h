@@ -9,7 +9,7 @@
 
 class ProjNode : public Node {
 public:
-  int idx_{};
+  const int idx_{};
   std::string label_;
   ProjNode(MultiNode* ctrl, int idx, std::string label);
   std::string label() override;
