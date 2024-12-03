@@ -63,6 +63,7 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
   Node *n;
   while (true) {
      n = WORK.pop();
+     if(n == nullptr) break;
     if (n->isDead())
       continue;
     cnt++;

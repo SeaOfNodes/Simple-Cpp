@@ -76,7 +76,7 @@ class Parser {
 public:
   ScopeNode *scope_node;
   static StartNode *START;
-  StopNode *STOP;
+  static StopNode *STOP;
   Tomi::Vector<ScopeNode *> xScopes;
 
   ScopeNode* continueScope;
@@ -91,7 +91,7 @@ public:
   StopNode *parse();
 
   StopNode *parse(bool show);
-
+  
   std::string src();
 
   Node *ctrl();

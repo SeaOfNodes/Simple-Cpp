@@ -2,6 +2,9 @@
 #include "../Include/graph_visualizer.h"
 #include "../Include/node/proj_node.h"
 
+
+// Todo: static fiasco?
+StopNode *Parser::STOP = nullptr;
 StartNode *Parser::START = nullptr;
 
 Parser::Parser(std::string source, TypeInteger *arg) {

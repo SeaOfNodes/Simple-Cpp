@@ -79,6 +79,7 @@ public:
   static int ITER_NOP_CNT;
   int hash_{};
 
+  bool test_nid(int i);
   // Global Value Numbering.  Hash over opcode and inputs; hits in this table
   // are structurally equal.
   static Tomi::HashMap<Node *, Node *> GVN;

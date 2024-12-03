@@ -3,6 +3,7 @@
 // Handling source file
 #include <fstream>
 #include "../Include/parser.h"
+#include "../Include/IR_printer.h"
 #include <iostream>
 
 #define VERSION_STRING "0.0.1"
@@ -52,6 +53,7 @@ int main(int argc, char const **argv) {
   std::ostringstream builder;
   StopNode *ret = parser->parse(true)->iterate();
   ret->print(builder).str();
+    std::cerr << IRPrinter::prettyPrint(ret, 99);
   mem.reset();
   return 0;
 }
