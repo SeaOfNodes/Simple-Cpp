@@ -8,6 +8,8 @@
 #include <bitset>
 #include <functional>
 #include <random>
+#include <format>
+#include <algorithm>
 
 #include "../../Include/tomi.h"
 #include "../../Include/type/type.h"
@@ -135,6 +137,8 @@ public:
   virtual std::ostringstream &print_1(std::ostringstream &builder,
                                       Tomi::Vector<bool> &) = 0;
 
+  void printLine(std::ostringstream &builder);
+
   virtual int hash();
 
   virtual bool isMultiHead();
@@ -237,6 +241,7 @@ public:
   template <typename T> T *walk_(const std::function<Node *(T *)> &pred);
 
   static void reset();
+  std::string p(int depth);
 };
 class StopNode;
 

@@ -141,6 +141,7 @@ Node *AddNode::idealize() {
   // because if it later became a constant then we could make this
   // transformation.
   if (lhs->in(2)->addDep(this)->type_->isConstant() && t2->isConstant()) {
+    std::cerr << "In addDep: " << nid;
     auto lhsFirst = lhs->in(1);
     auto lhsSecond = lhs->in(2);
     auto innerNode = (alloc.new_object<AddNode>(lhsSecond, rhs))->peephole();
@@ -160,6 +161,7 @@ Node *AddNode::idealize() {
   // Do we rotate (x + y) + z
   // into         (x + z) + y ?
   if (spine_cmp(lhs->in(2), rhs, this)) {
+      std::cerr << "Spine cmp: " << nid;
       return alloc.new_object<AddNode>(((alloc.new_object<AddNode>(lhs->in(1), rhs))->peephole()),
                                        lhs->in(2));
   }

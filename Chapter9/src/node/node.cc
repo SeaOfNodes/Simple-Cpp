@@ -1,6 +1,7 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/constant_node.h"
 #include <typeinfo> // For typeid
+#include "../../Include/IR_printer.h"
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
   nid = UNIQUE_ID++;
@@ -243,6 +244,32 @@ Node *Node::idom() {
   return idom;
 }
 
+void Node::printLine(std::ostringstream &builder) {
+    builder << std::format("{:>4} {:<7.7}", nid, label());
+    if(inputs.empty()) {
+        builder << "DEAD\n";
+        return;
+    }
+    for (Node* def: inputs) {
+        if(def == nullptr) builder << "____";
+        else builder << std::format("{:>4} ", def->nid);;
+    }
+    for(size_t i = inputs.size(); i < 3; i++) {
+        builder << "      ";
+    }
+    builder << " [[  ";
+    for(Node* use: outputs) {
+        if(use == nullptr) builder << "____";
+        else builder << std::format("{:>4} ", use->nid);
+    }
+    int lim = 5 - std::max(static_cast<int>(inputs.size()), 3);
+    for(size_t i = outputs.size(); i < lim; i++) {
+        builder << "      ";
+    }
+    builder << "]] ";
+    if(type_ != nullptr) type_->print_1(builder);
+    builder << "\n";
+}
 Node *Node::delDef(int idx) {
   unlock();
   Node *old_def = in(idx);
@@ -415,6 +442,9 @@ T* Node::walk_(const std::function<Node*(T*)>& pred) {
 
 */
 
+std::string Node::p(int depth) {
+    return IRPrinter::prettyPrint(this, depth);
+}
 std::bitset<10> Node::WVISIT = std::bitset<10>();
 int Node::ITER_NOP_CNT = 0;
 int Node::ITER_CNT = 0;
