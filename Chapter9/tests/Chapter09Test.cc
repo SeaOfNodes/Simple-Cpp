@@ -79,7 +79,6 @@ return arg;
 }*/
 
 
- Todo: Still need fix
 TEST(SimpleTest, testWorklist2) {
   std::string source = R"(
 int cond = 0;
@@ -92,7 +91,7 @@ return arg;
 )";
 
   auto *parser = new Parser(source);
-  StopNode *ret = parser->parse()->iterate();
+  StopNode *ret = parser->parse(false)->iterate();
   std::ostringstream builder;
   std::string result = ret->print(builder).str();
 

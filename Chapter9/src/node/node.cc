@@ -4,10 +4,7 @@
 #include "../../Include/IR_printer.h"
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
-    nid = UNIQUE_ID++;
-//    if(nid == 77) {
-//        std::cerr << "Stop here";
-//    }
+    nid  = UNIQUE_ID++;
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -81,9 +78,9 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
-//    if(nid == 76) {
-//        std::cerr << "Stop here";
-//    }
+    if(nid == 9) {
+        std::cerr << "Stop here1231";
+    }
     if (hash_ == 0)
         return;
     GVN.remove(this);
@@ -93,9 +90,12 @@ void Node::unlock() {
 
 Node *Node::setDef(int idx, Node *new_def) {
     unlock();
+//    if(nid == 9) {
+//        std::cerr << "Stop here";
+//    }
     Node *old_def = in(idx);
     if (old_def == new_def)
-        return this;
+        return new_def;
     if (new_def != nullptr)
         new_def->addUse(this);
     if (old_def != nullptr && old_def->delUse(this))
@@ -145,15 +145,15 @@ void Node::subsume(Node *nnn) {
         Node *n = outputs.back();
         outputs.pop_back();
         n->unlock();
-        if(n->nid == 76 && nnn->nid == 77) {
-            std::cerr << Parser::STOP->p(99);
-        }
         auto it = std::find(n->inputs.begin(), n->inputs.end(), this);
 
         if (it != n->inputs.end()) {
             *it = nnn;
         }
         nnn->addUse(n);
+//        if(n->nid == 9) {
+//            std::cerr << "Here";
+//        }
     }
     kill();
 }
@@ -206,8 +206,11 @@ Node *Node::peepholeOpt() {
             return deadCodeElim(n);
         }
     }
+//    if(nid == 9 && inputs[1] != nullptr && inputs[1]->nid == 28 &&  inputs[0] != nullptr && inputs[0]->nid == 4 ) {
+//        std::cerr << "Stop here";
+//    }
     Node *n = idealize();
-    if(n!= nullptr && nid == 71 && n->nid == 77) {
+    if(n!= nullptr && nid == 9 && n->nid == 28) {
         std::cerr << Parser::STOP->p(99);
     }
     if (n != nullptr)
@@ -305,12 +308,19 @@ void Node::printLine(std::ostringstream &builder) {
 
 Node *Node::delDef(int idx) {
     unlock();
-    Node *old_def = in(idx);
+    Node **old_def = &inputs[idx];
+    Node* nptr = *old_def;
     if (old_def != nullptr && // If the old def exists, remove a def->use edge
-        old_def->delUse(
+        nptr->delUse(
                 this))     // If we removed the last use, the old def is now dead
-        old_def->kill(); // Kill old def
-    inputs.erase(std::next(inputs.begin(), idx));
+        nptr->kill(); // Kill old def
+//    if(nid == 9) {
+//        std::cerr << "Stop here";
+//    }
+     Node * tmp = inputs.back();
+    inputs.pop_back();
+    inputs[idx] = tmp;
+    // erase is bad here
     return this;
 }
 
