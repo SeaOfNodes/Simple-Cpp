@@ -59,7 +59,7 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
 }
 
 PhiNode *AddNode::pcon(Node *op, Node *dep) {
-  PhiNode *phi = dynamic_cast<PhiNode *>(op);
+  auto *phi = dynamic_cast<PhiNode *>(op);
   return (phi && phi->allCons(dep)) ? phi : nullptr;
 }
 Type *AddNode::compute() {

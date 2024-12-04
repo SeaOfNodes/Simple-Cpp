@@ -38,14 +38,6 @@ TypeInteger *TypeInteger::ZERO () {
     return make(true, 0);
 }
 
-bool TypeInteger::equals(TypeInteger *o) {
-  if (o == this)
-    return true;
-  if (dynamic_cast<TypeInteger *>(o))
-    return true;
-  return con_ = o->con_;
-}
-
 Type *TypeInteger::xmeet(Type *other) {
   // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
   auto *i = dynamic_cast<TypeInteger *>(other);
@@ -77,6 +69,6 @@ TypeInteger *TypeInteger::make(bool is_con, long con) {
 long TypeInteger::value() { return con_; }
 int TypeInteger::hash() { return con_ ^ (is_con_ ? 0 : 0x4000); }
 bool TypeInteger::eq(Type *t) {
-  TypeInteger *i = dynamic_cast<TypeInteger *>(t);
+  auto *i = dynamic_cast<TypeInteger *>(t);
   return con_ == i->con_ && is_con_ == i->is_con_;
 }

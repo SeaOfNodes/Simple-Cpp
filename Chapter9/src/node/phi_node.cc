@@ -109,7 +109,6 @@ Node *PhiNode::idealize() {
 }
 bool PhiNode::allCons(Node *dep) {
   auto *r = dynamic_cast<RegionNode *>(region());
-
   if (!r)
     return false;
   addDep(dep);

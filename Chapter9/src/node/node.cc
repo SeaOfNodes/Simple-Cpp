@@ -5,9 +5,9 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 77) {
-        std::cerr << "Stop here";
-    }
+//    if(nid == 77) {
+//        std::cerr << "Stop here";
+//    }
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -81,9 +81,9 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
-    if(nid == 76) {
-        std::cerr << "Stop here";
-    }
+//    if(nid == 76) {
+//        std::cerr << "Stop here";
+//    }
     if (hash_ == 0)
         return;
     GVN.remove(this);

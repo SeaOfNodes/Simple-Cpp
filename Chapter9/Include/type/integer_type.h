@@ -14,7 +14,7 @@ public:
    * The constant value of
    * if not constant then 1=bottom, 0=bottom.
    * */
-  bool is_con_;
+  bool is_con_{};
 
   static TypeInteger* make(bool is_con, long con);
 
@@ -31,11 +31,9 @@ public:
   Type* dual() override;
 
   long value();
-  bool equals(TypeInteger *);
+  bool eq(Type *) override;
 
   int hash() override;
-  bool eq(Type*t) override;
-
 private:
   long con_;
 };
