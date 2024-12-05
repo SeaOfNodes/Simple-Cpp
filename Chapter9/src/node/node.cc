@@ -78,9 +78,6 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
-    if(nid == 9) {
-        std::cerr << "Stop here1231";
-    }
     if (hash_ == 0)
         return;
     GVN.remove(this);
@@ -210,9 +207,9 @@ Node *Node::peepholeOpt() {
 //        std::cerr << "Stop here";
 //    }
     Node *n = idealize();
-    if(n!= nullptr && nid == 9 && n->nid == 28) {
-        std::cerr << Parser::STOP->p(99);
-    }
+    // if(n!= nullptr && nid == 9 && n->nid == 28) {
+    //     std::cerr << Parser::STOP->p(99);
+    // }
     if (n != nullptr)
         return n;
     if (old == type_)
@@ -314,9 +311,9 @@ Node *Node::delDef(int idx) {
         nptr->delUse(
                 this))     // If we removed the last use, the old def is now dead
         nptr->kill(); // Kill old def
-//    if(nid == 9) {
-//        std::cerr << "Stop here";
-//    }
+    if(nid == 9) {
+        std::cerr << Parser::STOP->p(99);
+    }
      Node * tmp = inputs.back();
     inputs.pop_back();
     inputs[idx] = tmp;

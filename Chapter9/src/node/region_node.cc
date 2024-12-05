@@ -55,11 +55,11 @@ Node *RegionNode::idealize() {
     else
       return delDef(path);
   }
-  for (Node *phi : outputs) {
-    if (dynamic_cast<PhiNode *>(phi)) {
-      phi->delDef(path);
-    }
-  }
+  // for (Node *phi : outputs) {
+  //   if (dynamic_cast<PhiNode *>(phi)) {
+  //     phi->delDef(path);
+  //   }
+  // }
 
   // If down to a single input, become that input - but also make all
   // Phis an identity on *their* single input.

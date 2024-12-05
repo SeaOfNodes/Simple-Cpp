@@ -95,7 +95,7 @@ return arg;
   std::ostringstream builder;
   std::string result = ret->print(builder).str();
 
-  EXPECT_EQ("return Phi(Loop8,arg,(Phi_arg+4));", result);
+  EXPECT_EQ("return Phi(Loop7,arg,(Phi_arg+4));", result);
   EXPECT_EQ(13, GraphEvaluator::evaluate(ret, 1));
 }
 
