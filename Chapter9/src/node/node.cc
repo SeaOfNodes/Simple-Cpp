@@ -87,9 +87,6 @@ void Node::unlock() {
 
 Node *Node::setDef(int idx, Node *new_def) {
     unlock();
-//    if(nid == 9) {
-//        std::cerr << "Stop here";
-//    }
     Node *old_def = in(idx);
     if (old_def == new_def)
         return new_def;
@@ -127,8 +124,9 @@ Node *Node::addDef(Node *new_def) {
 
 bool Node::delUse(Node *use) {
     auto it = std::find(outputs.begin(), outputs.end(), use);
-    if (it != nullptr)
+    if (it != outputs.end()) {
         outputs.erase(it);
+    }
     return outputs.empty();
 }
 
@@ -148,9 +146,6 @@ void Node::subsume(Node *nnn) {
             *it = nnn;
         }
         nnn->addUse(n);
-//        if(n->nid == 9) {
-//            std::cerr << "Here";
-//        }
     }
     kill();
 }
@@ -178,7 +173,6 @@ Node *Node::peepholeOpt() {
     ITER_CNT++;
     Type *inner = compute();
     Type *old = setType(inner);
-
     // Replace constant computations from non-constants with a constant node
 
     auto *a = dynamic_cast<ConstantNode *>(this);
@@ -203,13 +197,8 @@ Node *Node::peepholeOpt() {
             return deadCodeElim(n);
         }
     }
-//    if(nid == 9 && inputs[1] != nullptr && inputs[1]->nid == 28 &&  inputs[0] != nullptr && inputs[0]->nid == 4 ) {
-//        std::cerr << "Stop here";
-//    }
+
     Node *n = idealize();
-    // if(n!= nullptr && nid == 9 && n->nid == 28) {
-    //     std::cerr << Parser::STOP->p(99);
-    // }
     if (n != nullptr)
         return n;
     if (old == type_)
@@ -311,9 +300,7 @@ Node *Node::delDef(int idx) {
         nptr->delUse(
                 this))     // If we removed the last use, the old def is now dead
         nptr->kill(); // Kill old def
-    if(nid == 9) {
-        std::cerr << Parser::STOP->p(99);
-    }
+
      Node * tmp = inputs.back();
     inputs.pop_back();
     inputs[idx] = tmp;

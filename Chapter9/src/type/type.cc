@@ -48,6 +48,9 @@ Type *Type::intern() {
 Type::Type(unsigned int type) : type_(type) {}
 Type *Type::meet(Type *other) {
   // Shortcut for the self case
+    if(other == nullptr) {
+        std::cerr << "Stop here";
+    }
   if (other == this)
     return this;
   // Same-type is always safe in the subclasses
@@ -125,7 +128,9 @@ unsigned int Type::hashCode() {
   return hash_;
 }
 
-bool Type::isa(Type *t) { return meet(t) == t; }
+bool Type::isa(Type *t) {
+    return meet(t) == t;
+}
 
 Type *Type::join(Type *t) {
   if (this == t)

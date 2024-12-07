@@ -597,9 +597,14 @@ public:
         return entry.getPtrValue();
       }
     }
-    while (table[hashValue].hash != -1 && !table[hashValue].isTombStone) {
-      if (compareKeys(table[hashValue].getKey(), key))
-        return table[hashValue].getPtrValue();
+    // Never result in infinite loop because table is never full(invariant)
+    while (table[hashValue].hash != -1) {
+//        if(table[hashValue].getKey()->nid == 11) {
+//            std::cerr << "Here same key";
+//        }
+      if (!table[hashValue].isTombStone && compareKeys(table[hashValue].getKey(), key)) {
+          return table[hashValue].getPtrValue();
+      }
       hashValue = (hashValue + 1) % TableSize;
     }
     // not in the table
@@ -643,6 +648,7 @@ public:
       repopulate();
     }
     unsigned long hashValue = hashFunc(key) % TableSize;
+
     auto &entry = table[hashValue];
     unsigned long originalHashValue = hashValue;
     // -1 in variant holds if the hash is not set yet

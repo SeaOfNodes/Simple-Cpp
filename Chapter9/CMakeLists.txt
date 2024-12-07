@@ -10,7 +10,6 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-#[[
 # Enable AddressSanitizer for Clang or GCC in Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Enabling AddressSanitizer")
@@ -23,7 +22,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
-]]
 
 # Add the include directory to the search path
 include_directories(${PROJECT_SOURCE_DIR}/Include)
