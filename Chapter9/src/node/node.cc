@@ -174,7 +174,6 @@ Node *Node::peepholeOpt() {
     Type *inner = compute();
     Type *old = setType(inner);
     // Replace constant computations from non-constants with a constant node
-
     auto *a = dynamic_cast<ConstantNode *>(this);
     if (!(a) && type_->isHighOrConst()) {
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));

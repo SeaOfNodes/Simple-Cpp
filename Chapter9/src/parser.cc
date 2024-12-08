@@ -215,12 +215,13 @@ Node *Parser::parseIf() {
     // Setup projection nodes
     Node *ifT = (alloc.new_object<ProjNode>((IfNode *) ifNode->keep(), 0, "True"))->peephole();
     // should be the if statement itself
-    ifNode->unkeep();
+    ifT->keep();
 
     Node *ifF =
             (alloc.new_object<ProjNode>((IfNode *) ifNode->unkeep(), 1, "False"))->peephole();
     // In if true branch, the ifT proj node becomes the ctrl
     // But first clone the scope and set it as current
+    ifF->keep();
 
     std::size_t ndefs = scope_node->nIns();
     ScopeNode *fScope = scope_node->dup(); // Duplicate current scope
@@ -229,6 +230,7 @@ Node *Parser::parseIf() {
     // Parse the true side
     ctrl(ifT->unkeep()); // set ctrl token to ifTrue projection
     parseStatement();    // Parse true-side
+
     ScopeNode *tScope = scope_node;
 
     scope_node = fScope;

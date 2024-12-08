@@ -18,9 +18,6 @@ Type *RegionNode::compute() {
     return Type::CONTROL();
   Type *t = Type::XCONTROL();
   for (int i = 1; i < nIns(); i++) {
-    if(in(i)->nid == 11) {
-                std::cerr << "Here";
-    }
     t = t->meet(in(i)->type_);
   }
   return t;
