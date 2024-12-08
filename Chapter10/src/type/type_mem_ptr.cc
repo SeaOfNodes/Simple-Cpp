@@ -1,0 +1,87 @@
+#include "../../Include/type/type_mem_ptr.h"
+
+TypeMemPtr::TypeMemPtr(TypeStruct *obj, bool nil) : Type(TMEMPTR), obj_(obj), nil_(nil) {}
+
+TypeMemPtr *TypeMemPtr::make(TypeStruct *obj, bool nil) {
+  return static_cast<TypeMemPtr*>((new TypeMemPtr(obj, nil))->intern());
+}
+
+TypeMemPtr *TypeMemPtr::make(TypeStruct *obj) {
+    return static_cast<TypeMemPtr*>((new TypeMemPtr(obj, false))->intern());
+}
+
+TypeMemPtr* TypeMemPtr::BOT() {
+    static TypeMemPtr* bot = make(TypeStruct::BOT(), true);
+    return bot;
+}
+
+
+TypeMemPtr* TypeMemPtr::TOP() {
+    static TypeMemPtr* top =  BOT()->dual();
+    return top;
+}
+
+TypeMemPtr* TypeMemPtr::NULLPTR() {
+    static TypeMemPtr* NullPtr=  make(TypeStruct::TOP(), true);
+    return NullPtr;
+
+}
+
+TypeMemPtr* TypeMemPtr::VOIDPTR() {
+    static TypeMemPtr* voidptr =  NULLPTR()->dual();
+    return voidptr;
+
+}
+
+
+TypeMemPtr *TypeMemPtr::TEST() {
+    static TypeMemPtr* test =  make(TypeStruct::TEST(), true);
+    return test;
+}
+
+void TypeMemPtr::gather(Tomi::Vector<Type *>& ts) {
+    ts.push_back(TypeMemPtr::NULLPTR());
+    ts.push_back(TypeMemPtr::BOT());
+    ts.push_back(TypeMemPtr::TEST());
+
+}
+
+Type *TypeMemPtr::xmeet(Type *other) {
+    TypeMemPtr* that = dynamic_cast<TypeMemPtr*>(other);
+    return TypeMemPtr::make(static_cast<TypeStruct*>(obj_->meet(that->obj_)), nil_ | that->nil_);
+}
+
+TypeMemPtr* TypeMemPtr::dual() {
+    return TypeMemPtr::make(obj_ == nullptr ? nullptr: obj_->dual(), !nil_);
+}
+TypeMemPtr* TypeMemPtr::glb() {
+    if(obj_ == nullptr) return BOT();
+    return make(obj_->glb(), true);
+}
+
+TypeMemPtr* TypeMemPtr::makeInit() {
+    return NULLPTR();
+}
+
+int TypeMemPtr::hash() {
+    return (obj_ == nullptr ? 0xDEADBEEF : obj_->hash())^ ( nil_ ? 1024: 0);
+}
+
+bool TypeMemPtr::eq(Type *other) {
+    if (other == this) return true;
+    TypeMemPtr* that = dynamic_cast<TypeMemPtr*>(other);
+    return obj_ == that->obj_ && nil_ == that->nil_;
+}
+
+std::ostringstream &TypeMemPtr::print_1(std::ostringstream &builder) {
+    if(this == NULLPTR()) {builder << "NULLPTR"; return builder;}
+    if(this == VOIDPTR()) {builder << "*void"; return builder;}
+    builder <<  obj_->print_1(builder).str() << "*" << (nil_ ? "!" : "");
+    return builder;
+}
+
+std::string TypeMemPtr::str() {
+    if(this == NULLPTR()) return "NULLPTR";
+    if(this == VOIDPTR()) return "*void";
+    return "*" + obj_->str() + (nil_ ? "!" : "");
+}

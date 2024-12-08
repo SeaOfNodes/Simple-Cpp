@@ -74,6 +74,7 @@ add_library(simple_lib
         src/type/field.cc
         src/type/type_struct.cc
         src/type/type_mem.cc
+        src/type/type_mem_ptr.cc
 
         # utils
         src/utils.cc
