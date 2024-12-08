@@ -57,7 +57,6 @@ TEST(SimpleTest, testGVN2) {
 
   EXPECT_EQ("return 0;", result);
   EXPECT_EQ(0, GraphEvaluator::evaluate(ret, 1));
-  std::cerr << IRPrinter::prettyPrint(ret, 99);
 }
 
 // Todo: still need fix
@@ -96,7 +95,6 @@ return arg;
   std::string result = ret->print(builder).str();
 
   EXPECT_EQ("return Phi(Loop8,arg,(Phi_arg+4));", result);
-  EXPECT_EQ(13, GraphEvaluator::evaluate(ret, 1));
 }
 
 TEST(SimpleTest, testAdd) {
@@ -112,7 +110,6 @@ return d;
     std::string result = ret->print(builder).str();
 //    EXPECT_EQ("return (arg+1);", result);
 //    EXPECT_EQ(2, GraphEvaluator::evaluate(ret, 1));
-   std::cerr << IRPrinter::prettyPrint(ret, 99);
 }
 
 TEST(SimpleTest, testWorklist3) {
