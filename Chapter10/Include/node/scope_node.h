@@ -4,6 +4,9 @@
 #include "../../Include/node/phi_node.h"
 #include "../../Include/node/region_node.h"
 #include "../../Include/type/type.h"
+#include "../../Include/type/type_mem_ptr.h"
+
+#include "../../Include/node/not_node.h"
 
 #include <stack>
 #include <unordered_map>
@@ -31,6 +34,13 @@ public:
    */
     Tomi::Vector<Tomi::HashMap<std::string, Type*>> declaredTypes;
   ScopeNode();
+  // Up-casting: using the results of an If to improve a value.
+  // E.g. "if( ptr ) ptr.field;" is legal because ptr is known not-null.
+
+  // This Scope looks for direct variable uses, or certain simple
+  // combinations, and replaces the variable with the upcast variant.
+
+  Node* upcast(Node* ctrl, Node* pred, bool invert);
 
   std::string label() override;
   Type *compute() override;

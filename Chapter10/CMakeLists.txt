@@ -66,6 +66,8 @@ add_library(simple_lib
         src/node/phi_node.cc
         src/node/stop_node.cc
         src/node/loop_node.cc
+        src/node/new_node.cc
+        src/node/mem_op_node.cc
 
         # type
         src/type/integer_type.cc

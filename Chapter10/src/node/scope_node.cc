@@ -18,6 +18,34 @@ void ScopeNode::pop() {
     scopes.pop_back();
 }
 
+Node* ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
+    if(ctrl->type_ == Type::CONTROL()) return nullptr;
+    // Invert the If conditional
+    if(invert) {
+        auto* notNode = dynamic_cast<NotNode*>(pred);
+       if(notNode) {
+           pred = notNode->in(1);
+       } else {
+           pred = IterPeeps::add((new NotNode(pred))->peephole());
+       }
+    }
+    // Direct use of a value as predicate.  This is a zero/null test.
+    auto* it = std::find(inputs.begin(), inputs.end(), pred);
+    if(it != inputs.end()) {
+        auto*tmp = dynamic_cast<TypeMemPtr*>(pred->type_);
+        if(!tmp) {
+            // Must be an `int`, since int and ptr are the only two value types
+            // being tested. No representation for a generic not-null int, so no upcast.
+            return nullptr;
+        }
+        if(tmp->isa(TypeMemPtr::VOIDPTR()))  {
+            return nullptr;  // Already not-null, no reason to upcast
+
+        }
+        // Upcast the ptr to not-null ptr, and replace in scope
+        // return replace(pred, new CastNode()).
+    }
+}
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
     if (!scopes.empty()) {
