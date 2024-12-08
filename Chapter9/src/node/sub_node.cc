@@ -22,7 +22,7 @@ Type *SubNode::compute() {
     return TypeInteger::ZERO();
   auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
   auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
-  if (i0->isConstant() && i1->isConstant()) {
+  if (i0 && i0->isConstant() && i1 && i1->isConstant()) {
     return TypeInteger::constant(i0->value() - i1->value());
   }
   return in(1)->type_->meet(in(2)->type_);

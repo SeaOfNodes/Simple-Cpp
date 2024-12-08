@@ -255,7 +255,6 @@ void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
       std::string name = pair.key;
       int idx = *syms[name];
       Node *def = n->in(idx);
-      std::string unique_name = def->uniqueName();
       while (auto *lazy = dynamic_cast<ScopeNode *>(def))
         def = lazy->in(idx);
       if (def == nullptr)
