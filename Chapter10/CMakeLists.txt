@@ -71,6 +71,8 @@ add_library(simple_lib
         src/type/integer_type.cc
         src/type/type.cc
         src/type/tuple_type.cc
+        src/type/field.cc
+        src/type/type_struct.cc
 
         # utils
         src/utils.cc

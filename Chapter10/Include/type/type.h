@@ -36,6 +36,10 @@ public:
   static constexpr unsigned int TINT = 5;
   // Tuples; finite collections of unrelated Types, kept in parallel
   static constexpr unsigned int TTUPLE = 6;
+  static constexpr unsigned int TMEM = 7;
+  static constexpr unsigned int TMEMPTR = 8;
+  static constexpr unsigned int TSTRUCT = 9;
+  static constexpr unsigned int TFLD = 10;
 
   unsigned int type_{};
 
@@ -52,6 +56,7 @@ public:
   // Strict constant values, things on the lattice centerline.
   // Excludes both high and low values
   virtual bool isConstant();
+  virtual std::string str();
 
   const char *STRS[4] = {"Bot", "Top", "Ctrl", "~Ctrl"};
   virtual std::ostringstream &print_1(std::ostringstream &builder);
@@ -71,6 +76,11 @@ public:
   virtual std::string ToString();
 
   bool isa(Type *t);
+    /**
+   * Compute greatest lower bound in the lattice
+   */
+   Type* glb();
+
   // Our lattice is defined with a MEET and a DUAL.
   // JOIN is dual of meet of both duals.
   virtual Type *join(Type *t);

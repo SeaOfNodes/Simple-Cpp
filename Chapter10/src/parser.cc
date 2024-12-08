@@ -11,6 +11,8 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     Node::reset();
     IterPeeps::reset();
 
+    // OBJS.clear();
+
     lexer = alloc.new_object<Lexer>(source);
     scope_node = alloc.new_object<ScopeNode>();
     continueScope = nullptr;

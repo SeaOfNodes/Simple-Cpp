@@ -104,6 +104,10 @@ Type *Type::xmeet(Type *t) {
 
 int Type::hash() { return type_; }
 
+std::string Type::str() {
+    return STRS[type_];
+}
+
 bool Type::operator==(Type& o) {
   if (&o == this)
     return true;
@@ -154,4 +158,8 @@ Type *Type::dual() {
 // Part of hashmap interface see in header.
 unsigned long long Tomi::hash<Type *>::operator()(Type *val) {
   return val->hashCode();
+}
+
+Type *Type::glb() {
+    return type_ == TXCTRL ? XCONTROL() : BOTTOM();
 }

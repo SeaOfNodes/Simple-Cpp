@@ -82,6 +82,7 @@ public:
   ScopeNode* continueScope;
   ScopeNode* breakScope;
 
+  //static Tomi::HashMap<std::string, TypeStruct> OBJS;
   explicit Parser(std::string source, TypeInteger *arg);
 
   explicit Parser(std::string source);
@@ -105,7 +106,7 @@ private:
    LIst of keywords disallowed as identifiers
    */
   const std::unordered_set<std::string> KEYWORDS = {
-      "break", "continue", "else", "false", "if", "int", "return", "true", "while"};
+      "break", "continue", "else", "false", "if", "int", "return", "true", "while", "null", "new", "struct"};
 
   Node *parseStatement();
 
