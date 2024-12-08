@@ -73,6 +73,7 @@ add_library(simple_lib
         src/type/tuple_type.cc
         src/type/field.cc
         src/type/type_struct.cc
+        src/type/type_mem.cc
 
         # utils
         src/utils.cc

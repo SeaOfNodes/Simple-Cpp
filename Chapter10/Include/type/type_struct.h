@@ -10,10 +10,10 @@ public:
     Tomi::Vector<Field*> fields_;
     TypeStruct(std::string name, Tomi::Vector<Field*> fields);
     static TypeStruct* make(std::string name, Tomi::Vector<Field*> fields);
-    static TypeStruct* TOP;
-    static TypeStruct* BOT;
-    static TypeStruct* TEST;
-    static void gather(Tomi::Vector<Type*> ts);
+    static TypeStruct* TOP();
+    static TypeStruct* BOT();
+    static TypeStruct* TEST();
+    static void gather(Tomi::Vector<Type*>& ts);
 
     int find(std::string fname);
     Type* xmeet(Type* that) override;

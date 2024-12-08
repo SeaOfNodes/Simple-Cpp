@@ -7,19 +7,21 @@
 StopNode *Parser::STOP = nullptr;
 StartNode *Parser::START = nullptr;
 
+Tomi::HashMap<std::string, TypeStruct *> Parser::OBJS = {};
+
 Parser::Parser(std::string source, TypeInteger *arg) {
     Node::reset();
     IterPeeps::reset();
 
-    // OBJS.clear();
+    OBJS.clear();
 
     lexer = alloc.new_object<Lexer>(source);
     scope_node = alloc.new_object<ScopeNode>();
     continueScope = nullptr;
     breakScope = nullptr;
 
-    START = alloc.new_object<StartNode>(std::initializer_list<Type *>{Type::CONTROL(), arg});
-    STOP = alloc.new_object<StopNode>(std::initializer_list<Node *>{});
+    START = alloc.new_object<StartNode>(std::initializer_list < Type * > {Type::CONTROL(), arg});
+    STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
     START->peephole();
 }
 
@@ -37,9 +39,9 @@ StopNode *Parser::parse() { return parse(true); }
 StopNode *Parser::parse(bool show) {
     xScopes.push_back(scope_node);
     scope_node->push();
-    scope_node->define(ScopeNode::CTRL,
+    scope_node->define(ScopeNode::CTRL, Type::CONTROL(),
                        (alloc.new_object<ProjNode>(START, 0, ScopeNode::CTRL))->peephole());
-    scope_node->define(ScopeNode::ARG0,
+    scope_node->define(ScopeNode::ARG0, Type::BOTTOM(),
                        (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
     parseBlock();
     // before pop
@@ -107,11 +109,40 @@ Node *Parser::parseContinue() {
     return continueScope;
 }
 
+Node *Parser::parseStruct() {
+    if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
+    std::string typeName = requireId();
+    if (OBJS.get(typeName) != nullptr) throw std::runtime_error("Redefining struct: " + typeName);
+    Tomi::Vector<Field *> fields;
+    require("{");
+    while (!peek('}') && !lexer->isEof()) {
+        Field *field = parseField(typeName);
+        auto *it = std::find(fields.begin(), fields.end(), field);
+        if (it != fields.end())
+            throw std::runtime_error("Field '" + field->fname_ + "' already defined in struct '" + typeName + "'");
+        fields.push_back(field);
+    }
+    require("}");
+    // Build and install the TypeStruct
+    TypeStruct *type = TypeStruct::make(typeName, fields);
+    OBJS.put(typeName, type);
+    START->addMemProj(type, scope_node);
+    return parseStatement();
+}
+
+Field *Parser::parseField(std::string name) {
+    if (matchx("int")) {
+        return require(Field::make(requireId(), TypeInteger::BOT()), ";");
+    }
+    throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
+
+}
+
 Node *Parser::parseStatement() {
     if (matchx("return"))
         return parseReturn();
     else if (matchx("int"))
-        return parseDecl();
+        return parseDecl(TypeInteger::BOTTOM());
     else if (match("{"))
         return require(parseBlock(), "}");
     else if (matchx("if"))
@@ -122,11 +153,15 @@ Node *Parser::parseStatement() {
         return parseBreak();
     else if (matchx("continue"))
         return parseContinue();
+    else if (matchx("struct"))
+        return parseStruct();
     else if (matchx("#showGraph"))
         return require(showGraph(), ";");
     else if (match(";"))
         return nullptr;
     else
+        // declarations of vars with struct type are handled in parseExpressionStatement due
+        // to ambiguity
         return parseExpressionStatement();
 }
 
@@ -412,13 +447,17 @@ Node *Parser::parsePrimary() {
 
 void Parser::require(std::string syntax) { require(nullptr, syntax); }
 
-Node *Parser::parseDecl() {
+Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
     require("=");
     auto expr = require(parseExpression(), ";");
-    if (scope_node->define(name, expr) == nullptr)
+    if (scope_node->define(name, t, expr) == nullptr)
         error("Redefining name '" + name + "'");
     return expr;
+}
+
+std::string Parser::memName(int alias) {
+    return "$" + std::to_string(alias);
 }
 
 std::string Parser::requireId() {
@@ -426,12 +465,6 @@ std::string Parser::requireId() {
     if (id != "" && (KEYWORDS.find(id) == KEYWORDS.end()))
         return id;
     error("Expected an identifier, found " + id);
-}
-
-Node *Parser::require(Node *n, std::string syntax) {
-    if (match(syntax))
-        return n;
-    errorSyntax(syntax);
 }
 
 void Parser::errorSyntax(std::string syntax) {

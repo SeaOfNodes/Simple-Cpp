@@ -26,6 +26,10 @@ public:
   Tomi::Vector<Tomi::HashMap<std::string, int>> scopes;
   Tomi::Vector<std::string> keys;
 
+    /**
+   * Tracks declared types for every name
+   */
+    Tomi::Vector<Tomi::HashMap<std::string, Type*>> declaredTypes;
   ScopeNode();
 
   std::string label() override;
@@ -42,7 +46,7 @@ public:
    * Create a new name in the current scope
    * Check if name already exists in the current scope
    */
-  Node *define(std::string name, Node *n);
+  Node *define(std::string name, Type* declaredType, Node *n);
   /**
    * If the name is present in any scope, then redefine else null
    * The nestingLevel is going to be the current scope level
