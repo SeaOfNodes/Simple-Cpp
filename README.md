@@ -11,7 +11,8 @@ The code is currently equivalent to chapter7 of the main implementation.
 Custom Arena allocator comes in chapter 8.
 
 TODO:
- - Implement Pretty Print for IR
  - Fix Graphviz generation for ch8
- - Add bump alloc for ch9
- - Fix everything in chapter9
+ - Better tools for debugging
+ - some custom functionality for deleting
+ - Nicer IRprinter
+ - Make sure graphviz output generates good graph
