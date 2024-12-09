@@ -69,6 +69,7 @@ add_library(simple_lib
         src/node/new_node.cc
         src/node/mem_op_node.cc
         src/node/store_node.cc
+        src/node/load_node.cc
 
         # type
         src/type/integer_type.cc
