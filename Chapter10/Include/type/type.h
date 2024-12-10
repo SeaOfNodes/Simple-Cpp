@@ -65,6 +65,7 @@ public:
   // Factory method which interns "this"
   Type *intern();
 
+  virtual Type* makeInit();
   virtual bool eq(Type *t);
 
   // to avoid collisions with INTERN

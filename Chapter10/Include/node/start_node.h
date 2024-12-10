@@ -14,8 +14,7 @@
 class StartNode : public MultiNode {
 public:
   TypeTuple *args_;
-
-
+  static Tomi::HashMap<std::string, int> aliasStarts;
   StartNode(std::initializer_list<Type *> args);
 
   bool isCFG() override;

@@ -178,6 +178,13 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 
 ScopeNode *ScopeNode::dup() { return dup(false); }
 
+Type *ScopeNode::lookUpDeclaredType(std::string name) {
+    for(int i = declaredTypes.size(); i >= 0; i--) {
+        Type**t = declaredTypes[i - 1].get(name);
+        if(t != nullptr) return *t;
+    }
+    return nullptr;
+}
 ScopeNode *ScopeNode::dup(bool loop) {
     auto *dup = alloc.new_object<ScopeNode>();
     // Our goals are:

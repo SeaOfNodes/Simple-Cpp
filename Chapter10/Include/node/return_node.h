@@ -1,12 +1,13 @@
 #ifndef RETURN_NODE_H
 #define RETURN_NODE_H
 #include "../../Include/node/node.h"
+#include "../../Include/node/scope_node.h"
 
 class ReturnNode: public Node {
 public:
   // ctrl - predecessor control node
   // data - Data node value
-  ReturnNode(Node* ctrl, Node* data);
+  ReturnNode(Node* ctrl, Node* data, ScopeNode* scope);
   Node* ctrl();
   Node* expr();
   std::ostringstream& print_1(std::ostringstream& builder, Tomi::Vector<bool>& visited) override;

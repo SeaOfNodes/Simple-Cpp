@@ -15,6 +15,7 @@ std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector
 
 void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
     int len = args_->types_.size();
+    aliasStarts.put(ts->name_, len);
 
     // resize the tuple's type array to include all fields of the struct
     int max = len + ts->fields_.size();

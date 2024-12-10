@@ -52,6 +52,8 @@ public:
    * */
   Node *lookup(std::string name);
 
+  Type* lookUpDeclaredType(std::string name);
+
   /*
    * Create a new name in the current scope
    * Check if name already exists in the current scope

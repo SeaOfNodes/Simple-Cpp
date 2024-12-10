@@ -30,6 +30,7 @@ public:
 
   Type* dual() override;
 
+  TypeInteger* makeInit() override;
   long value();
   bool eq(Type *) override;
 

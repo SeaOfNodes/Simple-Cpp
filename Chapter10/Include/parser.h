@@ -58,9 +58,11 @@ public:
 
     std::string matchId();
 
+    std::size_t position = 0;
+
 private:
     std::string input;
-    std::size_t position = 0;
+
 
     bool isIdStart(char ch);
 
@@ -95,6 +97,7 @@ public:
 
     StopNode *parse();
 
+    Type* type();
     StopNode *parse(bool show);
 
     std::string src();
@@ -106,6 +109,10 @@ public:
     bool peek(char ch);
 
     static std::string memName(int alias);
+
+    Node* newStruct(TypeStruct* obj);
+    Node* memAlias(int alias);
+    Node* memAlias(int alias, Node* st);
 
 private:
     /**
@@ -155,13 +162,17 @@ private:
 
     Node *parsePrimary();
 
+    Node* parsePostFix(Node* expr);
+
     Node *parseIntegerLiteral();
 
     Node *showGraph();
 
     Node *parseBlock();
 
-    void require(std::string syntax);
+    // require an exact match
+
+    Parser* require(std::string syntax);
 
     template<typename N>
     N require(N n, std::string syntax) {

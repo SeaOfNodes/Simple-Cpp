@@ -1,7 +1,8 @@
 #include "../Include/parser.h"
 #include "../Include/graph_visualizer.h"
 #include "../Include/node/proj_node.h"
-
+#include "../Include/node/new_node.h"
+#include "../Include/node/store_node.h"
 
 // Todo: static fiasco?
 StopNode *Parser::STOP = nullptr;
@@ -20,8 +21,8 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     continueScope = nullptr;
     breakScope = nullptr;
 
-    START = alloc.new_object<StartNode>(std::initializer_list < Type * > {Type::CONTROL(), arg});
-    STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
+    START = alloc.new_object<StartNode>(std::initializer_list<Type *>{Type::CONTROL(), arg});
+    STOP = alloc.new_object<StopNode>(std::initializer_list<Node *>{});
     START->peephole();
 }
 
@@ -246,7 +247,7 @@ Node *Parser::parseWhile() {
 Node *Parser::parseIf() {
     require("(");
     // Parse predicate
-    Node *pred = require(parseExpression(), ")");
+    Node *pred = require(parseExpression(), ")")->keep();
     // IfNode takes current control and predicate
     auto *ifNode = ((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
     // Setup projection nodes
@@ -266,6 +267,7 @@ Node *Parser::parseIf() {
 
     // Parse the true side
     ctrl(ifT->unkeep()); // set ctrl token to ifTrue projection
+    scope_node->upcast(ifT, pred, false); // up-cast predicate
     parseStatement();    // Parse true-side
 
     ScopeNode *tScope = scope_node;
@@ -273,9 +275,11 @@ Node *Parser::parseIf() {
     scope_node = fScope;
     ctrl(ifF->unkeep());
     if (matchx("else")) {
+        scope_node->upcast(ifF, pred, true); // Up-cast predicate
         parseStatement();
         fScope = scope_node;
     }
+    pred->unkeep();
 
     if (tScope->nIns() != ndefs || fScope->nIns() != ndefs) {
         throw std::runtime_error("Cannot define a new name on one arm of an if");
@@ -289,6 +293,18 @@ Node *Parser::parseIf() {
 
 Node *Parser::showGraph() {
     std::cout << GraphVisualizer().generateDotOutput(*this);
+    return nullptr;
+}
+
+Type *Parser::type() {
+    size_t old = lexer->position;
+    std::string tname = lexer->matchId();
+    if (tname.empty()) return nullptr;
+    if (tname == "int") return TypeInteger::BOT();
+    TypeStruct **obj = OBJS.get(tname);
+    if (obj != nullptr) return TypeMemPtr::make(*obj, match("?"));
+    // Not a type; unwind the parse
+    lexer->position = old;
     return nullptr;
 }
 
@@ -306,17 +322,39 @@ Node *Parser::parseBlock() {
 }
 
 Node *Parser::parseExpressionStatement() {
+    size_t old = lexer->position;
+    Type *t = type();
     std::string name = requireId();
-    require("=");
-    auto expr = require(parseExpression(), ";");
-    if (scope_node->update(name, expr) == nullptr)
-        error("Undefined name: '" + name + "'");
+    Node *expr;
+    if (match(";")) {
+        // No type and no expr is an error
+        if (t == nullptr) error("Expected a type or expression");
+        expr = (new ConstantNode(t->makeInit(), Parser::START))->peephole();
+    } else if (match("=")) {
+        // Assign "= expr;"
+        expr = require(parseExpression(), ";");
+
+    } else {
+        lexer->position = old;
+        return require(parseExpression(), ";");
+    }
+    // Defining a new variable vs updating an old one
+    if (t != nullptr) {
+        if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
+    } else {
+        Node *n = scope_node->lookup(name);
+        t = scope_node->lookUpDeclaredType(name);
+        if (n == nullptr) error("Undefined name: '" + name + "'");
+        scope_node->update(name, expr);
+    }
+    if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
     return expr;
+
 }
 
 Node *Parser::parseReturn() {
     Node *expr = require(parseExpression(), ";");
-    Node *bpeep = (alloc.new_object<ReturnNode>(ctrl(), expr))->peephole();
+    Node *bpeep = (alloc.new_object<ReturnNode>(ctrl(), expr, scope_node))->peephole();
     auto *ret = STOP->addReturn(bpeep);
     ctrl((alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START))
                  ->peephole()); // kill control
@@ -421,9 +459,54 @@ Node *Parser::parseMultiplication() {
 Node *Parser::parseUnary() {
     if (match("-"))
         return (alloc.new_object<MinusNode>(parseUnary()))->peephole();
-    return parsePrimary();
+    if(match("!")) return (new NotNode(parseUnary()))->peephole();
+    return parsePostFix(parsePrimary());
 }
 
+Node* Parser::memAlias(int alias) {
+    return scope_node->lookup(memName(alias));
+}
+
+Node* Parser::memAlias(int alias, Node* st) {
+    return scope_node->update(memName(alias), st);
+}
+Node* Parser::newStruct(TypeStruct* obj) {
+    Node* n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
+    Node* initValue = (new ConstantNode(TypeInteger::constant(0), Parser::START))->peephole();
+    int* alias = Parser::START->aliasStarts.get(obj->name_);
+    assert(alias != nullptr);
+
+    for(Field* field: obj->fields_) {
+        //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
+
+        memAlias(*alias, (new StoreNode(field->fname_, *alias, memAlias(*alias), n, initValue))->peephole());
+        alias++;
+    }
+    return n->unkeep();
+}
+Node* Parser::parsePostFix(Node *expr) {
+    if (!match(".")) return expr;
+    auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
+
+    if (!ptr) error("Expected struct reference but got " + expr->type_->str());
+    std::string name = requireId();
+    int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
+    if (idx == -1) error("Accessing unknown fijeld '" + name + "' from '" + ptr->str() + "'");
+    int alias = *(START->aliasStarts.get(ptr->obj_->name_)) + idx;
+    if (match("=")) {
+        // Disambiguate "obj.fld==x" boolean test from "obj.fld=x" field assignment
+        if (peek('=')) lexer->position--;
+        else {
+            Node *val = parseExpression();
+            memAlias(alias, (new StoreNode(name, alias, memAlias(alias), expr, val)))->peephole();
+            return expr;    // "obj.a = expr" returns the expression while updating memory
+
+        }
+    }
+    Type *declaredType = ptr->obj_->fields_[idx]->type_;
+    // Todo: Load node here
+    // return parsePostFix(new LoadNode())
+}
 Node *Parser::parsePrimary() {
     lexer->skipWhiteSpace();
     if (lexer->isNumber())
@@ -432,8 +515,15 @@ Node *Parser::parsePrimary() {
         return require(parseExpression(), ")");
     if (matchx("true"))
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(1), START))->peephole();
-    if (matchx("true"))
+    if (matchx("false"))
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(0), START))->peephole();
+    if(matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
+    if(matchx("new")) {
+        std::string structName = requireId();
+        TypeStruct**obj = OBJS.get(structName);
+        if(obj == nullptr) error("Undefined struct: " + structName);
+        return newStruct(*obj);
+    }
     std::string name = lexer->matchId();
     if (name == "")
         errorSyntax("an identifier or expression");
@@ -445,14 +535,17 @@ Node *Parser::parsePrimary() {
     throw std::runtime_error("Undefined name: '" + name + "'");
 }
 
-void Parser::require(std::string syntax) { require(nullptr, syntax); }
+Parser *Parser::require(std::string syntax) {
+    require(nullptr, syntax);
+    return this;
+}
 
 Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
-    require("=");
-    auto expr = require(parseExpression(), ";");
-    if (scope_node->define(name, t, expr) == nullptr)
-        error("Redefining name '" + name + "'");
+    auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
+            require("=")->parseExpression(), ";");
+    if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
+    if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
     return expr;
 }
 

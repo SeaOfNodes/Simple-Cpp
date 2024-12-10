@@ -12,6 +12,10 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
   return builder;
 }
 
+Type* Type::makeInit() {
+    return nullptr;
+}
+
 Type *Type::CONTROL() {
   static Type CONTROL = Type(TCTRL);
   // intern on the persistent object

@@ -37,7 +37,7 @@ public:
     TypeMemPtr* dual();
     TypeMemPtr* glb();
 
-    TypeMemPtr* makeInit();
+    TypeMemPtr* makeInit() override;
 
     int hash();
 

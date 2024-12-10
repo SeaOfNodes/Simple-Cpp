@@ -37,6 +37,9 @@ TypeInteger *TypeInteger::BOT() {
 TypeInteger *TypeInteger::ZERO () {
     return make(true, 0);
 }
+TypeInteger * TypeInteger::makeInit() {
+    return ZERO();
+}
 
 Type *TypeInteger::xmeet(Type *other) {
   // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
