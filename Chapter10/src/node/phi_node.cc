@@ -1,7 +1,7 @@
 #include "../../Include/node/phi_node.h"
 
-PhiNode::PhiNode(std::string label, std::initializer_list<Node *> inputs)
-    : Node(inputs), label_(label) {}
+PhiNode::PhiNode(std::string label, Type* type_, std::initializer_list<Node *> inputs)
+    : Node(inputs), declaredType(type_), label_(label) {}
 std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
@@ -117,8 +117,8 @@ bool PhiNode::allCons(Node *dep) {
   return Node::allCons(dep);
 }
 
-PhiNode::PhiNode(std::string label, Tomi::Vector<Node *> inputs)
-    : Node(inputs), label_(label) {}
+PhiNode::PhiNode(std::string label, Type* type_, Tomi::Vector<Node *> inputs)
+    : Node(inputs), declaredType(type_), label_(label) {}
 bool PhiNode::same_op() {
   for (int i = 2; i < nIns(); i++) {
     if (typeid(*in(1)) != typeid(*in(i)))

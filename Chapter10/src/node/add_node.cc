@@ -52,7 +52,7 @@ Node *AddNode::phiCon(Node *op, bool rotate) {
   std::string label = lphi->label_ + (dynamic_cast<PhiNode *>(rhs)
                                           ? dynamic_cast<PhiNode *>(rhs)->label_
                                           : "");
-  Node* phi = alloc.new_object<PhiNode>(label, ns);
+  Node* phi = alloc.new_object<PhiNode>(label,lphi->declaredType, ns);
   phi = phi->peephole();
   // Rotate needs another op, otherwise just the phi
   return lhs == lphi ? phi : op->copy(lhs->in(1), phi);

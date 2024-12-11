@@ -185,6 +185,7 @@ Type *ScopeNode::lookUpDeclaredType(std::string name) {
     }
     return nullptr;
 }
+
 ScopeNode *ScopeNode::dup(bool loop) {
     auto *dup = alloc.new_object<ScopeNode>();
     // Our goals are:

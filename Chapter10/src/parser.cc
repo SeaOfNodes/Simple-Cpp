@@ -1,8 +1,8 @@
 #include "../Include/parser.h"
 #include "../Include/graph_visualizer.h"
-#include "../Include/node/proj_node.h"
 #include "../Include/node/new_node.h"
 #include "../Include/node/store_node.h"
+#include "../Include/node/load_node.h"
 
 // Todo: static fiasco?
 StopNode *Parser::STOP = nullptr;
@@ -459,24 +459,25 @@ Node *Parser::parseMultiplication() {
 Node *Parser::parseUnary() {
     if (match("-"))
         return (alloc.new_object<MinusNode>(parseUnary()))->peephole();
-    if(match("!")) return (new NotNode(parseUnary()))->peephole();
+    if (match("!")) return (new NotNode(parseUnary()))->peephole();
     return parsePostFix(parsePrimary());
 }
 
-Node* Parser::memAlias(int alias) {
+Node *Parser::memAlias(int alias) {
     return scope_node->lookup(memName(alias));
 }
 
-Node* Parser::memAlias(int alias, Node* st) {
+Node *Parser::memAlias(int alias, Node *st) {
     return scope_node->update(memName(alias), st);
 }
-Node* Parser::newStruct(TypeStruct* obj) {
-    Node* n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
-    Node* initValue = (new ConstantNode(TypeInteger::constant(0), Parser::START))->peephole();
-    int* alias = StartNode::aliasStarts.get(obj->name_);
+
+Node *Parser::newStruct(TypeStruct *obj) {
+    Node *n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
+    Node *initValue = (new ConstantNode(TypeInteger::constant(0), Parser::START))->peephole();
+    int *alias = StartNode::aliasStarts.get(obj->name_);
     assert(alias != nullptr);
 
-    for(Field* field: obj->fields_) {
+    for (Field *field: obj->fields_) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
         memAlias(*alias, (new StoreNode(field->fname_, *alias, memAlias(*alias), n, initValue))->peephole());
@@ -484,7 +485,8 @@ Node* Parser::newStruct(TypeStruct* obj) {
     }
     return n->unkeep();
 }
-Node* Parser::parsePostFix(Node *expr) {
+
+Node *Parser::parsePostFix(Node *expr) {
     if (!match(".")) return expr;
     auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
 
@@ -504,9 +506,9 @@ Node* Parser::parsePostFix(Node *expr) {
         }
     }
     Type *declaredType = ptr->obj_->fields_[idx]->type_;
-    // Todo: Load node here
-    // return parsePostFix(new LoadNode())
+    return parsePostFix((new LoadNode(name, alias, declaredType, memAlias(alias), expr))->peephole());
 }
+
 Node *Parser::parsePrimary() {
     lexer->skipWhiteSpace();
     if (lexer->isNumber())
@@ -517,11 +519,11 @@ Node *Parser::parsePrimary() {
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(1), START))->peephole();
     if (matchx("false"))
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(0), START))->peephole();
-    if(matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
-    if(matchx("new")) {
+    if (matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
+    if (matchx("new")) {
         std::string structName = requireId();
-        TypeStruct**obj = OBJS.get(structName);
-        if(obj == nullptr) error("Undefined struct: " + structName);
+        TypeStruct **obj = OBJS.get(structName);
+        if (obj == nullptr) error("Undefined struct: " + structName);
         return newStruct(*obj);
     }
     std::string name = lexer->matchId();
@@ -533,6 +535,16 @@ Node *Parser::parsePrimary() {
     if (n != nullptr)
         return n;
     throw std::runtime_error("Undefined name: '" + name + "'");
+}
+
+bool Parser::peekIsId() {
+
+    return lexer->peekIsId();
+}
+
+bool Lexer::peekIsId() {
+    skipWhiteSpace();
+    return isIdStart(peek());
 }
 
 Parser *Parser::require(std::string syntax) {
@@ -647,8 +659,7 @@ std::string Lexer::parsePunctuation() {
 }
 
 std::string Lexer::matchId() {
-    skipWhiteSpace();
-    return isIdStart(peek()) ? parseId() : "";
+    return peekIsId() ? parseId() : "";
 }
 
 std::string Lexer::parseNumberString() {

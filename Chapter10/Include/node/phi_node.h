@@ -9,8 +9,9 @@
 class PhiNode : public Node {
 public:
   std::string label_;
-  PhiNode(std::string label, std::initializer_list<Node *> inputs);
-  PhiNode(std::string label, Tomi::Vector<Node *> inputs);
+  Type* declaredType;
+  PhiNode(std::string label, Type* declaredType, std::initializer_list<Node *> inputs);
+  PhiNode(std::string label, Type* declaredType, Tomi::Vector<Node *> inputs);
 
   std::string label() override;
   std::string glabel() override;

@@ -59,6 +59,7 @@ public:
     std::string matchId();
 
     std::size_t position = 0;
+    bool peekIsId();
 
 private:
     std::string input;
@@ -107,6 +108,7 @@ public:
     Node *ctrl(Node *n);
 
     bool peek(char ch);
+    bool peekIsId();
 
     static std::string memName(int alias);
 
