@@ -473,7 +473,7 @@ Node* Parser::memAlias(int alias, Node* st) {
 Node* Parser::newStruct(TypeStruct* obj) {
     Node* n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
     Node* initValue = (new ConstantNode(TypeInteger::constant(0), Parser::START))->peephole();
-    int* alias = Parser::START->aliasStarts.get(obj->name_);
+    int* alias = StartNode::aliasStarts.get(obj->name_);
     assert(alias != nullptr);
 
     for(Field* field: obj->fields_) {
@@ -492,7 +492,7 @@ Node* Parser::parsePostFix(Node *expr) {
     std::string name = requireId();
     int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
     if (idx == -1) error("Accessing unknown fijeld '" + name + "' from '" + ptr->str() + "'");
-    int alias = *(START->aliasStarts.get(ptr->obj_->name_)) + idx;
+    int alias = *(StartNode::aliasStarts.get(ptr->obj_->name_)) + idx;
     if (match("=")) {
         // Disambiguate "obj.fld==x" boolean test from "obj.fld=x" field assignment
         if (peek('=')) lexer->position--;

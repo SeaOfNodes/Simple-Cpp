@@ -6,6 +6,7 @@ StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
   type_ = args_;
 }
 
+Tomi::HashMap<std::string, int>  StartNode::aliasStarts = Tomi::HashMap<std::string, int>();
 bool StartNode::isCFG() { return true; }
 
 std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
