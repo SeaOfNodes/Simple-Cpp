@@ -1,4 +1,7 @@
 #include "../../Include/node/phi_node.h"
+#include "../../Include/type/type_mem.h"
+#include "../../Include/node/cast_node.h"
+#include "../../Include/node/if_node.h"
 
 PhiNode::PhiNode(std::string label, Type* type_, std::initializer_list<Node *> inputs)
     : Node(inputs), declaredType(type_), label_(label) {}
@@ -58,6 +61,10 @@ Node *PhiNode::singleUniqueInput() {
   }
   return live;
 }
+bool PhiNode::isMem() {
+    auto* a = dynamic_cast<TypeMem*>(declaredType);
+    return a != nullptr;
+}
 bool PhiNode::isMultiTail() { return true; }
 Node *PhiNode::idealize() {
   auto *r = dynamic_cast<RegionNode *>(region());
@@ -96,8 +103,8 @@ Node *PhiNode::idealize() {
       lhss[i] = in(i)->in(1);
       rhss[i] = in(i)->in(2);
     }
-    Node *phi_lhs = alloc.new_object<PhiNode>(label_, lhss);
-    Node *phi_rhs = alloc.new_object<PhiNode>(label_, rhss);
+    Node *phi_lhs = alloc.new_object<PhiNode>(label_, declaredType, lhss);
+    Node *phi_rhs = alloc.new_object<PhiNode>(label_, declaredType, rhss);
     // Phi(region, arg, arg)
     // Phi(region, 1, 2)
     // now the first one has the same inputs
@@ -105,6 +112,34 @@ Node *PhiNode::idealize() {
     phi_rhs = phi_rhs->peephole();
     return op->copy(phi_lhs, phi_rhs);
   }
+    // If merging Phi(N, cast(N)) - we are losing the cast JOIN effects, so just remove.
+    if(nIns() == 3) {
+        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast->in(1)->addDep(this) == in(2)) {
+            return in(2);
+        }
+        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast->in(1)->addDep(this) == in(1)) {
+            return in(1);
+        }
+    }
+    // If merging a null-checked null and the checked value, just use the value.
+    // if( val ) ..; phi(Region,False=0/null,True=val);
+    // then replace with plain val.
+    if(nIns() == 3) {
+        int nullx = -1;
+        if(in(1)->type_ == in(1)->type_->makeInit()) nullx = 1;
+        if(in(2)->type_ == in(2)->type_->makeInit()) nullx = 2;
+        if(nullx != -1) {
+            Node* val = in(3-nullx);
+            if(auto* iff = dynamic_cast<IfNode*>(region()->idom()); iff->pred()->addDep(this) == val) {
+                // Must walk the idom on the null side to make sure we hit False.
+                Node* idom = region()->in(nullx);
+                while(idom->in(0) != iff) idom = idom->idom();
+                if(auto* proj = dynamic_cast<ProjNode*>(idom); proj->idx_ == 1) {
+                    return val;
+                }
+            }
+        }
+    }
   return nullptr;
 }
 bool PhiNode::allCons(Node *dep) {

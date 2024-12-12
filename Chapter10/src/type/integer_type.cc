@@ -17,6 +17,14 @@ std::string TypeInteger::ToString() {
   os << "TypeInteger: " << value();
   return os.str();
 }
+std::ostringstream& TypeInteger::typeName(std::ostringstream& builder) {
+    if(this == TOP()) builder << "IntTop";
+    if(this == BOT()) builder << "IntBot";
+    else {
+        builder << "Int";
+    }
+    return builder;
+}
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
   if (this == TOP())
@@ -41,6 +49,11 @@ TypeInteger * TypeInteger::makeInit() {
     return ZERO();
 }
 
+std::string TypeInteger::str() {
+    if(this == TOP()) return "~int";
+    if(this == BOT()) return "_int";
+    return std::to_string(con_);
+}
 Type *TypeInteger::xmeet(Type *other) {
   // Invariant from caller: 'this' != 'other' and same class (TypeInteger)
   auto *i = dynamic_cast<TypeInteger *>(other);

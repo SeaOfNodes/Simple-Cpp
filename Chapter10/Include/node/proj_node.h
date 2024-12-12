@@ -20,6 +20,8 @@ public:
 
   bool isMultiTail();
 
+  bool isMem() override;
+
   Type* compute() override;
   Node* idealize() override;
   bool eq(Node*n) override;

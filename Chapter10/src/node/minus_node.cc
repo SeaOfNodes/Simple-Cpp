@@ -22,4 +22,10 @@ Type *MinusNode::compute() {
   return TypeInteger::TOP()->meet(in(1)->type_);
 }
 
-Node *MinusNode::idealize() { return nullptr; }
+Node *MinusNode::idealize() {
+    // -(-x) is x
+    if(auto* minus = dynamic_cast<MinusNode*>(in(1))) {
+        return minus->in(1);
+    }
+    return nullptr;
+}

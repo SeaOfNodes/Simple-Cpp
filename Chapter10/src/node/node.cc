@@ -4,7 +4,7 @@
 #include "../../Include/IR_printer.h"
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
-    nid  = UNIQUE_ID++;
+    nid = UNIQUE_ID++;
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -31,7 +31,10 @@ Node *Node::out(std::size_t i) const {
     return (i < outputs.size()) ? outputs[i] : nullptr;
 }
 
-std::string Node::uniqueName() { return label() + std::to_string(nid); }
+std::string Node::uniqueName() {
+    // Todo: Get rid of $ as graphviz doesn't like it
+    return label() + std::to_string(nid);
+}
 
 std::string Node::glabel() { return label(); }
 
@@ -95,12 +98,17 @@ Node *Node::setDef(int idx, Node *new_def) {
     if (old_def != nullptr && old_def->delUse(this))
         old_def->kill();
     inputs[idx] = new_def;
+    moveDepsToWorkList();
     return new_def;
 }
 
 Node *Node::addUse(Node *n) {
     outputs.push_back(n);
     return this;
+}
+
+bool Node::iskeep() {
+    return std::find(outputs.begin(), outputs.end(), nullptr) != outputs.end();
 }
 
 Node *Node::addDep(Node *dep) {
@@ -257,12 +265,9 @@ bool Node::allCons(Node *dep) {
 
 Node *Node::idom() {
     Node *idom = in(0);
-    if (idom->i_depth == 0)
-        idom->idom(); // Recursively set _idepth
-    if (i_depth == 0)
-        i_depth = idom->i_depth + 1;
     return idom;
 }
+
 
 void Node::printLine(std::ostringstream &builder) {
     builder << std::format("{:>4} {:<7.7}", nid, label());
@@ -294,13 +299,13 @@ void Node::printLine(std::ostringstream &builder) {
 Node *Node::delDef(int idx) {
     unlock();
     Node **old_def = &inputs[idx];
-    Node* nptr = *old_def;
+    Node *nptr = *old_def;
     if (old_def != nullptr && // If the old def exists, remove a def->use edge
         nptr->delUse(
                 this))     // If we removed the last use, the old def is now dead
         nptr->kill(); // Kill old def
 
-     Node * tmp = inputs.back();
+    Node *tmp = inputs.back();
     inputs.pop_back();
     inputs[idx] = tmp;
     // erase is bad here
@@ -314,6 +319,10 @@ Node *Node::copy(Node *lhs, Node *rhs) {
 bool Node::isUnused() const { return outputs.empty(); }
 
 bool Node::isCFG() { return false; }
+
+bool Node::isMem() {
+    return false;
+}
 
 void Node::kill() {
     unlock();
@@ -377,12 +386,18 @@ Node *Node::find(Tomi::Vector<bool> visit, int nid_) {
 
 bool Node::eq(Node *n) { return true; }
 
+int Node::_idepth(int idx) {
+    return idepth_== 0 ? idepth_ = in(idx)->idepth()+1 : idepth_;
+}
+int Node::idepth() {
+    return _idepth(0);
+}
 Node *Node::idealize() { return nullptr; }
 
 Type *Node::compute() { return nullptr; }
 
 Node *Node::deadCodeElim(Node *m) {
-    if (m != this && isUnused()) {
+    if (m != this && !isDead()) {
         m->keep();
         kill();
         m->unkeep();

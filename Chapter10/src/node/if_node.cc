@@ -1,6 +1,8 @@
 #include "../../Include/node/if_node.h"
 
-IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {}
+IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {
+    IterPeeps::add(this);
+}
 std::string IfNode::label() { return "if"; }
 std::ostringstream &IfNode::print_1(std::ostringstream &builder,
                                     Tomi::Vector<bool> &visited) {

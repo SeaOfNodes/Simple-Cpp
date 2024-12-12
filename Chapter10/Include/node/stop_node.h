@@ -20,6 +20,9 @@ public:
   ReturnNode *ret();
   Type *compute() override;
   Node *idealize() override;
+  Node*idom() override;
+
+  StopNode* typeCheck();
 
   Node *addReturn(Node *node);
   StopNode* iterate();

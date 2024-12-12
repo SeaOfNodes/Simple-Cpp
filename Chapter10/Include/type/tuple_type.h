@@ -11,14 +11,19 @@ public:
   explicit TypeTuple(Tomi::Vector<Type *> &types);
 
   Type *xmeet(Type *other) override;
-
+  static TypeTuple* TEST();
   // DEBUG INFO FOR DEBUGGER
   std::string ToString() override;
+  static void gather(Tomi::Vector<Type *> &ts);
 
   std::ostringstream &print_1(std::ostringstream &builder) override;
   static TypeTuple *make(std::initializer_list<Type *>);
   static TypeTuple *make(Tomi::Vector<Type *>);
 
+  std::ostringstream& typeName(std::ostringstream &builder) override;
+
+  Type* glb() override;
+  std::string str() override;
   bool eq(Type *t) override;
   int hash() override;
 

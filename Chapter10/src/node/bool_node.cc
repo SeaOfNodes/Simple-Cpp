@@ -34,6 +34,23 @@ Node *BoolNode::idealize() {
   if (in(1) == in(2))
     return alloc.new_object<ConstantNode>(TypeInteger::constant(doOp(3, 3) ? 1 : 0),
                             Parser::START);
+  // Equals pushes constant to the right; 5 == x becomes x == 5
+  if(dynamic_cast<EQ*>(this)) {
+      if(!dynamic_cast<ConstantNode*>(in(2))) {
+          // con == noncon becomes noncon ==con
+          if(dynamic_cast<ConstantNode*>(in(1))) {
+              return alloc.new_object<EQ>(in(2), in(1));
+          }
+          // Equals sorts by NID oterwise: non.high == non.low becomes non.low == non.high
+          else if(in(1)->nid > in(2)->nid) {
+              return alloc.new_object<EQ>(in(2), in(1));
+          }
+      }
+      // Equals X==0 becomes a !X
+      if(in(2)->type_ == TypeInteger::ZERO() || in(2)->type_ == TypeMemPtr::NULLPTR()) {
+          return alloc.new_object<NotNode>(in(1));
+      }
+  }
   // Do we have ((x * (phi cons)) * con) ?
   // Do we have ((x * (phi cons)) * (phi cons)) ?
   // Push constant up through the phi: x * (phi con0*con0 con1*con1...)

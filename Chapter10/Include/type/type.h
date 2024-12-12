@@ -64,6 +64,7 @@ public:
 
   // Factory method which interns "this"
   Type *intern();
+  virtual std::ostringstream& typeName(std::ostringstream& builder);
 
   virtual Type* makeInit();
   virtual bool eq(Type *t);
@@ -80,7 +81,7 @@ public:
     /**
    * Compute greatest lower bound in the lattice
    */
-   Type* glb();
+   virtual Type* glb();
 
   // Our lattice is defined with a MEET and a DUAL.
   // JOIN is dual of meet of both duals.

@@ -62,7 +62,7 @@ Type *Type::meet(Type *other) {
     return xmeet(other);
   if (other->isSimple())
     return other->xmeet(this);
-  return xmeet(other);
+  return Type::BOTTOM();
 }
 // O(1)
 std::string Type::ToString() {
@@ -112,6 +112,9 @@ std::string Type::str() {
     return STRS[type_];
 }
 
+std::ostringstream& Type::typeName(std::ostringstream& builder) {
+    return print_1(builder);
+}
 bool Type::operator==(Type& o) {
   if (&o == this)
     return true;

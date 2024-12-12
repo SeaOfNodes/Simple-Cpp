@@ -493,7 +493,7 @@ Node *Parser::parsePostFix(Node *expr) {
     if (!ptr) error("Expected struct reference but got " + expr->type_->str());
     std::string name = requireId();
     int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
-    if (idx == -1) error("Accessing unknown fijeld '" + name + "' from '" + ptr->str() + "'");
+    if (idx == -1) error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
     int alias = *(StartNode::aliasStarts.get(ptr->obj_->name_)) + idx;
     if (match("=")) {
         // Disambiguate "obj.fld==x" boolean test from "obj.fld=x" field assignment

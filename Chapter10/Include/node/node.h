@@ -66,15 +66,6 @@ public:
    */
   Type *type_ = nullptr;
 
-  /**
-   * Immediate dominator tree depth, used to approximate a real IDOM during
-   * parsing where we do not have the whole program, and also peepholes
-   * change the CFG incrementally.
-   * <p>
-   * See {@link <a
-   * href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
-   */
-  int i_depth{};
   static int ITER_CNT;
   static int ITER_NOP_CNT;
   int hash_{};
@@ -156,6 +147,8 @@ public:
 
   [[nodiscard]] virtual bool isCFG();
 
+  [[nodiscard]] virtual bool isMem();
+
   Node *addUse(Node *n);
 
   Node *setDef(int idx, Node *new_def);
@@ -186,6 +179,8 @@ public:
   // Add bogus null use to keep node alive
   Node *keep();
 
+  // Test "keep" status
+  bool iskeep();
   Node *unkeep();
 
   // Replace self with nnn in the graph, making 'this' go dead
@@ -225,6 +220,16 @@ public:
   // Ignores i(0), as is usually control.
   virtual bool allCons(Node *dep);
 
+  /**
+   * Immediate dominator tree depth, used to approximate a real IDOM depth
+   * during parsing where we do not have the whole program, and also
+   * peepholes change the CFG incrementally.
+   * <p>
+   * See {@link <a href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
+   */
+  int idepth_{};    // IDOM depth approx; Zero is unset; non-zero is cached legit
+  int _idepth(int idx);
+  virtual int idepth();
   // Return the immediate dominator of this Node and compute dom tree depth.
   virtual Node *idom();
 

@@ -29,8 +29,10 @@ public:
   Type *xmeet(Type *other) override;
 
   Type* dual() override;
-
+  std::string str() override;
   TypeInteger* makeInit() override;
+  std::ostringstream& typeName(std::ostringstream& builder) override;
+
   long value();
   bool eq(Type *) override;
 

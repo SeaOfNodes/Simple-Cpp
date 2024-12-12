@@ -18,7 +18,8 @@ public:
   Node *idealize() override;
   Node *idom_; // Immediate dominator cache
   // Immediate dominator of Region is a little more complicated.
-  Node *idom() override;
+  int idepth() override;
+    Node *idom() override;
   bool isMultiHead() override;
   // True if last input is null
   bool inProgress();
@@ -35,5 +36,6 @@ public:
   Type *compute() override;
   Node *idealize() override;
   Node *idom() override;
+  int idepth() override;
 };
 #endif

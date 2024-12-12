@@ -14,4 +14,5 @@ Node *LoopNode::idealize() {
   return inProgress() ? nullptr : RegionNode::idealize();
 }
 
+int LoopNode::idepth() {return _idepth(1); }
 Node *LoopNode::idom() { return entry(); }

@@ -23,6 +23,7 @@ public:
 
   Type *compute() override;
   Node *idealize() override;
+ bool isMem() override;
 
   Node *singleUniqueInput();
 

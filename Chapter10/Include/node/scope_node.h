@@ -54,6 +54,7 @@ public:
 
   Type* lookUpDeclaredType(std::string name);
 
+  Node* replace(Node* old, Node* cast);
   /*
    * Create a new name in the current scope
    * Check if name already exists in the current scope

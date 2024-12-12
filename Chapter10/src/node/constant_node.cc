@@ -18,9 +18,6 @@ bool ConstantNode::eq(Node *n) {
   auto* con = dynamic_cast<ConstantNode*>(n);
   return con_ == con->con_;
 }
-Node* ConstantNode::idom() {
-  return nullptr;
-}
 
 int ConstantNode::hash() {
   return con_->hashCode();

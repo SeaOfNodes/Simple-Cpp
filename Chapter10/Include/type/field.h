@@ -7,7 +7,6 @@
 class Field : public Type {
 public:
     // The pair {fieldName,type} uniquely identifies a field.
-
     // Field name
     std::string fname_;
     // Type of the field
@@ -18,6 +17,7 @@ public:
     static Field *make(std::string fname, Type *type);
 
     static Field *TEST();
+
 
     static void gather(Tomi::Vector<Type *> &ts);
 

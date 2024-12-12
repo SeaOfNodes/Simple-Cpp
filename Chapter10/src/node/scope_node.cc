@@ -1,4 +1,7 @@
 #include "../../Include/node/scope_node.h"
+#include "../../Include/node/cast_node.h"
+#include "../../Include/node/constant_node.h"
+
 #include <cassert>
 
 ScopeNode::ScopeNode() : Node({}) { type_ = Type::BOTTOM(); }
@@ -18,34 +21,55 @@ void ScopeNode::pop() {
     scopes.pop_back();
 }
 
-Node* ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
-    if(ctrl->type_ == Type::CONTROL()) return nullptr;
+Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
+    if (ctrl->type_ == Type::CONTROL()) return nullptr;
     // Invert the If conditional
-    if(invert) {
-        auto* notNode = dynamic_cast<NotNode*>(pred);
-       if(notNode) {
-           pred = notNode->in(1);
-       } else {
-           pred = IterPeeps::add((new NotNode(pred))->peephole());
-       }
+    if (invert) {
+        auto *notNode = dynamic_cast<NotNode *>(pred);
+        if (notNode) {
+            pred = notNode->in(1);
+        } else {
+            pred = IterPeeps::add((new NotNode(pred))->peephole());
+        }
     }
     // Direct use of a value as predicate.  This is a zero/null test.
-    auto* it = std::find(inputs.begin(), inputs.end(), pred);
-    if(it != inputs.end()) {
-        auto*tmp = dynamic_cast<TypeMemPtr*>(pred->type_);
-        if(!tmp) {
+    auto *it = std::find(inputs.begin(), inputs.end(), pred);
+    if (it != inputs.end()) {
+        auto *tmp = dynamic_cast<TypeMemPtr *>(pred->type_);
+        if (!tmp) {
             // Must be an `int`, since int and ptr are the only two value types
             // being tested. No representation for a generic not-null int, so no upcast.
             return nullptr;
         }
-        if(tmp->isa(TypeMemPtr::VOIDPTR()))  {
+        if (tmp->isa(TypeMemPtr::VOIDPTR())) {
             return nullptr;  // Already not-null, no reason to upcast
 
         }
         // Upcast the ptr to not-null ptr, and replace in scope
-        // return replace(pred, new CastNode()).
+        return replace(pred, (new CastNode(TypeMemPtr::VOIDPTR(), ctrl, pred))->peephole());
+
     }
+    if(auto* NOT = dynamic_cast<NotNode*>(pred)) {
+        // Direct use of a !value as predicate.  This is a zero/null test.
+        auto* it = std::find(inputs.begin(), inputs.end(), NOT->in(1));
+        if(it != inputs.end()) {
+            Type*tinit = NOT->in(1)->type_->makeInit();
+            if(NOT->in(1)->type_->isa(tinit)) return nullptr;
+            return replace(NOT->in(1), (new ConstantNode(tinit, Parser::START))->peephole());
+        }
+    }
+    return nullptr;
 }
+
+Node *ScopeNode::replace(Node *old, Node *cast) {
+    for (int i = 0; i < nIns(); i++) {
+        if (in(i) == old) {
+            setDef(i, cast);
+        }
+    }
+    return cast;
+}
+
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
     if (!scopes.empty()) {
@@ -87,10 +111,11 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
             old = loop->in(static_cast<std::size_t>(*idx));
         } else {
             old = loop->setDef(
-                    *idx, (alloc.new_object<PhiNode>(name, std::initializer_list < Node * > {loop->ctrl(),
-                                                                                             loop->update(name, nullptr,
-                                                                                                          nestingLevel),
-                                                                                             nullptr}))
+                    *idx, (alloc.new_object<PhiNode>(name, lookUpDeclaredType(name),
+                                                     std::initializer_list<Node *>{loop->ctrl(),
+                                                                                   loop->update(name, nullptr,
+                                                                                                nestingLevel),
+                                                                                   nullptr}))
                             ->peephole());
         }
         setDef(*idx, old);
@@ -128,7 +153,7 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
     // not called with keep here
     RegionNode *r = dynamic_cast<RegionNode *>(
             ctrl((alloc.new_object<RegionNode>(
-                    std::initializer_list < Node * > {nullptr, ctrl(), that->ctrl()}))->keep()));
+                    std::initializer_list<Node *>{nullptr, ctrl(), that->ctrl()}))->keep()));
 
     Tomi::Vector<std::string> ns = reverseNames();
     // Note that we skip i==0, which is bound to '$ctrl'
@@ -137,13 +162,14 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
             // If we are in lazy phi mode we need to a lookup
             // by name as it will trigger a phi creation
             Node *phi =
-                    alloc.new_object<PhiNode>(ns[i], std::initializer_list < Node * >
-                                                     {r, this->lookup(ns[i]), that->lookup(ns[i])});
+                    alloc.new_object<PhiNode>(ns[i], lookUpDeclaredType(ns[i]), std::initializer_list<Node *>
+                            {r, this->lookup(ns[i]), that->lookup(ns[i])});
             phi = phi->peephole();
             setDef(i, phi);
         }
     }
     that->kill();
+    IterPeeps::add(r);
     return r->unkeep()->peephole();
 }
 
@@ -169,7 +195,7 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
             IterPeeps::addAll(phi->outputs);
             phi->moveDepsToWorkList();
             if (in != phi) {
-                phi->subsume(in);
+                if (!phi->iskeep()) phi->subsume(in);
                 setDef(i, in); // Set the Update back into Scope
             }
         }
@@ -179,9 +205,9 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 ScopeNode *ScopeNode::dup() { return dup(false); }
 
 Type *ScopeNode::lookUpDeclaredType(std::string name) {
-    for(int i = declaredTypes.size(); i >= 0; i--) {
-        Type**t = declaredTypes[i - 1].get(name);
-        if(t != nullptr) return *t;
+    for (int i = declaredTypes.size(); i >= 0; i--) {
+        Type **t = declaredTypes[i - 1].get(name);
+        if (t != nullptr) return *t;
     }
     return nullptr;
 }
@@ -194,6 +220,9 @@ ScopeNode *ScopeNode::dup(bool loop) {
     // 3) Ensure that the order of defs is the same to allow easy merging
     for (const auto &syms: scopes) {
         dup->scopes.push_back(syms);
+    }
+    for (const auto &declaredType: declaredTypes) {
+        dup->declaredTypes.push_back(declaredType);
     }
     // Control comes first
     dup->addDef(ctrl());

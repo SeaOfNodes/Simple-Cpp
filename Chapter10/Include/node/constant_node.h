@@ -18,8 +18,6 @@ public:
   Type *compute() override;
   Node *idealize() override;
   bool eq(Node*) override;
-  // Dead control is its own idom root
-  Node* idom() override;
   int hash() override;
 };
 #endif

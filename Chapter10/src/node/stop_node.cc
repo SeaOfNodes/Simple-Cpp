@@ -27,8 +27,13 @@ ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
 }
 
+Node* StopNode::idom() { return nullptr; }
+
 Type *StopNode::compute() { return Type::BOTTOM(); }
 
+StopNode* StopNode::typeCheck() {
+
+}
 Node *StopNode::idealize() {
   int len = static_cast<int>(nIns());
   // never got here
