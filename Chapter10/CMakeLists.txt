@@ -87,8 +87,6 @@ add_library(simple_lib
         src/graphEvaluator.cc
         src/iterPeeps.cc
         src/IR_Printer.cc
-        # tests
-        tests/TypeTest.cc
         )
 
 set(CMAKE_BUILD_TYPE Debug)

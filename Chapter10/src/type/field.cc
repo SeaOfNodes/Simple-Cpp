@@ -7,13 +7,13 @@ Field *Field::make(std::string fname, Type *type) {
     return static_cast<Field *>((new Field(fname, type))->intern());
 }
 
-Field *Field::TEST() {
+Field *Field::test() {
     static Field *TEST = make("TEST", TypeInteger::ZERO());
     return TEST;
 }
 
 void Field::gather(Tomi::Vector<Type *> &ts) {
-    ts.push_back(TEST());
+    ts.push_back(test());
 }
 
 Field *Field::xmeet(Type *that) {

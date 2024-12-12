@@ -26,6 +26,11 @@ std::ostringstream& TypeInteger::typeName(std::ostringstream& builder) {
     return builder;
 }
 
+void TypeInteger::gather(Tomi::Vector<Type *> &ts) {
+    ts.push_back(ZERO());
+    ts.push_back(BOT());
+}
+
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
   if (this == TOP())
     builder << "IntTop";

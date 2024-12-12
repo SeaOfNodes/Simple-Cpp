@@ -93,7 +93,7 @@ bool TypeTuple::eq(Type *t) {
   return true;
 }
 TypeTuple* TypeTuple::TEST() {
-    return make({TypeInteger::BOT(), TypeMemPtr::TEST()});
+    return make({TypeInteger::BOT(), TypeMemPtr::test()});
 }
 void TypeTuple::gather(Tomi::Vector<Type *> &ts) {
     ts.push_back(TEST());

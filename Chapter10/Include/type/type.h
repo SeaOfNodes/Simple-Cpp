@@ -69,6 +69,7 @@ public:
   virtual Type* makeInit();
   virtual bool eq(Type *t);
 
+  static Tomi::Vector<Type*> gather();
   // to avoid collisions with INTERN
   int get_hash();
   bool operator==(Type&);

@@ -98,6 +98,9 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
       // If there are distant neighbors, move to worklist
       n->moveDepsToWorkList();
     }
+    if(n->isUnused() && !(dynamic_cast<StopNode*>(n))) {
+        n->kill(); // just plain dead
+    }
   }
   if (show) {
     /*std::cerr << (new GraphVisualiser().generateDotOutput(stop, nullptr,

@@ -12,7 +12,7 @@ public:
     static TypeStruct* make(std::string name, Tomi::Vector<Field*> fields);
     static TypeStruct* TOP();
     static TypeStruct* BOT();
-    static TypeStruct* TEST();
+    static TypeStruct* test();
     static void gather(Tomi::Vector<Type*>& ts);
 
     int find(std::string fname);

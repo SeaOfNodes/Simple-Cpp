@@ -34,16 +34,15 @@ TypeMemPtr* TypeMemPtr::VOIDPTR() {
 }
 
 
-TypeMemPtr *TypeMemPtr::TEST() {
-    static TypeMemPtr* test =  make(TypeStruct::TEST(), true);
+TypeMemPtr *TypeMemPtr::test() {
+    static TypeMemPtr* test =  make(TypeStruct::test(), true);
     return test;
 }
 
 void TypeMemPtr::gather(Tomi::Vector<Type *>& ts) {
     ts.push_back(TypeMemPtr::NULLPTR());
     ts.push_back(TypeMemPtr::BOT());
-    ts.push_back(TypeMemPtr::TEST());
-
+    ts.push_back(TypeMemPtr::test());
 }
 
 Type *TypeMemPtr::xmeet(Type *other) {

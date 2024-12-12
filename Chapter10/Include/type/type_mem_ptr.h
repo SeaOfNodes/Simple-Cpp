@@ -30,7 +30,7 @@ public:
     static TypeMemPtr* TOP();
     static TypeMemPtr* NULLPTR();
     static TypeMemPtr* VOIDPTR();
-    static TypeMemPtr* TEST();
+    static TypeMemPtr* test();
 
     static void gather(Tomi::Vector<Type*>& ts);
     Type* xmeet(Type* other) override;

@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(googletest)
 set(CMAKE_BUILD_TYPE Debug)
 
 include(GoogleTest)
-add_executable(simple_test Chapter10Test.cc)
+add_executable(simple_test Chapter10Test.cc TypeTest.cc)
 
 target_link_libraries(simple_test PUBLIC
         GTest::gtest_main

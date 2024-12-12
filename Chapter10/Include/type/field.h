@@ -16,8 +16,7 @@ public:
 
     static Field *make(std::string fname, Type *type);
 
-    static Field *TEST();
-
+    static Field *test();
 
     static void gather(Tomi::Vector<Type *> &ts);
 

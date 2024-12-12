@@ -19,13 +19,13 @@ TypeStruct *TypeStruct::BOT() {
 
 }
 
-TypeStruct *TypeStruct::TEST() {
-    TypeStruct *test = make("$BOT", Tomi::Vector<Field *>{Field::TEST()});
+TypeStruct *TypeStruct::test() {
+    TypeStruct *test = make("$BOT", Tomi::Vector<Field *>{Field::test()});
     return test;
 }
 
 void TypeStruct::gather(Tomi::Vector<Type *> &ts) {
-    ts.push_back(TEST());
+    ts.push_back(test());
     ts.push_back(BOT());
 }
 

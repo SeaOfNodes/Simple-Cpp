@@ -22,6 +22,8 @@ public:
   bool isConstant() override;
   bool isHighOrConst() override;
 
+  static void gather(Tomi::Vector<Type *> &ts);
+
   std::ostringstream &print_1(std::ostringstream &builder) override;
 
   // DEBUG INFO FOR DEBUGGER

@@ -1,4 +1,8 @@
 #include "../../Include/type/type.h"
+#include "../../Include/type/field.h"
+#include "../../Include/type/integer_type.h"
+#include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/type/tuple_type.h"
 #include <iostream>
 
 int Type::get_hash() { return hash_; }
@@ -125,6 +129,22 @@ bool Type::operator==(Type& o) {
   return eq(&o);
 }
 
+Tomi::Vector<Type *> Type::gather() {
+    Tomi::Vector<Type*> ts;
+    ts.push_back(BOTTOM());
+    ts.push_back(CONTROL());
+    Field::gather(ts);
+    TypeInteger::gather(ts);
+    TypeMemPtr::gather(ts);
+    TypeStruct::gather(ts);
+    TypeTuple::gather(ts);
+    int sz = ts.size();
+    for(int i = 0; i < sz; i++) {
+        ts[i] = ts[i]->intern();
+    }
+    return ts;
+
+}
 bool Type::eq(Type *t) { return true; }
 
 unsigned int Type::hashCode() {
