@@ -20,5 +20,8 @@ bool ConstantNode::eq(Node *n) {
 }
 
 int ConstantNode::hash() {
+  if(con_ == nullptr) {
+      std::cout << "Type is not set";
+  }
   return con_->hashCode();
 }

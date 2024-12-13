@@ -143,7 +143,7 @@ Node *Parser::parseStatement() {
     if (matchx("return"))
         return parseReturn();
     else if (matchx("int"))
-        return parseDecl(TypeInteger::BOTTOM());
+        return parseDecl(TypeInteger::BOT());
     else if (match("{"))
         return require(parseBlock(), "}");
     else if (matchx("if"))
@@ -325,6 +325,9 @@ Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
     std::string name = requireId();
+    if(name == "r") {
+        std::cout << "r";
+    }
     Node *expr;
     if (match(";")) {
         // No type and no expr is an error
@@ -554,6 +557,9 @@ Parser *Parser::require(std::string syntax) {
 
 Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
+    if(name == "p") {
+        std::cout << "p";
+    }
     auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
             require("=")->parseExpression(), ";");
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());

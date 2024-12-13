@@ -12,13 +12,14 @@ Type *ScopeNode::compute() { return Type::BOTTOM(); }
 
 Node *ScopeNode::idealize() { return nullptr; }
 
-void ScopeNode::push() { scopes.emplace_back(); }
+void ScopeNode::push() { scopes.emplace_back(); declaredTypes.emplace_back(); }
 
 void ScopeNode::pop() {
     // first pop elements in hashmap
     popN(scopes.back().size());
     // then pop the empty hashmap
     scopes.pop_back();
+    declaredTypes.pop_back();
 }
 
 Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
@@ -72,11 +73,15 @@ Node *ScopeNode::replace(Node *old, Node *cast) {
 
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
+    if(name == "$ctrl") {
+        std::cout << "here";
+    }
     if (!scopes.empty()) {
         auto &sysm = scopes.back();
 
         if (sysm.get(name) != nullptr)
             return nullptr; // double define
+        // zero here
         declaredTypes.back().put(name, declaredType);
 
         sysm.put(name, static_cast<int>(nIns()));
@@ -205,7 +210,7 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 ScopeNode *ScopeNode::dup() { return dup(false); }
 
 Type *ScopeNode::lookUpDeclaredType(std::string name) {
-    for (int i = declaredTypes.size(); i >= 0; i--) {
+    for (size_t i = declaredTypes.size(); i > 0; i--) {
         Type **t = declaredTypes[i - 1].get(name);
         if (t != nullptr) return *t;
     }

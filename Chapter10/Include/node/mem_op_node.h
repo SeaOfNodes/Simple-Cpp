@@ -16,7 +16,7 @@ public:
 
     bool eq(Node* n) override;
     int hash() override;
-    std::string err();
+    std::string err() override;
 };
 
 #endif

@@ -114,10 +114,10 @@ Node *PhiNode::idealize() {
   }
     // If merging Phi(N, cast(N)) - we are losing the cast JOIN effects, so just remove.
     if(nIns() == 3) {
-        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast->in(1)->addDep(this) == in(2)) {
+        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast && cast->in(1)->addDep(this) == in(2)) {
             return in(2);
         }
-        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast->in(1)->addDep(this) == in(1)) {
+        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast && cast->in(1)->addDep(this) == in(1)) {
             return in(1);
         }
     }

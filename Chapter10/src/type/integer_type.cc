@@ -51,6 +51,7 @@ TypeInteger *TypeInteger::ZERO () {
     return make(true, 0);
 }
 TypeInteger * TypeInteger::makeInit() {
+    std::cerr << "Do I call this instead";
     return ZERO();
 }
 
@@ -84,7 +85,7 @@ Type *TypeInteger::dual() {
   return con_ == 0 ? BOT() : TOP();
 }
 TypeInteger *TypeInteger::make(bool is_con, long con) {
-  return static_cast<TypeInteger *>((alloc.new_object<TypeInteger>(is_con, con))->intern());
+  return dynamic_cast<TypeInteger *>((alloc.new_object<TypeInteger>(is_con, con))->intern());
 }
 
 long TypeInteger::value() { return con_; }

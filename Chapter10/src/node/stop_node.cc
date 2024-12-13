@@ -1,4 +1,5 @@
 #include "../../Include/node/stop_node.h"
+#include <functional>
 
 StopNode::StopNode(std::initializer_list<Node *> inputs) : Node(inputs) {}
 std::string StopNode::label() { return "Stop"; }
@@ -9,7 +10,6 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   }
   builder << "Stop[ ";
   for (Node *ret : inputs) {
-
     ret->print_0(builder, visited);
     builder << " ";
   }
@@ -17,9 +17,9 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
-StopNode *StopNode::iterate() { return IterPeeps::iterate(this, false); }
+StopNode *StopNode::iterate() { return IterPeeps::iterate(this, false)->typeCheck(); }
 StopNode *StopNode::iterate(bool show) {
-  return IterPeeps::iterate(this, show);
+  return IterPeeps::iterate(this, show)->typeCheck();
 }
 
 bool StopNode::isCFG() { return true; }
@@ -32,7 +32,15 @@ Node* StopNode::idom() { return nullptr; }
 Type *StopNode::compute() { return Type::BOTTOM(); }
 
 StopNode* StopNode::typeCheck() {
+    std::function<std::string(Node*)> boundPrint = [](Node* n) {
+        return n->err();
+    };
 
+    std::string err1 = walk(boundPrint);
+    if(!err1.empty()) {
+        throw std::runtime_error(err1);
+    }
+    return this;
 }
 Node *StopNode::idealize() {
   int len = static_cast<int>(nIns());

@@ -11,14 +11,16 @@
 #include <format>
 #include <algorithm>
 
+#include <type_traits>
 #include "../../Include/tomi.h"
 #include "../../Include/type/type.h"
 
 // Custom hashing for Node:
 class Node;
 
-template <> struct Tomi::hash<Node *> {
-  unsigned long long operator()(Node *val);
+template<>
+struct Tomi::hash<Node *> {
+    unsigned long long operator()(Node *val);
 };
 
 /**
@@ -35,276 +37,352 @@ void del(std::vector<T> &vec, typename std::vector<T>::iterator::pos);*/
 
 class Node {
 public:
-  /**
-   * Each node has a unique dense Node ID within a compilation context
-   * The ID is useful for debugging, for using as an offset in a bitvector,
-   * as well as for computing equality of nodes (to be implemented later).
-   */
-  int nid{};
-  /**
-   * Inputs to the node. These are use-def references to Nodes.
-   * <p>
-   * Generally fixed length, ordered, nulls allowed, no unused trailing space.
-   * Ordering is required because e.g. "a/b" is different from "b/a".
-   * The first input (offset 0) is often a {@link #isCFG} node.
-   */
-  Tomi::Vector<Node *> inputs;
-  /**
-   * Outputs reference Nodes that are not null and have this Node as an
-   * input.  These nodes are users of this node, thus these are def-use
-   * references to Nodes.
-   * <p>
-   * Outputs directly match inputs, making a directed graph that can be
-   * walked in either direction.  These outputs are typically used for
-   * efficient optimizations but otherwise have no semantics meaning.
-   */
-  Tomi::Vector<Node *> outputs;
+    /**
+     * Each node has a unique dense Node ID within a compilation context
+     * The ID is useful for debugging, for using as an offset in a bitvector,
+     * as well as for computing equality of nodes (to be implemented later).
+     */
+    int nid{};
+    /**
+     * Inputs to the node. These are use-def references to Nodes.
+     * <p>
+     * Generally fixed length, ordered, nulls allowed, no unused trailing space.
+     * Ordering is required because e.g. "a/b" is different from "b/a".
+     * The first input (offset 0) is often a {@link #isCFG} node.
+     */
+    Tomi::Vector<Node *> inputs;
+    /**
+     * Outputs reference Nodes that are not null and have this Node as an
+     * input.  These nodes are users of this node, thus these are def-use
+     * references to Nodes.
+     * <p>
+     * Outputs directly match inputs, making a directed graph that can be
+     * walked in either direction.  These outputs are typically used for
+     * efficient optimizations but otherwise have no semantics meaning.
+     */
+    Tomi::Vector<Node *> outputs;
 
-  /**
-   * Current computed type for this Node.  This value changes as the graph
-   * changes and more knowledge is gained about the program
-   */
-  Type *type_ = nullptr;
+    /**
+     * Current computed type for this Node.  This value changes as the graph
+     * changes and more knowledge is gained about the program
+     */
+    Type *type_ = nullptr;
 
-  static int ITER_CNT;
-  static int ITER_NOP_CNT;
-  int hash_{};
+    static int ITER_CNT;
+    static int ITER_NOP_CNT;
+    int hash_{};
 
-  bool test_nid(int i);
-  // Global Value Numbering.  Hash over opcode and inputs; hits in this table
-  // are structurally equal.
-  static Tomi::HashMap<Node *, Node *> GVN;
+    bool test_nid(int i);
 
-  // Hash of opcode and inputs
-  unsigned long long hashCode();
-  Tomi::Vector<Node *> deps_;
+    // Global Value Numbering.  Hash over opcode and inputs; hits in this table
+    // are structurally equal.
+    static Tomi::HashMap<Node *, Node *> GVN;
+
+    // Hash of opcode and inputs
+    unsigned long long hashCode();
+
+    Tomi::Vector<Node *> deps_;
+
+    virtual std::string err();
 
 private:
-  Tomi::Vector<bool> bitset;
-  /**
-   * A private Global Static mutable counter, for unique node id generation.
-   * To make the compiler multithreaded, this field will have to move into a
-   * TLS. Starting with value 1, to avoid bugs confusing node ID 0 with
-   * uninitialized values.
-   * */
-  static int UNIQUE_ID;
-  static int UID();
+    Tomi::Vector<bool> bitset;
+    /**
+     * A private Global Static mutable counter, for unique node id generation.
+     * To make the compiler multithreaded, this field will have to move into a
+     * TLS. Starting with value 1, to avoid bugs confusing node ID 0 with
+     * uninitialized values.
+     * */
+    static int UNIQUE_ID;
+
+    static int UID();
 
 public:
-  Node() = default;
+    Node() = default;
 
-  Node(std::initializer_list<Node *> inputNodes);
-  Node(Tomi::Vector<Node *> inputs);
+    Node(std::initializer_list<Node *> inputNodes);
 
-  bool operator==(Node &);
-  virtual ~Node() = default;
+    Node(Tomi::Vector<Node *> inputs);
 
-  // Easy reading label for debugger, e.g. "Add" or "Region" or "EQ"
-  virtual std::string label() = 0;
+    bool operator==(Node &);
 
-  // Unique label for graph visualization, e.g. "Add12" or "Region30" or "EQ99"
-  virtual std::string uniqueName();
+    virtual ~Node() = default;
 
-  // Graphical label, e.g. "+" or "Region" or "=="
-  virtual std::string glabel();
+    // Easy reading label for debugger, e.g. "Add" or "Region" or "EQ"
+    virtual std::string label() = 0;
 
-  std::string ToString();
+    // Unique label for graph visualization, e.g. "Add12" or "Region30" or "EQ99"
+    virtual std::string uniqueName();
 
-  // ------------------------------------------------
+    // Graphical label, e.g. "+" or "Region" or "=="
+    virtual std::string glabel();
 
-  // Debugger printing.
+    std::string ToString();
 
-  // This is a *deep* print.  This version will fail on cycles, which we will
-  // correct later when we can parse programs with loops.  We print with a
-  // tik-tok style; the common _print0 calls the per-Node _print1, which
-  // calls back to _print0;
-  std::ostringstream &print(std::ostringstream &b);
+    // ------------------------------------------------
 
-  // This is the common print: check for DEAD and print "DEAD" else call the
-  // per-Node print1.
-  virtual std::ostringstream &print_0(std::ostringstream &builder,
-                                      Tomi::Vector<bool> &visited);
+    // Debugger printing.
 
-  // Every Node implements this.
-  virtual std::ostringstream &print_1(std::ostringstream &builder,
-                                      Tomi::Vector<bool> &) = 0;
+    // This is a *deep* print.  This version will fail on cycles, which we will
+    // correct later when we can parse programs with loops.  We print with a
+    // tik-tok style; the common _print0 calls the per-Node _print1, which
+    // calls back to _print0;
+    std::ostringstream &print(std::ostringstream &b);
 
-  void printLine(std::ostringstream &builder);
+    // This is the common print: check for DEAD and print "DEAD" else call the
+    // per-Node print1.
+    virtual std::ostringstream &print_0(std::ostringstream &builder,
+                                        Tomi::Vector<bool> &visited);
 
-  virtual int hash();
+    // Every Node implements this.
+    virtual std::ostringstream &print_1(std::ostringstream &builder,
+                                        Tomi::Vector<bool> &) = 0;
 
-  virtual bool isMultiHead();
-  virtual bool isMultiTail();
-  // Graph Node & Edge manipulation
-  [[nodiscard]] Node *in(std::size_t i) const;
-  [[nodiscard]] Node *out(std::size_t i) const;
+    void printLine(std::ostringstream &builder);
 
-  [[nodiscard]] std::size_t nIns() const;
+    virtual int hash();
 
-  [[nodiscard]] std::size_t nOuts() const;
+    virtual bool isMultiHead();
 
-  [[nodiscard]] bool isUnused() const;
+    virtual bool isMultiTail();
 
-  [[nodiscard]] virtual bool isCFG();
+    // Graph Node & Edge manipulation
+    [[nodiscard]] Node *in(std::size_t i) const;
 
-  [[nodiscard]] virtual bool isMem();
+    [[nodiscard]] Node *out(std::size_t i) const;
 
-  Node *addUse(Node *n);
+    [[nodiscard]] std::size_t nIns() const;
 
-  Node *setDef(int idx, Node *new_def);
-  /**
-   * Add a node to the list o dependencies. Only add it if its not
-   * an input or output of this node, that is, it is at least one step
-   * away. The node being added must benefit from this node being peepholed.
-   */
-  Node *addDep(Node *dep);
+    [[nodiscard]] std::size_t nOuts() const;
 
-  Node *addDef(Node *new_def);
+    [[nodiscard]] bool isUnused() const;
 
-  // Remove the numbered input, compressing the inputs in-place. This
-  // shuffles the order deterministically - which is suitable for Region and
-  // Phi, but not for every Node.
-  Node *delDef(int idx);
+    [[nodiscard]] virtual bool isCFG();
 
-  bool delUse(Node *use);
+    [[nodiscard]] virtual bool isMem();
 
-  void popN(std::size_t n);
+    Node *addUse(Node *n);
 
-  // Kill a Node with no uses, by setting all of its defs to null.
-  void kill();
+    Node *setDef(int idx, Node *new_def);
 
-  // Mostly used for asserts and printing.
-  bool isDead();
-  // Shortcuts to stop DCE mid-parse
-  // Add bogus null use to keep node alive
-  Node *keep();
+    /**
+     * Add a node to the list o dependencies. Only add it if its not
+     * an input or output of this node, that is, it is at least one step
+     * away. The node being added must benefit from this node being peepholed.
+     */
+    Node *addDep(Node *dep);
 
-  // Test "keep" status
-  bool iskeep();
-  Node *unkeep();
+    Node *addDef(Node *new_def);
 
-  // Replace self with nnn in the graph, making 'this' go dead
-  void subsume(Node *nnn);
+    // Remove the numbered input, compressing the inputs in-place. This
+    // shuffles the order deterministically - which is suitable for Region and
+    // Phi, but not for every Node.
+    Node *delDef(int idx);
 
-  // Graph-based optimisations
+    bool delUse(Node *use);
 
-  static bool disablePeephole;
-  // Try to peephole at this node and return a better replacement Node if
-  // possible.
+    void popN(std::size_t n);
 
-  Node *peephole();
+    // Kill a Node with no uses, by setting all of its defs to null.
+    void kill();
 
-  void unlock();
+    // Mostly used for asserts and printing.
+    bool isDead();
 
-  // Unlike peephole above, this explicitly returns null for no-change, or
-  // not-null for a better replacement
-  Node *peepholeOpt();
+    // Shortcuts to stop DCE mid-parse
+    // Add bogus null use to keep node alive
+    Node *keep();
 
-  /*
-   * Find a node by index.
-   * */
-  Node *deadCodeElim(Node *m);
+    // Test "keep" status
+    bool iskeep();
 
-  virtual Type *compute();
+    Node *unkeep();
 
-  // Set the type.  Assert monotonic progress.
-  // If changing, add users to worklist.
-  Type *setType(Type *type);
+    // Replace self with nnn in the graph, making 'this' go dead
+    void subsume(Node *nnn);
 
-  virtual Node *idealize();
+    // Graph-based optimisations
 
-  virtual bool eq(Node *n);
-  Node *swap12();
+    static bool disablePeephole;
+    // Try to peephole at this node and return a better replacement Node if
+    // possible.
 
-  // does this node contain all constants
-  // Ignores i(0), as is usually control.
-  virtual bool allCons(Node *dep);
+    Node *peephole();
 
-  /**
-   * Immediate dominator tree depth, used to approximate a real IDOM depth
-   * during parsing where we do not have the whole program, and also
-   * peepholes change the CFG incrementally.
-   * <p>
-   * See {@link <a href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
-   */
-  int idepth_{};    // IDOM depth approx; Zero is unset; non-zero is cached legit
-  int _idepth(int idx);
-  virtual int idepth();
-  // Return the immediate dominator of this Node and compute dom tree depth.
-  virtual Node *idom();
+    void unlock();
 
-  virtual Node *copy(Node *lhs, Node *rhs);
+    // Unlike peephole above, this explicitly returns null for no-change, or
+    // not-null for a better replacement
+    Node *peepholeOpt();
 
-  Node *find(Tomi::Vector<bool> visit, int nid_);
+    /*
+     * Find a node by index.
+     * */
+    Node *deadCodeElim(Node *m);
 
-  // Move the dependents onto a worklist, and clear for future dependents.
-  void moveDepsToWorkList();
+    virtual Type *compute();
 
-  // Utility to walk the entire graph applying a function; return the first
-  // not-null result.
-  static std::bitset<10> WVISIT;
-  template <typename T> T *walk(const std::function<Node *(T *)> &pred);
-  template <typename T> T *walk_(const std::function<Node *(T *)> &pred);
+    // Set the type.  Assert monotonic progress.
+    // If changing, add users to worklist.
+    Type *setType(Type *type);
 
-  static void reset();
-  std::string p(int depth);
+    virtual Node *idealize();
+
+    virtual bool eq(Node *n);
+
+    Node *swap12();
+
+    // does this node contain all constants
+    // Ignores i(0), as is usually control.
+    virtual bool allCons(Node *dep);
+
+    /**
+     * Immediate dominator tree depth, used to approximate a real IDOM depth
+     * during parsing where we do not have the whole program, and also
+     * peepholes change the CFG incrementally.
+     * <p>
+     * See {@link <a href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
+     */
+    int idepth_{};    // IDOM depth approx; Zero is unset; non-zero is cached legit
+    int _idepth(int idx);
+
+    virtual int idepth();
+
+    // Return the immediate dominator of this Node and compute dom tree depth.
+    virtual Node *idom();
+
+    virtual Node *copy(Node *lhs, Node *rhs);
+
+    Node *find(Tomi::Vector<bool> visit, int nid_);
+
+    // Move the dependents onto a worklist, and clear for future dependents.
+    void moveDepsToWorkList();
+
+    // Utility to walk the entire graph applying a function; return the first
+    // not-null result.
+    static Tomi::BitArray<10> WVISIT;
+
+    template<typename T>
+    T walk(const std::function<T(Node*)> &pred) {
+//        assert(WVISIT.count() == 0);
+        T rez = walk_(pred);
+        WVISIT.reset();
+        return rez;
+    };
+
+    template<typename T>
+    T walk_(const std::function<T(Node*)> &pred) {
+        if (WVISIT.test(nid)) {
+            if constexpr (std::is_pointer<T>::value) {
+                return nullptr;
+            }
+            return T();
+        } // been there done that
+        WVISIT.set(nid);
+        // call pred here on each node
+        T x = pred(this);
+        if constexpr (std::is_pointer<T>::value) {
+            if (x != nullptr) return x;
+        } else {
+            if (x != T()) return x;
+        }
+
+        for (auto *def: inputs) {
+            if (def != nullptr) {
+                T result = def->walk_(pred);
+                if constexpr (std::is_pointer<T>::value) {
+                    if (result != nullptr) return result;
+                } else {
+                    if (result != T()) return result;
+                }
+            }
+        }
+
+        for (Node *use: outputs) {
+            if (use != nullptr) {
+                T result = use->walk_(pred);
+                if constexpr (std::is_pointer<T>::value) {
+                    if (result != nullptr) return result;
+                } else {
+                    if (result != T()) return result;
+                }
+            }
+        }
+        if constexpr (std::is_pointer<T>::value) {
+            return nullptr;
+        }
+        return T();
+    };
+
+    static void reset();
+
+    std::string p(int depth);
 };
+
 class StopNode;
 
 class IterPeeps {
-  /*
-   * * Classic WorkList, with a fast add/remove, dup removal, random pull.
-   * The Node's nid is used to check membership in the worklist.
-   */
+    /*
+     * * Classic WorkList, with a fast add/remove, dup removal, random pull.
+     * The Node's nid is used to check membership in the worklist.
+     */
 public:
-  static Node *add(Node *n);
+    static Node *add(Node *n);
 
-  static void addAll(Tomi::Vector<Node *> ary);
-  /**
-   * Iterate peepholes to a fixed point
-   */
+    static void addAll(Tomi::Vector<Node *> ary);
 
-  static StopNode *iterate(StopNode *stop, bool show);
-  static bool MidAssert();
-  static void reset();
-
-  class WorkList {
-  public:
-    WorkList();
-    WorkList(long seed);
-    /* Useful stat - how many nodes are processed in the post parse iterative
-     * opt */
-    int totalWork;
-    int trackWork; // track how many nodes are left to process
-    // TOdo: fixed sized replace it with custom one
-    Tomi::BitArray<100> on_;
-    std::mt19937 rng; // For randomising pull from the WorkList
-    Tomi::Vector<Node *> es;
-    long seed{};
-
-    /*
-      Pushes a Node on the WorkList, ensuring no duplicates
-      If Node is null it will not be added.
+    /**
+     * Iterate peepholes to a fixed point
      */
-    Node *push(Node *x);
 
-    void addAll(Tomi::Vector<Node *>);
-    /*
-     * True if Node is on the WorkList
-     */
-    bool on(Node *x);
-    /*
-      Removes a random Node from the WorkList; null if WorkList is empty
-     */
-    Node *pop();
+    static StopNode *iterate(StopNode *stop, bool show);
 
-    void clear();
-  };
-  static WorkList WORK;
+    static bool MidAssert();
+
+    static void reset();
+
+    class WorkList {
+    public:
+        WorkList();
+
+        WorkList(long seed);
+
+        /* Useful stat - how many nodes are processed in the post parse iterative
+         * opt */
+        int totalWork;
+        int trackWork; // track how many nodes are left to process
+        // TOdo: fixed sized replace it with custom one
+        Tomi::BitArray<100> on_;
+        std::mt19937 rng; // For randomising pull from the WorkList
+        Tomi::Vector<Node *> es;
+        long seed{};
+
+        /*
+          Pushes a Node on the WorkList, ensuring no duplicates
+          If Node is null it will not be added.
+         */
+        Node *push(Node *x);
+
+        void addAll(Tomi::Vector<Node *>);
+
+        /*
+         * True if Node is on the WorkList
+         */
+        bool on(Node *x);
+
+        /*
+          Removes a random Node from the WorkList; null if WorkList is empty
+         */
+        Node *pop();
+
+        void clear();
+    };
+
+    static WorkList WORK;
 
 private:
-  static bool MID_ASSERT;
-  // static bool progressOnList(StopNode *stop);
+    static bool MID_ASSERT;
+    // static bool progressOnList(StopNode *stop);
 };
 
 #endif

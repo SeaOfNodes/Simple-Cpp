@@ -76,11 +76,10 @@ add_library(simple_lib
         src/utils.cc
         src/graphVisualizer.cc
         src/graphEvaluator.cc
-        src/iterPeeps.cc
-        src/IR_Printer.cc)
+        src/iterPeeps.cc)
 
 set(CMAKE_BUILD_TYPE Debug)
 
 add_subdirectory(tests)
-add_executable(Simple src/main.cc)
+
 target_link_libraries(Simple PUBLIC simple_lib)

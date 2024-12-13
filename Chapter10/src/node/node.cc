@@ -385,7 +385,9 @@ Node *Node::find(Tomi::Vector<bool> visit, int nid_) {
 }
 
 bool Node::eq(Node *n) { return true; }
-
+std::string Node::err() {
+    return "";
+}
 int Node::_idepth(int idx) {
     return idepth_== 0 ? idepth_ = in(idx)->idepth()+1 : idepth_;
 }
@@ -453,44 +455,11 @@ bool Node::operator==(Node &o) {
     return eq(&o);
 }
 // Todo: should not be a template OR should be defined in the header
-/*template <typename T>
-T* Node::walk(const std::function<Node*(T*)>& pred) {
-    assert(WVISIT.count() == 0);
-    T rez = walk_(pred);
-    WVISIT.reset();
-    return rez;
-}*/
-
-/*
-template <typename T>
-T* Node::walk_(const std::function<Node*(T*)>& pred) {
-    if(WVISIT.test(nid)) return nullptr; // been there done that
-    WVISIT[nid] = true;
-    T* x = pred(this);
-    if(x != nullptr) return x;
-
-    for(auto*def: inputs) {
-        if(def != nullptr) {
-            T* result = def->walk_(pred);
-            if(result != nullptr) return result;
-        }
-    }
-
-    for(Node* use: outputs) {
-        if(use!= nullptr) {
-            T* result = use->walk_(pred);
-            if(result != nullptr) return result;
-        }
-    }
-    return nullptr;
-}
-
-*/
 
 std::string Node::p(int depth) {
     return IRPrinter::prettyPrint(this, depth);
 }
 
-std::bitset<10> Node::WVISIT = std::bitset<10>();
+Tomi::BitArray<10> Node::WVISIT = Tomi::BitArray<10>();
 int Node::ITER_NOP_CNT = 0;
 int Node::ITER_CNT = 0;

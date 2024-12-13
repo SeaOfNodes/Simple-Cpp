@@ -17,6 +17,7 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
 }
 
 Type* Type::makeInit() {
+    std::cerr << "Do I call this";
     return nullptr;
 }
 
