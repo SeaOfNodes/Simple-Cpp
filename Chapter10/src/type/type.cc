@@ -17,7 +17,6 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
 }
 
 Type* Type::makeInit() {
-    std::cerr << "Do I call this";
     return nullptr;
 }
 
@@ -48,10 +47,16 @@ Type *Type::BOTTOM() {
 Type *Type::intern() {
   static Tomi::HashMap<Type *, Type *> INTERN;
   Type **nnn = INTERN.get(this);
+
   if (nnn == nullptr) {
     INTERN.put(this, this); // call hashCode as a side-effect
     return this;
   }
+  Type* nptr = *nnn;
+
+//  if(nptr->hash_ == 9876545) {
+//      std::cerr << "here";
+//  }
   return *nnn;
 }
 Type::Type(unsigned int type) : type_(type) {}
@@ -139,8 +144,8 @@ Tomi::Vector<Type *> Type::gather() {
     TypeMemPtr::gather(ts);
     TypeStruct::gather(ts);
     TypeTuple::gather(ts);
-    int sz = ts.size();
-    for(int i = 0; i < sz; i++) {
+    size_t sz = ts.size();
+    for(size_t i = 0; i < sz; i++) {
         ts[i] = ts[i]->intern();
     }
     return ts;
@@ -189,5 +194,5 @@ unsigned long long Tomi::hash<Type *>::operator()(Type *val) {
 }
 
 Type *Type::glb() {
-    return type_ == TXCTRL ? XCONTROL() : BOTTOM();
+    return type_ == TCTRL ? XCONTROL() : BOTTOM();
 }

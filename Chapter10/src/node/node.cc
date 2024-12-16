@@ -399,7 +399,7 @@ Node *Node::idealize() { return nullptr; }
 Type *Node::compute() { return nullptr; }
 
 Node *Node::deadCodeElim(Node *m) {
-    if (m != this && !isDead()) {
+    if (m != this && isUnused() && !isDead()) {
         m->keep();
         kill();
         m->unkeep();

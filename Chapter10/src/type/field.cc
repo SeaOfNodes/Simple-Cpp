@@ -4,7 +4,7 @@
 Field::Field(std::string fname, Type *type) : Type(TFLD), fname_(fname), type_(type) {}
 
 Field *Field::make(std::string fname, Type *type) {
-    return static_cast<Field *>((new Field(fname, type))->intern());
+    return dynamic_cast<Field *>((new Field(fname, type))->intern());
 }
 
 Field *Field::test() {
@@ -31,12 +31,12 @@ Field *Field::glb() {
 }
 
 int Field::hash() {
-    return std::hash < std::string > {}(fname_) ^ type_->hash();
+    return std::hash<std::string >{}(fname_) ^ type_->hash();
 }
 
 bool Field::eq(Type *t) {
-    Field *fld = dynamic_cast<Field *>(t);
-    return fname_ == fld->fname_ && type_->eq(fld->type_);
+    auto *fld = dynamic_cast<Field *>(t);
+    return fname_ == fld->fname_ && type_ == fld->type_;
 }
 
 std::ostringstream &Field::print_1(std::ostringstream &builder) {

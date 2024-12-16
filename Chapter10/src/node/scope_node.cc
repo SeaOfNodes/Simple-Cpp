@@ -73,9 +73,6 @@ Node *ScopeNode::replace(Node *old, Node *cast) {
 
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
-    if(name == "$ctrl") {
-        std::cout << "here";
-    }
     if (!scopes.empty()) {
         auto &sysm = scopes.back();
 
@@ -115,13 +112,16 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
         if (phi && loop->ctrl() == phi->region()) {
             old = loop->in(static_cast<std::size_t>(*idx));
         } else {
+            if(name == "$2") {
+                std::cout << "$2";
+            }
+            Node* new_node =(alloc.new_object<PhiNode>(name, lookUpDeclaredType(name),
+                                                       std::initializer_list<Node *>{loop->ctrl(),
+                                                                                     loop->update(name, nullptr,
+                                                                                                  nestingLevel),
+                                                                                     nullptr}))->peephole();
             old = loop->setDef(
-                    *idx, (alloc.new_object<PhiNode>(name, lookUpDeclaredType(name),
-                                                     std::initializer_list<Node *>{loop->ctrl(),
-                                                                                   loop->update(name, nullptr,
-                                                                                                nestingLevel),
-                                                                                   nullptr}))
-                            ->peephole());
+                    *idx, new_node);
         }
         setDef(*idx, old);
     }
@@ -166,6 +166,12 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
         if (in(i) != that->in(i)) { // No need for redundant Phis
             // If we are in lazy phi mode we need to a lookup
             // by name as it will trigger a phi creation
+//            if(ns[i] == "p") {
+//                std::cout << "here";
+//            }
+//            if(ns[i] == "h") {
+//                std::cout << "here";
+//            }
             Node *phi =
                     alloc.new_object<PhiNode>(ns[i], lookUpDeclaredType(ns[i]), std::initializer_list<Node *>
                             {r, this->lookup(ns[i]), that->lookup(ns[i])});
@@ -197,6 +203,7 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
     for (int i = 1; i < nIns(); i++) {
         if (auto *phi = dynamic_cast<PhiNode *>(in(i)); phi) {
             Node *in = phi->peephole();
+
             IterPeeps::addAll(phi->outputs);
             phi->moveDepsToWorkList();
             if (in != phi) {

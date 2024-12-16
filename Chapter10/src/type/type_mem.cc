@@ -3,7 +3,7 @@
 TypeMem::TypeMem(int alias) : Type(TMEM), alias_(alias) {}
 
 TypeMem *TypeMem::make(int alias) {
-    return static_cast<TypeMem *>((new TypeMem(alias))->intern());
+    return dynamic_cast<TypeMem *>((new TypeMem(alias))->intern());
 }
 
 TypeMem *TypeMem::TOP() {
@@ -22,7 +22,7 @@ void TypeMem::gather(Tomi::Vector<Type *> &ts) {
 }
 
 TypeMem *TypeMem::xmeet(Type *t) {
-    TypeMem *that = dynamic_cast<TypeMem *>(t);
+    auto *that = dynamic_cast<TypeMem *>(t);
     return alias_ == 0 ? that : (that->alias_ == 0 ? this : BOT());
 }
 
@@ -41,7 +41,7 @@ int TypeMem::hash() {
 }
 
 bool TypeMem::eq(Type *t) {
-    TypeMem *that = dynamic_cast<TypeMem *>(t);
+    auto *that = dynamic_cast<TypeMem *>(t);
     return alias_ == that->alias_;
 }
 

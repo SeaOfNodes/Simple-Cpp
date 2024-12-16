@@ -325,9 +325,7 @@ Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
     std::string name = requireId();
-    if(name == "r") {
-        std::cout << "r";
-    }
+    Node* p = scope_node->lookup("p");
     Node *expr;
     if (match(";")) {
         // No type and no expr is an error
@@ -429,6 +427,7 @@ Node *Parser::parseComparison() {
 
 Node *Parser::parseAddition() {
     Node *lhs = parseMultiplication();
+
     while (true) {
         if (false);
         else if (match("+")) {
@@ -438,7 +437,7 @@ Node *Parser::parseAddition() {
         } else
             break;
         lhs->setDef(2, parseMultiplication());
-        lhs = lhs->peephole();
+        lhs = lhs->peephole(); // new id because new replacement WRONG!!
     }
     return lhs;
 }
@@ -490,10 +489,13 @@ Node *Parser::newStruct(TypeStruct *obj) {
 }
 
 Node *Parser::parsePostFix(Node *expr) {
-    if (!match(".")) return expr;
+    bool match_s = match(".");
+    if(!match_s) return expr;
     auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
 
-    if (!ptr) error("Expected struct reference but got " + expr->type_->str());
+    if (!ptr){
+        error("Expected struct reference but got " + expr->type_->str());
+    }
     std::string name = requireId();
     int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
     if (idx == -1) error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
@@ -533,6 +535,7 @@ Node *Parser::parsePrimary() {
     if (name == "")
         errorSyntax("an identifier or expression");
     Node *n = scope_node->lookup(name);
+
     std::ostringstream b;
     std::string arg_type = n->type_->print_1(b).str();
     if (n != nullptr)
@@ -557,9 +560,7 @@ Parser *Parser::require(std::string syntax) {
 
 Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
-    if(name == "p") {
-        std::cout << "p";
-    }
+    Node* p = scope_node->lookup("p");
     auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
             require("=")->parseExpression(), ";");
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());

@@ -590,22 +590,24 @@ public:
   }
 
   V *get(const K &key) {
-    unsigned long hashValue = hashFunc(key) % TableSize;
-    auto &entry = table[hashValue];
+    unsigned long hashValue = hashFunc(key);
+
+    unsigned long bucketIndex = hashValue % TableSize;
+    auto &entry = table[bucketIndex];
     if (entry.hash != -1 && !entry.isTombStone) {
       if (compareKeys(entry.getKey(), key)) {
         return entry.getPtrValue();
       }
     }
     // Never result in infinite loop because table is never full(invariant)
-    while (table[hashValue].hash != -1) {
-//        if(table[hashValue].getKey()->nid == 11) {
+    while (table[bucketIndex].hash != -1) {
+//        if(table[bucketIndex].getKey()->nid == 11) {
 //            std::cerr << "Here same key";
 //        }
-      if (!table[hashValue].isTombStone && compareKeys(table[hashValue].getKey(), key)) {
-          return table[hashValue].getPtrValue();
+      if (!table[bucketIndex].isTombStone && compareKeys(table[bucketIndex].getKey(), key)) {
+          return table[bucketIndex].getPtrValue();
       }
-      hashValue = (hashValue + 1) % TableSize;
+      bucketIndex = (bucketIndex + 1) % TableSize;
     }
     // not in the table
     return nullptr;
@@ -647,40 +649,41 @@ public:
     if (n_elements >= eightyPercentOfTableSize) {
       repopulate();
     }
-    unsigned long hashValue = hashFunc(key) % TableSize;
-
-    auto &entry = table[hashValue];
-    unsigned long originalHashValue = hashValue;
+    unsigned long hashValue = hashFunc(key);
+    unsigned long bucketIndex = hashValue % TableSize;
+    auto &entry = table[bucketIndex];
+    unsigned long originalBucketIndex = bucketIndex;
     // -1 in variant holds if the hash is not set yet
     if (entry.hash == -1) {
-      entry.hash = hashValue;
+      entry.hash = bucketIndex;
       entry.key = key;
       entry.val = value;
       n_elements++;
 
     } else {
       // linear probing loop
-      while (table[hashValue].hash != -1) {
-        if (table[hashValue].isTombStone) {
-          auto &old = table[hashValue];
+      while (table[bucketIndex].hash != -1) {
+        if (table[bucketIndex].isTombStone) {
+          auto &old = table[bucketIndex];
           old.key = key;
           old.val = value;
+          old.isTombStone = false;
           n_elements++;
           return;
         }
-        if (compareKeys(table[hashValue].getKey(), key)) {
-          table[hashValue].setValue(value);
+        if (compareKeys(table[bucketIndex].getKey(), key)) {
+          table[bucketIndex].setValue(value);
           return;
         }
 
-        hashValue = (hashValue + 1) % TableSize;
-        if (hashValue == originalHashValue) {
+        bucketIndex = (bucketIndex + 1) % TableSize;
+        if (bucketIndex == originalBucketIndex) {
           // resize
           // hopefully never get here
         }
       }
-      auto &create_new = table[hashValue];
-      create_new.hash = hashValue;
+      auto &create_new = table[bucketIndex];
+      create_new.hash = bucketIndex;
       n_elements++;
       create_new.key = key;
       create_new.val = value;
@@ -688,19 +691,20 @@ public:
   }
   // Lazy Deletion(https://en.wikipedia.org/wiki/Lazy_deletion)
   void remove(const K &key) {
-    unsigned long hashValue = hashFunc(key) % TableSize;
-    auto &entry = table[hashValue];
+    unsigned long hashValue = hashFunc(key);
+    unsigned long bucketIndex = hashValue % TableSize;
+    auto &entry = table[bucketIndex];
     if (entry.hash == -1) {
       return;
     } else {
       n_elements--;
-      while (table[hashValue].hash != -1) {
-        if (compareKeys(table[hashValue].getKey(), key)) {
-          auto &old = table[hashValue];
+      while (table[bucketIndex].hash != -1) {
+        if (compareKeys(table[bucketIndex].getKey(), key)) {
+          auto &old = table[bucketIndex];
           old.isTombStone = true;
           return;
         }
-        hashValue = (hashValue + 1) % TableSize;
+        bucketIndex = (bucketIndex + 1) % TableSize;
       }
     }
   }

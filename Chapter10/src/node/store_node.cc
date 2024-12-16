@@ -27,7 +27,7 @@ Node *StoreNode::idealize() {
     // Simple store-after-store on same address.  Should pick up the
     // required init-store being stomped by a first user store.
     auto *st = dynamic_cast<StoreNode *>(mem());
-    if (ptr() == st->ptr() && // Must check same object
+    if (st && ptr() == st->ptr() && // Must check same object
         dynamic_cast<TypeMemPtr *>(ptr()->type_) &&
         // No bother if weird dead pointers
         // Must have exactly one use of "this" or you get weird

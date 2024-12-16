@@ -5,7 +5,7 @@ TypeStruct::TypeStruct(std::string name, Tomi::Vector<Field *> fields) : Type(TS
 }
 
 TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
-    return static_cast<TypeStruct *>((new TypeStruct(name, fields))->intern());
+    return dynamic_cast<TypeStruct *>((new TypeStruct(name, fields))->intern());
 }
 
 TypeStruct *TypeStruct::TOP() {

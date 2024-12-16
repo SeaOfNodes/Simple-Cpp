@@ -13,7 +13,7 @@ class TypeMem: public Type {
     //  N means slice#N.
 public:
     int alias_;
-    TypeMem(int alias);
+    explicit TypeMem(int alias);
     static TypeMem* make(int alias);
     static TypeMem* TOP();
     static TypeMem* BOT();

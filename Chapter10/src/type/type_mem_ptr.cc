@@ -3,11 +3,11 @@
 TypeMemPtr::TypeMemPtr(TypeStruct *obj, bool nil) : Type(TMEMPTR), obj_(obj), nil_(nil) {}
 
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj, bool nil) {
-  return static_cast<TypeMemPtr*>((new TypeMemPtr(obj, nil))->intern());
+  return dynamic_cast<TypeMemPtr*>((new TypeMemPtr(obj, nil))->intern());
 }
 
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj) {
-    return static_cast<TypeMemPtr*>((new TypeMemPtr(obj, false))->intern());
+    return TypeMemPtr::make(obj, false);
 }
 
 TypeMemPtr* TypeMemPtr::BOT() {
@@ -46,8 +46,8 @@ void TypeMemPtr::gather(Tomi::Vector<Type *>& ts) {
 }
 
 Type *TypeMemPtr::xmeet(Type *other) {
-    TypeMemPtr* that = dynamic_cast<TypeMemPtr*>(other);
-    return TypeMemPtr::make(static_cast<TypeStruct*>(obj_->meet(that->obj_)), nil_ | that->nil_);
+    auto* that = dynamic_cast<TypeMemPtr*>(other);
+    return TypeMemPtr::make(dynamic_cast<TypeStruct*>(obj_->meet(that->obj_)), nil_ | that->nil_);
 }
 
 TypeMemPtr* TypeMemPtr::dual() {
@@ -68,7 +68,7 @@ int TypeMemPtr::hash() {
 
 bool TypeMemPtr::eq(Type *other) {
     if (other == this) return true;
-    TypeMemPtr* that = dynamic_cast<TypeMemPtr*>(other);
+    auto* that = dynamic_cast<TypeMemPtr*>(other);
     return obj_ == that->obj_ && nil_ == that->nil_;
 }
 

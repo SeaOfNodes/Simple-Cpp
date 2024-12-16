@@ -9,7 +9,7 @@
 class PhiNode : public Node {
 public:
   std::string label_;
-  Type* declaredType;
+  Type* declaredType = nullptr;
   PhiNode(std::string label, Type* declaredType, std::initializer_list<Node *> inputs);
   PhiNode(std::string label, Type* declaredType, Tomi::Vector<Node *> inputs);
 

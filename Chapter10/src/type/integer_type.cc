@@ -51,7 +51,6 @@ TypeInteger *TypeInteger::ZERO () {
     return make(true, 0);
 }
 TypeInteger * TypeInteger::makeInit() {
-    std::cerr << "Do I call this instead";
     return ZERO();
 }
 

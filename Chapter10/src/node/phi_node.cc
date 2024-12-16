@@ -4,7 +4,8 @@
 #include "../../Include/node/if_node.h"
 
 PhiNode::PhiNode(std::string label, Type* type_, std::initializer_list<Node *> inputs)
-    : Node(inputs), declaredType(type_), label_(label) {}
+    : Node(inputs), declaredType(type_), label_(label) {
+}
 std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
@@ -34,10 +35,13 @@ Type *PhiNode::compute() {
       }
       return type_;
   }
-  if(r->inProgress()) return Type::BOTTOM();
-  Type *t = Type::TOP();
+  if(r->inProgress()) return declaredType;
+ // Set type to local top of the starting type
+  Type *t = declaredType->glb()->dual();
   for (int i = 1; i < nIns(); i++) {
-    if ((r->in(i)->addDep(this)->type_ != Type::XCONTROL()) && (in(i) != this))
+      // If the region's control input is live, add this as a dependency
+      // to the control because we can be peeped should it become dead.
+    if ((r->in(i)->addDep(this)->type_ != Type::XCONTROL()))
       t = t->meet(in(i)->type_);
   }
   return t;
@@ -117,7 +121,7 @@ Node *PhiNode::idealize() {
         if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast && cast->in(1)->addDep(this) == in(2)) {
             return in(2);
         }
-        if(auto* cast = dynamic_cast<CastNode*>(in(1)); cast && cast->in(1)->addDep(this) == in(1)) {
+        if(auto* cast = dynamic_cast<CastNode*>(in(2)); cast && cast->in(1)->addDep(this) == in(1)) {
             return in(1);
         }
     }
@@ -130,7 +134,7 @@ Node *PhiNode::idealize() {
         if(in(2)->type_ == in(2)->type_->makeInit()) nullx = 2;
         if(nullx != -1) {
             Node* val = in(3-nullx);
-            if(auto* iff = dynamic_cast<IfNode*>(region()->idom()); iff->pred()->addDep(this) == val) {
+            if(auto* iff = dynamic_cast<IfNode*>(region()->idom()); iff && iff->pred()->addDep(this) == val) {
                 // Must walk the idom on the null side to make sure we hit False.
                 Node* idom = region()->in(nullx);
                 while(idom->in(0) != iff) idom = idom->idom();

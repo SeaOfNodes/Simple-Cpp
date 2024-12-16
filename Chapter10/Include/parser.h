@@ -120,6 +120,8 @@ private:
     /**
      LIst of keywords disallowed as identifiers
      */
+
+    // replace this with custom data structure
     const std::unordered_set <std::string> KEYWORDS = {
             "break", "continue", "else", "false", "if", "int", "return", "true", "while", "null", "new", "struct"};
 

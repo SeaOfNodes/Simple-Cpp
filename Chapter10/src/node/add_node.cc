@@ -79,7 +79,6 @@ Node *AddNode::idealize() {
   Node *rhs = in(2);
   Type *t1 = lhs->type_;
   Type *t2 = rhs->type_;
-
   // Already handled by peephole constant folding
   // They should have been already replaced with constant nodes
 
@@ -125,6 +124,9 @@ Node *AddNode::idealize() {
   // Now we might see (add add non) or (add non non) but never (add non add) nor
   // (add add add)
   if (!i1) {
+    bool spine = spine_cmp(lhs, rhs, this);
+    return spine ? swap12() : phiCon(this, false);
+
     return spine_cmp(lhs, rhs, this) ? swap12() : phiCon(this, true);
   }
 
