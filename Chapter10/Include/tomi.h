@@ -609,7 +609,7 @@ public:
           return table[bucketIndex].getPtrValue();
       }
       // make sure loop will terminate
-      if(bucketIndex + 1 == TableSize) return nullptr;
+//      if(bucketIndex + 1 == TableSize) return nullptr;
       bucketIndex = (bucketIndex + 1) % TableSize;
     }
     // not in the table
@@ -641,7 +641,7 @@ public:
 
     for (size_t i = 0; i < oldTableSize; ++i) {
       auto &node = oldTable[i];
-      if (!node.isTombStone && node.hash != -1) {
+      if (!node.isTombStone) {
         put(node.key, node.val);
       }
     }
@@ -658,7 +658,7 @@ public:
     unsigned long originalBucketIndex = bucketIndex;
     // -1 in variant holds if the hash is not set yet
     if (entry.hash == -1) {
-      entry.hash = bucketIndex;
+      entry.hash = hashValue;
       entry.key = key;
       entry.val = value;
       n_elements++;
