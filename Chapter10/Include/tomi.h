@@ -641,7 +641,7 @@ public:
 
     for (size_t i = 0; i < oldTableSize; ++i) {
       auto &node = oldTable[i];
-      if (!node.isTombStone) {
+      if (!node.isTombStone && node.hash != -1) {
         put(node.key, node.val);
       }
     }
