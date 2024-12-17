@@ -325,7 +325,6 @@ Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
     std::string name = requireId();
-    Node* p = scope_node->lookup("p");
     Node *expr;
     if (match(";")) {
         // No type and no expr is an error
@@ -341,13 +340,15 @@ Node *Parser::parseExpressionStatement() {
     }
     // Defining a new variable vs updating an old one
     if (t != nullptr) {
-        if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
+        if (scope_node->define(name, t, expr) == nullptr) error("Redefining name `" + name + "`");
     } else {
         Node *n = scope_node->lookup(name);
         t = scope_node->lookUpDeclaredType(name);
         if (n == nullptr) error("Undefined name: '" + name + "'");
         scope_node->update(name, expr);
     }
+    TypeMemPtr* ta = dynamic_cast<TypeMemPtr*>(t);
+    TypeMemPtr* tb = dynamic_cast<TypeMemPtr*>(expr->type_);
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
     return expr;
 

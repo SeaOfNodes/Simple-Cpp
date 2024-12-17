@@ -163,6 +163,9 @@ unsigned int Type::hashCode() {
 }
 
 bool Type::isa(Type *t) {
+    TypeMemPtr*goal = dynamic_cast<TypeMemPtr*>(t);
+    TypeMemPtr* actual = dynamic_cast<TypeMemPtr*>(meet(t));
+
     return meet(t) == t;
 }
 

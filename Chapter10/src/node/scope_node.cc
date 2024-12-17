@@ -23,7 +23,7 @@ void ScopeNode::pop() {
 }
 
 Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
-    if (ctrl->type_ == Type::CONTROL()) return nullptr;
+    if (ctrl->type_ == Type::XCONTROL()) return nullptr;
     // Invert the If conditional
     if (invert) {
         auto *notNode = dynamic_cast<NotNode *>(pred);

@@ -599,6 +599,7 @@ public:
         return entry.getPtrValue();
       }
     }
+
     // Never result in infinite loop because table is never full(invariant)
     while (table[bucketIndex].hash != -1) {
 //        if(table[bucketIndex].getKey()->nid == 11) {
@@ -607,6 +608,8 @@ public:
       if (!table[bucketIndex].isTombStone && compareKeys(table[bucketIndex].getKey(), key)) {
           return table[bucketIndex].getPtrValue();
       }
+      // make sure loop will terminate
+      if(bucketIndex + 1 == TableSize) return nullptr;
       bucketIndex = (bucketIndex + 1) % TableSize;
     }
     // not in the table

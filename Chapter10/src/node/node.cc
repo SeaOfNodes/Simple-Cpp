@@ -5,6 +5,12 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
+    if(nid == 54) {
+        std::cerr << "Here";
+    }
+    if(nid == 46) {
+        std::cerr << "Here";
+    }
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -81,6 +87,9 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
+    if(this == nullptr) {
+        std::cerr << "Stop here\n";
+    }
     if (hash_ == 0)
         return;
     GVN.remove(this);
@@ -146,6 +155,8 @@ void Node::subsume(Node *nnn) {
     assert(nnn != this);
     while (nOuts() > 0) {
         Node *n = outputs.back();
+        // N should not be null, as that means that the node you try to subsume is still in a keep-unkeep block.
+        assert(n != nullptr);
         outputs.pop_back();
         n->unlock();
         auto it = std::find(n->inputs.begin(), n->inputs.end(), this);
@@ -181,6 +192,9 @@ Node *Node::peepholeOpt() {
     ITER_CNT++;
     Type *inner = compute();
     Type *old = setType(inner);
+    if(nid == 25) {
+        std::cerr << "Here";
+    }
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
     if (!(a) && type_->isHighOrConst()) {
@@ -208,6 +222,7 @@ Node *Node::peepholeOpt() {
     Node *n = idealize();
     if (n != nullptr)
         return n;
+
     if (old == type_)
         ITER_NOP_CNT++;
     // returns this if type is mutated
@@ -399,6 +414,9 @@ Node *Node::idealize() { return nullptr; }
 Type *Node::compute() { return nullptr; }
 
 Node *Node::deadCodeElim(Node *m) {
+    if(nid == 46) {
+        std::cerr << "Here";
+    }
     if (m != this && isUnused() && !isDead()) {
         m->keep();
         kill();
