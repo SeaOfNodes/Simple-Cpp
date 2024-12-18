@@ -5,10 +5,7 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 54) {
-        std::cerr << "Here";
-    }
-    if(nid == 46) {
+    if(nid == 45) {
         std::cerr << "Here";
     }
     for (Node *n: inputNodes) {
@@ -156,6 +153,9 @@ void Node::subsume(Node *nnn) {
     while (nOuts() > 0) {
         Node *n = outputs.back();
         // N should not be null, as that means that the node you try to subsume is still in a keep-unkeep block.
+        if(n == nullptr) {
+            std::cerr << "Here";
+        }
         assert(n != nullptr);
         outputs.pop_back();
         n->unlock();
@@ -190,11 +190,14 @@ void Node::moveDepsToWorkList() {
 
 Node *Node::peepholeOpt() {
     ITER_CNT++;
-    Type *inner = compute();
-    Type *old = setType(inner);
-    if(nid == 25) {
+    if(nid == 45) {
         std::cerr << "Here";
     }
+
+    Type *inner = compute();
+    Type *old = setType(inner);
+
+
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
     if (!(a) && type_->isHighOrConst()) {
@@ -220,8 +223,10 @@ Node *Node::peepholeOpt() {
     }
 
     Node *n = idealize();
+
     if (n != nullptr)
         return n;
+
 
     if (old == type_)
         ITER_NOP_CNT++;

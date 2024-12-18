@@ -5,6 +5,9 @@
 
 PhiNode::PhiNode(std::string label, Type* type_, std::initializer_list<Node *> inputs)
     : Node(inputs), declaredType(type_), label_(label) {
+    if(nid == 45) {
+        std::cerr << "here";
+    }
 }
 std::string PhiNode::label() { return "Phi_" + label_; }
 std::string PhiNode::glabel() { return "&phi;_" + label_; }

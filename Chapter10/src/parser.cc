@@ -42,7 +42,7 @@ StopNode *Parser::parse(bool show) {
     scope_node->push();
     scope_node->define(ScopeNode::CTRL, Type::CONTROL(),
                        (alloc.new_object<ProjNode>(START, 0, ScopeNode::CTRL))->peephole());
-    scope_node->define(ScopeNode::ARG0, Type::BOTTOM(),
+    scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(),
                        (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
     parseBlock();
     // before pop
@@ -338,7 +338,11 @@ Node *Parser::parseExpressionStatement() {
         lexer->position = old;
         return require(parseExpression(), ";");
     }
+
     // Defining a new variable vs updating an old one
+    if(expr->nid == 45) {
+        std::cerr << "Smt";
+    }
     if (t != nullptr) {
         if (scope_node->define(name, t, expr) == nullptr) error("Redefining name `" + name + "`");
     } else {
@@ -561,9 +565,14 @@ Parser *Parser::require(std::string syntax) {
 
 Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
-    Node* p = scope_node->lookup("p");
+    if(name == "arg") {
+        std::cerr << "arg";
+    }
     auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
             require("=")->parseExpression(), ";");
+    if(expr->type_ == Type::BOTTOM()) {
+        std::cerr << "Type is bottom" << std::endl;
+    }
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
     if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
     return expr;
@@ -577,6 +586,10 @@ std::string Parser::requireId() {
     std::string id = lexer->matchId();
     if (id != "" && (KEYWORDS.find(id) == KEYWORDS.end()))
         return id;
+
+    if (id == "") {
+        error("Expected an identifier, found 'NULLPTR'");
+    }
     error("Expected an identifier, found " + id);
 }
 
