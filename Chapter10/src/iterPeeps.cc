@@ -70,6 +70,9 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
       continue;
     cnt++;
     Node *x = n->peepholeOpt();
+    if(n->nid == 46 && n != x && x != nullptr) {
+        std::cerr << "Hi";
+    }
     if (x != nullptr) {
       if (x->isDead())
         continue;

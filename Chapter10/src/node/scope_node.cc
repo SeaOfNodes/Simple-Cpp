@@ -73,9 +73,6 @@ Node *ScopeNode::replace(Node *old, Node *cast) {
 
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
-    if(n->nid == 45) {
-        std::cerr << "here";
-    }
     if (!scopes.empty()) {
         auto &sysm = scopes.back();
 
@@ -115,11 +112,6 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
         if (phi && loop->ctrl() == phi->region()) {
             old = loop->in(static_cast<std::size_t>(*idx));
         } else {
-            if(name == "arg") {
-                std::cout << "$2";
-                Type* t = lookUpDeclaredType(name);
-                std::cerr << "Here";
-            }
             Node* new_node =(alloc.new_object<PhiNode>(name, lookUpDeclaredType(name),
                                                        std::initializer_list<Node *>{loop->ctrl(),
                                                                                      loop->update(name, nullptr,

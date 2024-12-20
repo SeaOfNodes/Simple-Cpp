@@ -51,9 +51,9 @@ int main(int argc, char const **argv) {
     print_usage();
   auto *parser = new Parser(handle_file(argv[1]));
   std::ostringstream builder;
-  StopNode *ret = parser->parse(true)->iterate();
+  StopNode *ret = parser->parse(false)->iterate();
   ret->print(builder).str();
-    std::cerr << IRPrinter::prettyPrint(ret, 99);
+//    std::cerr << IRPrinter::prettyPrint(ret, 99);
   mem.reset();
   return 0;
 }

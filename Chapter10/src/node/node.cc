@@ -5,7 +5,7 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 45) {
+    if(nid == 54) {
         std::cerr << "Here";
     }
     for (Node *n: inputNodes) {
@@ -153,9 +153,6 @@ void Node::subsume(Node *nnn) {
     while (nOuts() > 0) {
         Node *n = outputs.back();
         // N should not be null, as that means that the node you try to subsume is still in a keep-unkeep block.
-        if(n == nullptr) {
-            std::cerr << "Here";
-        }
         assert(n != nullptr);
         outputs.pop_back();
         n->unlock();
@@ -190,10 +187,7 @@ void Node::moveDepsToWorkList() {
 
 Node *Node::peepholeOpt() {
     ITER_CNT++;
-    if(nid == 45) {
-        std::cerr << "Here";
-    }
-
+    // end loop
     Type *inner = compute();
     Type *old = setType(inner);
 
@@ -224,8 +218,10 @@ Node *Node::peepholeOpt() {
 
     Node *n = idealize();
 
-    if (n != nullptr)
+    if (n != nullptr) {
         return n;
+    }
+
 
 
     if (old == type_)
@@ -419,9 +415,6 @@ Node *Node::idealize() { return nullptr; }
 Type *Node::compute() { return nullptr; }
 
 Node *Node::deadCodeElim(Node *m) {
-    if(nid == 46) {
-        std::cerr << "Here";
-    }
     if (m != this && isUnused() && !isDead()) {
         m->keep();
         kill();
@@ -446,7 +439,7 @@ unsigned long long Node::hashCode() {
     int hashc = hash();
     for (Node *n: inputs) {
         if (n != nullptr) {
-            hashc = hash_ ^ (hash_ << 17) ^ (hash_ >> 13) ^ n->nid;
+            hashc = hashc ^ (hashc << 17) ^ (hashc >> 13) ^ n->nid;
         }
     }
     // if hash is still zero

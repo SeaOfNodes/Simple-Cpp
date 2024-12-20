@@ -453,6 +453,8 @@ template <typename K, typename V> struct HashNode {
   int long long hash{-1};
   K key;
   V val;
+  bool isTombStone{false};
+
   K getKey() const { return key; }
   V getValue() const { return val; };
   V *getPtrValue() { return &val; }
@@ -460,6 +462,7 @@ template <typename K, typename V> struct HashNode {
   void setKey(K key_) { key = key_; }
   void reset() {
     hash = -1;
+    isTombStone = false;
   }
 };
 } // namespace detail
@@ -589,9 +592,10 @@ public:
 
   V *get(const K &key) {
     unsigned long hashValue = hashFunc(key);
+
     unsigned long bucketIndex = hashValue % TableSize;
     auto &entry = table[bucketIndex];
-    if (entry.hash != -1) {
+    if (entry.hash != -1 && !entry.isTombStone) {
       if (compareKeys(entry.getKey(), key)) {
         return entry.getPtrValue();
       }
@@ -602,7 +606,7 @@ public:
 //        if(table[bucketIndex].getKey()->nid == 11) {
 //            std::cerr << "Here same key";
 //        }
-      if (compareKeys(table[bucketIndex].getKey(), key)) {
+      if (!table[bucketIndex].isTombStone && compareKeys(table[bucketIndex].getKey(), key)) {
           return table[bucketIndex].getPtrValue();
       }
       // make sure loop will terminate
@@ -638,7 +642,7 @@ public:
     int cont{0};
     for (size_t i = 0; i < oldTableSize; ++i) {
       auto &node = oldTable[i];
-      if (node.hash != -1) {
+      if (node.hash != -1 && !node.isTombStone) {
         cont++;
         put(node.key, node.val);
       }
@@ -668,6 +672,14 @@ public:
     } else {
       // linear probing loop
       while (table[bucketIndex].hash != -1) {
+          if(table[bucketIndex].isTombStone) {
+              auto &old = table[bucketIndex];
+              old.key = key;
+              old.val = value;
+              old.isTombStone = false;
+              n_elements++;
+              return;
+          }
         if (compareKeys(table[bucketIndex].getKey(), key)) {
           table[bucketIndex].setValue(value);
           return;
@@ -690,7 +702,6 @@ public:
   void remove(const K &key) {
     unsigned long hashValue = hashFunc(key);
     unsigned long bucketIndex = hashValue % TableSize;
-
     auto &entry = table[bucketIndex];
     if (entry.hash == -1) {
       return;
@@ -698,8 +709,8 @@ public:
       while (table[bucketIndex].hash != -1) {
         if (compareKeys(table[bucketIndex].getKey(), key)) {
           auto &old = table[bucketIndex];
-          old.hash = -1;
-          n_elements--;
+          old.isTombStone = true;
+          n_elements++;
           return;
         }
         bucketIndex = (bucketIndex + 1) % TableSize;

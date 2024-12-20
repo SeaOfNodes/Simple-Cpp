@@ -194,7 +194,7 @@ Node *Parser::parseWhile() {
     // Parse predicate
     auto pred = require(parseExpression(), ")");
     // IfNode takes current control and predicate
-    auto *ifNode = (IfNode *) ((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
+    auto *ifNode = (IfNode *) ((alloc.new_object<IfNode>(ctrl(), pred)))->peephole();
     // Setup projection nodes
     Node *ifT = (alloc.new_object<ProjNode>((IfNode *) ifNode->keep(), 0, "True"))->peephole();
     ifT->keep();
@@ -326,6 +326,7 @@ Node *Parser::parseExpressionStatement() {
     Type *t = type();
     std::string name = requireId();
     Node *expr;
+
     if (match(";")) {
         // No type and no expr is an error
         if (t == nullptr) error("Expected a type or expression");
@@ -333,16 +334,12 @@ Node *Parser::parseExpressionStatement() {
     } else if (match("=")) {
         // Assign "= expr;"
         expr = require(parseExpression(), ";");
-
     } else {
         lexer->position = old;
         return require(parseExpression(), ";");
     }
 
     // Defining a new variable vs updating an old one
-    if(expr->nid == 45) {
-        std::cerr << "Smt";
-    }
     if (t != nullptr) {
         if (scope_node->define(name, t, expr) == nullptr) error("Redefining name `" + name + "`");
     } else {
@@ -565,14 +562,9 @@ Parser *Parser::require(std::string syntax) {
 
 Node *Parser::parseDecl(Type *t) {
     std::string name = requireId();
-    if(name == "arg") {
-        std::cerr << "arg";
-    }
+    // p is good here
     auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
             require("=")->parseExpression(), ";");
-    if(expr->type_ == Type::BOTTOM()) {
-        std::cerr << "Type is bottom" << std::endl;
-    }
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
     if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
     return expr;
