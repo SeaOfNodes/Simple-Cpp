@@ -1,0 +1,1 @@
+// Declared in node.h to avoid cirular dependencies
