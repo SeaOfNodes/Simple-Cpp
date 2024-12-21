@@ -75,6 +75,7 @@ add_library(simple_lib
         src/node/cproj_node.cc
         src/node/never_node.cc
         src/node/xctrl_node.cc
+        src/globalCodeMotion.cc
 
         # type
         src/type/integer_type.cc

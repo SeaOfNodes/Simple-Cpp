@@ -26,6 +26,7 @@ Type *RegionNode::compute() {
   }
   return t;
 }
+
 // Todo: take a look at this here
 Node *RegionNode::idealize() {
   if (inProgress())
