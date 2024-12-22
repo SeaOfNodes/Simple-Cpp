@@ -16,3 +16,4 @@ TODO:
  - some custom functionality for deleting
  - Nicer IRprinter
  - Make sure graphviz output generates good graph
+ - Finish off IrPrinter and tools for all the chapters as well as the evaluator
