@@ -1,6 +1,6 @@
 #include "../../Include/node/if_node.h"
 #include "../../Include/parser.h"
-
+#include "../../Include/node/cproj_node.h"
 IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {
     IterPeeps::add(this);
 }
@@ -70,4 +70,17 @@ Node *IfNode::idealize() {
     }
   }
   return nullptr;
+}
+
+void IfNode::walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *> unreach) {
+    for(Node* proj: outputs) {
+        if(dynamic_cast<CProjNode*>(proj)->loopDepth_ == 0) {
+            unreach.put((CProjNode*)proj);
+        }
+    }
+    CFGNode::walkUnreach_(vitisted, unreach);
+}
+
+Node* IfNode::getBlockStart() {
+   return ctrl()->getBlockStart();
 }

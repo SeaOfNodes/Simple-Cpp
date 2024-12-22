@@ -53,6 +53,9 @@ Node *Node::unkeep() {
     return this;
 }
 
+int Node::UID() {
+    return UNIQUE_ID;
+}
 std::string Node::ToString() {
     std::ostringstream builder;
     return print(builder).str();
@@ -77,6 +80,10 @@ std::ostringstream &Node::print_0(std::ostringstream &builder,
     } else {
         return print_1(builder, visited);
     }
+}
+
+CFGNode *Node::cfg0() {
+    return dynamic_cast<CFGNode *>(in(0));
 }
 
 std::ostringstream &Node::print(std::ostringstream &b) {
@@ -201,6 +208,9 @@ Node *Node::peepholeOpt() {
     auto *a = dynamic_cast<ConstantNode *>(this);
     if (!(a) && type_->isHighOrConst()) {
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
+        if(type_ == Type::XCONTROL()) {
+            return alloc.new_object<XCtrlNode>();
+        }
         return peepholedNode->peepholeOpt();
     }
     // Global Value Numbering

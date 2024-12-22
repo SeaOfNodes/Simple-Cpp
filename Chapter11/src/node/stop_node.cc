@@ -1,7 +1,7 @@
 #include "../../Include/node/stop_node.h"
 #include <functional>
 
-StopNode::StopNode(std::initializer_list<Node *> inputs) : Node(inputs) {}
+StopNode::StopNode(std::initializer_list<Node *> inputs) : CFGNode(inputs) {}
 std::string StopNode::label() { return "Stop"; }
 std::ostringstream &StopNode::print_1(std::ostringstream &builder,
                                       Tomi::Vector<bool> &visited) {
@@ -22,12 +22,18 @@ StopNode *StopNode::iterate(bool show) {
   return IterPeeps::iterate(this, show)->typeCheck();
 }
 
-bool StopNode::isCFG() { return true; }
+bool StopNode::blockHead() { return true; }
 ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
 }
 
-Node* StopNode::idom() { return nullptr; }
+int StopNode::loopDepth() {
+    return (loopDepth_=1);
+}
+Node* StopNode::getBlockStart() {
+    return this;
+}
+CFGNode* StopNode::idom() { return nullptr; }
 
 Type *StopNode::compute() { return Type::BOTTOM(); }
 
@@ -41,6 +47,18 @@ StopNode* StopNode::typeCheck() {
         throw std::runtime_error(err1);
     }
     return this;
+}
+
+int StopNode::idepth() {
+    if(idepth_ != 0) return idepth_;
+    int d = 0;
+    for(Node* n: inputs) {
+        if(n != nullptr) {
+            d = std::max(d, n->idepth()+1);
+        }
+    }
+    idepth_ = d;
+    return idepth_;
 }
 Node *StopNode::idealize() {
   int len = static_cast<int>(nIns());

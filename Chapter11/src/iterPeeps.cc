@@ -1,4 +1,5 @@
 #include "../Include/graph_visualizer.h"
+#include "../Include/globalCodeMotion.h"
 #include "../Include/node/node.h"
 #include "../Include/node/stop_node.h"
 
@@ -111,6 +112,7 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
     /*std::cerr << (new GraphVisualiser().generateDotOutput(stop, nullptr,
      * nullptr));*/
   }
+  GlobalCodeMotion::buildCFG(stop);
   return stop;
 }
 

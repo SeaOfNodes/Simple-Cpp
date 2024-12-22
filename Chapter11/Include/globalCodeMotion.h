@@ -22,6 +22,8 @@ public:
     static void walkInfinite(CFGNode* n, Tomi::BitArray<10>& visited, StopNode* stop);
 
     static void schedEarly();
+    // Post-Order of CFG
+
     static void rpo_cfg(Node* n, Tomi::BitArray<10>& visited, Tomi::Vector<CFGNode*>& rpo);
     static void schedEarly_(Node* n, Tomi::BitArray<10>& visit);
     static void schedLate(StartNode* start);

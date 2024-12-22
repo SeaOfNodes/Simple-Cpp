@@ -35,8 +35,8 @@ public:
 class LoopNode : public RegionNode {
 public:
   LoopNode(Node* entry);
-  Node* entry();
-  Node* back();
+  CFGNode* entry();
+  CFGNode* back();
   std::string label() override;
   Type *compute() override;
   Node *idealize() override;

@@ -17,6 +17,7 @@
 
 // Custom hashing for Node:
 class Node;
+class CFGNode;
 
 template<>
 struct Tomi::hash<Node *> {
@@ -27,7 +28,6 @@ struct Tomi::hash<Node *> {
  * All Nodes in the Sea of Nodes IR inherit from the Node class.
  * The Node class provides common functionality used by all subtypes.
  * Subtypes of Node specialize by overriding methods.
- */
 /*
 template <typename T>
 typename std::vector<T>::Iterator find(std::vector<T> &vec, const T &value);
@@ -83,7 +83,12 @@ public:
 
     Tomi::Vector<Node *> deps_;
 
+
     virtual std::string err();
+    CFGNode* cfg0();
+
+
+    static int UID();
 
 private:
     Tomi::Vector<bool> bitset;
@@ -95,7 +100,6 @@ private:
      * */
     static int UNIQUE_ID;
 
-    static int UID();
 
 public:
     Node() = default;
