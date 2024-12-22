@@ -1,4 +1,5 @@
 #include "../../Include/node/proj_node.h"
+#include "../../Include/type/type_mem.h"
 
 ProjNode::ProjNode(Node *ctrl, int idx, std::string label)
         : Node({ctrl}), idx_(idx), label_(std::move(label)) {}

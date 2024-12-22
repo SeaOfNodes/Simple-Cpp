@@ -11,7 +11,7 @@
 #include "node.h"
 
 
-class StartNode : public MultiNode, public CFGNode {
+class StartNode : public MultiNode {
 public:
   TypeTuple *args_;
   static Tomi::HashMap<std::string, int> aliasStarts;

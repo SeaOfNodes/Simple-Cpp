@@ -1,11 +1,11 @@
 #ifndef MULTI_NODE_H
 #define MULTI_NODE_H
-#include "node.h"
+#include "cfg_node.h"
 
 // forward declare
 class ProjNode;
 
-class MultiNode : public Node {
+class MultiNode : public CFGNode {
 public:
   MultiNode(std::initializer_list<Node *> = {});
   std::string label() override;

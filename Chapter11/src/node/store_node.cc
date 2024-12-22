@@ -3,9 +3,9 @@
 #include "../../Include/type/type_mem_ptr.h"
 
 StoreNode::StoreNode(std::string name, int alias, Node* ctrl, Node *memSlice, Node *memPtr, Node *value) : MemOpNode(name, alias,
-                                                                                                         ctrl, memSlice,
+                                                                                                                     {ctrl, memSlice,
                                                                                                          memPtr,
-                                                                                                         value) {}
+                                                                                                         value}) {}
 
 std::string StoreNode::label() { return "Store"; }
 

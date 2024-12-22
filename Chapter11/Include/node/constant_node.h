@@ -3,10 +3,14 @@
 
 #include "node.h"
 
+// forward declare
+class CFGNode;
+
 class ConstantNode : public Node {
 public:
-  std::ostringstream builder;
-  ConstantNode(Type *type, Node *START);
+    ConstantNode(Type *type, CFGNode *START);
+
+    std::ostringstream builder;
   Type *con_;
   bool isMultiTail() override;
   bool isPinned() override;

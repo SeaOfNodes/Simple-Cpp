@@ -285,15 +285,16 @@ else {
         }
 }
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
-    EXPECT_EQ("return 0"; result);
+    EXPECT_EQ("return 0", result);
 
 }
+
 TEST(SimpleTest, testPrimes) {
-std::string source = R"(
+    std::string source = R"(
     if( arg < 2 ) return 0;
 int primeCount = 1;
 int prime = 3;
@@ -317,11 +318,12 @@ while( prime <= arg ) {
 }
 return primeCount;
 )";
-auto* parser = new Parser(source);
-StopNode*ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ("Stop[ return 0; return Phi(Loop19,1,Phi(Region81,Phi_primeCount,Phi(Region76,(Phi_primeCount+1),Phi_primeCount))); ]"; result);
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = ret->print(builder).str();
+    EXPECT_EQ(
+            "Stop[ return 0; return Phi(Loop19,1,Phi(Region81,Phi_primeCount,Phi(Region76,(Phi_primeCount+1),Phi_primeCount))); ]", result);
 }
 
 TEST(SimpleTest, testAntiDeps1) {
@@ -334,29 +336,11 @@ i=v.f;
 if (arg) v.f=1;
 return i;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return .f;", result);
-
-}
-
-TEST(SimpleTest, testAntiDeps1) {
-std::string source = R"(
-struct S { int f; }
-S v=new S;
-v.f = 2;
-int i=new S.f;
-i=v.f;
-if (arg) v.f=1;
-return i;
-)";
-auto* parser = new Parser(source);
-StopNode*ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ("return .f;", result);
 
 }
 
@@ -374,13 +358,14 @@ if (arg) {
 }
 return i;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return Phi(Region31,.f,0);", result);
 
 }
+
 TEST(SimpleTest, testAntiDeps3) {
     std::string source = R"(
 struct S { int f; }
@@ -394,8 +379,8 @@ if (v1) {
 }
 return v0;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return new S;", result);
@@ -412,8 +397,8 @@ if (arg+1) arg= 0;
 while (arg) v.f = 2;
 return i;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return .f;", result);
@@ -432,13 +417,14 @@ while(1) {
 }
 return v;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return new S;", result);
 
 }
+
 TEST(SimpleTest, testAntiDeps6) {
     std::string source = R"(
 struct s { int v; }
@@ -448,8 +434,8 @@ while( -arg )
 while(1)
   arg = arg+ptr.v;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return 0;", result);
@@ -468,13 +454,14 @@ while (arg) {
 }
 return i;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return .f", result);
 
 }
+
 TEST(SimpleTest, testAntiDeps8) {
     std::string source = R"(
 struct S { int f; }
@@ -489,8 +476,8 @@ while(arg) {
 }
 return arg;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return Phi(Loop13,arg,Phi(Region35,.f,0));", result);
@@ -509,8 +496,8 @@ if (arg) {
 }
 return v;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return new S;", result);
@@ -530,8 +517,8 @@ while (arg > 0) {
 }
 return v;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return new S;", result);
@@ -546,8 +533,8 @@ if( arg==0 ) s.f = 1;
 else if (arg == 1) s.f = 1;
 return s.f;;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return Phi(Region35,1,Phi(Region33,1,0));", result);
@@ -565,8 +552,8 @@ while(0>=0) {
 }
 return 0;
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return 0;", result);
@@ -584,8 +571,8 @@ int v0=0;
     }
 }
 )";
-    auto* parser = new Parser(source);
-    StopNode*ret = parser->parse(true)->iterate();
+    auto *parser = new Parser(source);
+    StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ("return 0;", result);

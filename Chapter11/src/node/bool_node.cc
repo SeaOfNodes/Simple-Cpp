@@ -1,4 +1,5 @@
 #include "../../Include/node/bool_node.h"
+#include "../../Include/parser.h"
 
 BoolNode::BoolNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 

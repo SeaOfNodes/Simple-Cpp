@@ -1,4 +1,5 @@
 #include "../../Include/node/if_node.h"
+#include "../../Include/parser.h"
 
 IfNode::IfNode(Node *ctrl, Node *parent) : MultiNode({ctrl, parent}) {
     IterPeeps::add(this);

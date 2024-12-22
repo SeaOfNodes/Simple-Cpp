@@ -1,6 +1,7 @@
 #include "../../Include/node/region_node.h"
 #include "../../Include/node/constant_node.h"
 #include <algorithm>
+#include "../../Include/parser.h"
 
 RegionNode::RegionNode(std::initializer_list<Node *> nodes) : CFGNode(nodes) {}
 std::string RegionNode::label() { return "Region"; }
@@ -118,7 +119,7 @@ return lca;
 Node* RegionNode::getBlockStart() {
     return this;
 }
-void RegionNode::walkUnreach_(Tomi::BitArray<10> &visit, Tomi::HashMap<CFGNode *, CFGNode *> unreach){
+void RegionNode::walkUnreach_(Tomi::BitArray<10> &visit, Tomi::HashSet<CFGNode*> unreach){
     for(int i =1; i <nIns(); i++) {
         cfg(i)->walkUnreach(visit, unreach);
     }

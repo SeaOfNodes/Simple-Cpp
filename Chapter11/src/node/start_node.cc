@@ -43,4 +43,4 @@ Node *StartNode::idealize() { return nullptr; }
 
 bool StartNode::isMultiHead() {return true;}
 // No immediate dominator, and idepth==0
-Node *StartNode::idom() { return nullptr; }
+CFGNode *StartNode::idom() { return nullptr; }

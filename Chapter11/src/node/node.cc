@@ -1,7 +1,10 @@
 #include "../../Include/node/node.h"
 #include "../../Include/node/constant_node.h"
-#include <typeinfo> // For typeid
+
 #include "../../Include/IR_printer.h"
+#include "../../Include/parser.h"
+
+#include <typeinfo> // For typeid
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;

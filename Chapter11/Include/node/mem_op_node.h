@@ -10,7 +10,7 @@ class MemOpNode : public Node {
 public:
     std::string name_;
     int alias_;
-    MemOpNode(std::string name, int alias, Node* ctrl, Node* memSlice, Node* memPtr, Node* value);
+    MemOpNode(std::string name, int alias, std::initializer_list<Node*> nodes);
     Node* mem();
     Node* ptr();
 

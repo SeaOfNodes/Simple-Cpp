@@ -1,6 +1,7 @@
 #include "../../Include/node/scope_node.h"
 #include "../../Include/node/cast_node.h"
 #include "../../Include/node/constant_node.h"
+#include "../../Include/parser.h"
 
 #include <cassert>
 

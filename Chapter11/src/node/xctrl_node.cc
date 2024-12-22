@@ -8,7 +8,7 @@ std::string XCtrlNode::label() {
     return "XCtrl";
 }
 
-std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
+std::ostringstream &XCtrlNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     return builder;
 }
 

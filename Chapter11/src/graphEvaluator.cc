@@ -1,4 +1,8 @@
 #include "../Include/graph_evaluator.h"
+#include "../Include/node/minus_node.h"
+#include "../Include/node/sub_node.h"
+#include "../Include/node/region_node.h"
+#include "../Include/node/return_node.h"
 
 StartNode *GraphEvaluator::findStart(Tomi::Vector<bool> &visit, Node *node) {
   if (node == nullptr)
