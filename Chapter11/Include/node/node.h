@@ -17,6 +17,7 @@
 
 // Custom hashing for Node:
 class Node;
+
 class CFGNode;
 
 template<>
@@ -85,7 +86,8 @@ public:
 
 
     virtual std::string err();
-    CFGNode* cfg0();
+
+    CFGNode *cfg0();
 
 
     static int UID();
@@ -142,8 +144,6 @@ public:
     virtual std::ostringstream &print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &) = 0;
 
-    void printLine(std::ostringstream &builder);
-
     virtual int hash();
 
     virtual bool isMultiHead();
@@ -166,7 +166,7 @@ public:
     [[nodiscard]] virtual bool isMem();
 
     /** Return block start from a isCFG() */
-    [[nodiscard]] virtual Node* getBlockStart();
+    [[nodiscard]] virtual Node *getBlockStart();
 
 
     /** Pinned in the schedule */
@@ -274,7 +274,7 @@ public:
     static Tomi::BitArray<10> WVISIT;
 
     template<typename T>
-    T walk(const std::function<T(Node*)> &pred) {
+    T walk(const std::function<T(Node *)> &pred) {
 //        assert(WVISIT.count() == 0);
         T rez = walk_(pred);
         WVISIT.reset();
@@ -282,7 +282,7 @@ public:
     };
 
     template<typename T>
-    T walk_(const std::function<T(Node*)> &pred) {
+    T walk_(const std::function<T(Node *)> &pred) {
         if (WVISIT.test(nid)) {
             if constexpr (std::is_pointer<T>::value) {
                 return nullptr;

@@ -8,7 +8,7 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 54) {
+    if (nid == 54) {
         std::cerr << "Here";
     }
     for (Node *n: inputNodes) {
@@ -56,6 +56,7 @@ Node *Node::unkeep() {
 int Node::UID() {
     return UNIQUE_ID;
 }
+
 std::string Node::ToString() {
     std::ostringstream builder;
     return print(builder).str();
@@ -94,7 +95,7 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
-    if(this == nullptr) {
+    if (this == nullptr) {
         std::cerr << "Stop here\n";
     }
     if (hash_ == 0)
@@ -208,7 +209,7 @@ Node *Node::peepholeOpt() {
     auto *a = dynamic_cast<ConstantNode *>(this);
     if (!(a) && type_->isHighOrConst()) {
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
-        if(type_ == Type::XCONTROL()) {
+        if (type_ == Type::XCONTROL()) {
             return alloc.new_object<XCtrlNode>();
         }
         return peepholedNode->peepholeOpt();
@@ -236,7 +237,6 @@ Node *Node::peepholeOpt() {
     if (n != nullptr) {
         return n;
     }
-
 
 
     if (old == type_)
@@ -299,34 +299,6 @@ Node *Node::idom() {
     return idom;
 }
 
-
-void Node::printLine(std::ostringstream &builder) {
-    builder << std::format("{:>4} {:<7.7}", nid, label());
-//    if(inputs.empty()) {
-//        builder << "DEAD\n";
-//        return;
-//    }
-    for (Node *def: inputs) {
-        if (def == nullptr) builder << "____";
-        else builder << std::format("{:>4} ", def->nid);;
-    }
-    for (size_t i = inputs.size(); i < 3; i++) {
-        builder << "      ";
-    }
-    builder << " [[  ";
-    for (Node *use: outputs) {
-        if (use == nullptr) builder << "____";
-        else builder << std::format("{:>4} ", use->nid);
-    }
-    int lim = 5 - std::max(static_cast<int>(inputs.size()), 3);
-    for (size_t i = outputs.size(); i < lim; i++) {
-        builder << "      ";
-    }
-    builder << "]] ";
-    if (type_ != nullptr) type_->print_1(builder);
-    builder << "\n";
-}
-
 Node *Node::delDef(int idx) {
     unlock();
     Node **old_def = &inputs[idx];
@@ -354,9 +326,11 @@ bool Node::isCFG() { return false; }
 bool Node::isMem() {
     return false;
 }
-Node* Node::getBlockStart() {
+
+Node *Node::getBlockStart() {
     return nullptr;
 }
+
 bool Node::isPinned() {
     return false;
 }
@@ -422,15 +396,19 @@ Node *Node::find(Tomi::Vector<bool> visit, int nid_) {
 }
 
 bool Node::eq(Node *n) { return true; }
+
 std::string Node::err() {
     return "";
 }
+
 int Node::_idepth(int idx) {
-    return idepth_== 0 ? idepth_ = in(idx)->idepth()+1 : idepth_;
+    return idepth_ == 0 ? idepth_ = in(idx)->idepth() + 1 : idepth_;
 }
+
 int Node::idepth() {
     return _idepth(0);
 }
+
 Node *Node::idealize() { return nullptr; }
 
 Type *Node::compute() { return nullptr; }

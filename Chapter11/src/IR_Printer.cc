@@ -1,9 +1,55 @@
 #include "../Include/IR_printer.h"
 #include "../Include/node/node.h"
 #include "../Include/node/region_node.h"
+#include "../Include/parser.h"
+#include "../Include/node/cfg_node.h"
+#include "../Include/utils.h"
+#include <limits>
+
+void IRPrinter::printLine(Node *n, std::ostringstream &sb) {
+    printLine_(n, sb);
+
+}
+
+void IRPrinter::printLine(Node *n, std::ostringstream &sb, Tomi::Vector<Node *> &bns, int i,
+                          Tomi::HashMap<Node *, int> &ds) {
+    printLine(n, sb);
+    Utils::del(bns, i);
+    ds.remove(n);
+}
+
+void IRPrinter::printLine_(Node *n, std::ostringstream &builder) {
+    builder << std::format("{:>4} {:<7.7}", n->nid, n->label());
+//    if(inputs.empty()) {
+//        builder << "DEAD\n";
+//        return;
+//    }
+    for (Node *def: n->inputs) {
+        if (def == nullptr) builder << "____";
+        else builder << std::format("{:>4} ", def->nid);;
+    }
+    for (size_t i = n->inputs.size(); i < 3; i++) {
+        builder << "      ";
+    }
+    builder << " [[  ";
+    for (Node *use: n->outputs) {
+        if (use == nullptr) builder << "____";
+        else builder << std::format("{:>4} ", use->nid);
+    }
+    int lim = 5 - std::max(static_cast<int>(n->inputs.size()), 3);
+    for (size_t i = n->outputs.size(); i < lim; i++) {
+        builder << "      ";
+    }
+    builder << "]] ";
+    if (n->type_ != nullptr) n->type_->print_1(builder);
+    builder << "\n";
+}
 
 // Another bulk pretty-printer.  Makes more effort at basic-block grouping.
 std::string IRPrinter::prettyPrint(Node *node, int depth) {
+    if (Parser::SCHEDULED) {
+        return prettyPrintScheduled(node, depth, false);
+    }
     BFS *bfs = new BFS(node, depth);
     // First, a Breadth First Search at a fixed depth.
     Tomi::Vector<Node *> rpos;
@@ -14,20 +60,23 @@ std::string IRPrinter::prettyPrint(Node *node, int depth) {
     // Reverse the post-order walk
     std::ostringstream builder;
     bool gap = false;
-    for(int i = rpos.size() - 1; i >= 0; i--) {
+    for (int i = rpos.size() - 1; i >= 0; i--) {
         Node *n = rpos[i];
         if (n->isCFG() || n->isMultiHead()) {
             if (!gap) builder << "\n";
-            n->printLine(builder);
-            while(--i >= 0) {
+            printLine(n, builder);
+            while (--i >= 0) {
                 Node *m = rpos[i];
-                if (!m->isMultiTail()) {i++; break;}
-                m->printLine(builder);
+                if (!m->isMultiTail()) {
+                    i++;
+                    break;
+                }
+                printLine(n, builder);
             }
             builder << "\n";
             gap = true;
         } else {
-            n->printLine(builder);
+            printLine(n, builder);
             gap = false;
         }
     }
@@ -88,6 +137,86 @@ BFS::BFS(Node *root, int d) {
         }
     }
     lim_ = lim;
+}
+
+std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmFormat) {
+    Tomi::HashMap<Node *, int> ds;
+    walk_(ds, node, depth);
+    std::ostringstream builder;
+    Tomi::Vector<Node *> bns;
+    while (!ds.isEmpty()) {
+        CFGNode *blk = nullptr;
+        for (auto n: ds) {
+            auto *cfg0 = dynamic_cast<CFGNode *>(n.key);
+            auto *cfg = cfg0 && cfg0->blockHead() ? cfg0 : dynamic_cast<CFGNode *>(n.key->in(0));
+            if (blk == nullptr || cfg->idepth() < blk->idepth()) {
+                blk = cfg;
+            }
+        }
+        ds.remove(blk);
+        builder << label(blk) << ":\n";
+        builder << std::string(4 * 5, ' ').c_str();
+        builder << " [[ ";
+        if (dynamic_cast<RegionNode *>(blk) || dynamic_cast<StopNode *>(blk)) {
+            auto *ifa = dynamic_cast<StopNode *>(blk);
+            for (int i = (ifa ? 0 : 1); i < blk->nIns(); i++) {
+                label(builder, blk->cfg(i));
+            }
+        } else if (!dynamic_cast<StartNode *>(blk)) {
+            label(builder, blk);
+        }
+        builder << " ]]";
+        // Collect block contents that are in the depth limit
+        bns.clear();
+        int xd = std::numeric_limits<int>::max();
+        for (Node *use: blk->outputs) {
+            int *i = ds.get(use);
+            auto *cfg = dynamic_cast<CFGNode *>(use);
+            if (i != nullptr && !(cfg && cfg->blockHead())) {
+                bns.push_back(use);
+                xd = std::min(xd, *i);
+            }
+        }
+        // Print Phis up front, if any
+        for (int i = 0; i < bns.size(); i++) {
+            auto *phi = dynamic_cast<PhiNode *>(bns[i]);
+            if (phi) {
+                printLine(phi, builder, bns, i--, ds);
+            }
+        }
+        // Print block contents in depth order, bumping depth until whole block printed
+        for (; !bns.empty(); xd++) {
+            for (int i = 0; i < bns.size(); i++) {
+                if (*ds.get(bns[i]) == xd) {
+                    printLine(bns[i], builder, bns, i--, ds);
+                }
+            }
+        }
+        builder << "\n";
+    }
+    return builder.str();
+}
+
+void IRPrinter::label(std::ostringstream &sb, CFGNode *blk) {
+    if (!blk->blockHead()) blk = blk->cfg(0);
+    sb << label(blk);
+
+}
+
+std::string IRPrinter::label(CFGNode *blk) {
+    if (dynamic_cast<StartNode *>(blk)) return "START";
+    if (dynamic_cast<LoopNode *>(blk)) return "LOOP" + std::to_string(blk->nid);
+    else return "L" + std::to_string(blk->nid);
+}
+
+void IRPrinter::walk_(Tomi::HashMap<Node *, int> &ds, Node *node, int d) {
+    int *nd = ds.get(node);
+    if (nd != nullptr && nd) return;
+    ds.put(node, d);
+    if (d == 0) return;
+    for (Node *def: node->inputs) {
+        if (def != nullptr) walk_(ds, def, d - 1);
+    }
 }
 
 void BFS::swap(int x, int y) {
