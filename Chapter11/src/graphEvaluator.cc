@@ -7,10 +7,7 @@
 StartNode *GraphEvaluator::findStart(Tomi::Vector<bool> &visit, Node *node) {
   if (node == nullptr)
     return nullptr;
-  if (auto *start = dynamic_cast<StartNode *>(node)) {
-    if (start)
-      return start;
-  }
+
   if (node->nid >= visit.size()) {
     visit.resize(node->nid + 1, false);
   }
@@ -20,18 +17,20 @@ StartNode *GraphEvaluator::findStart(Tomi::Vector<bool> &visit, Node *node) {
 
   visit[node->nid] = true;
 
+  auto*start = dynamic_cast<StartNode*>(node) ? dynamic_cast<StartNode*>(node) : nullptr;
+
   for (Node *def : node->inputs) {
     auto res = findStart(visit, def);
     if (res != nullptr) {
-      return res;
+        start = res;
     }
   }
   for (Node *use : node->outputs) {
     auto res = findStart(visit, use);
     if (res != nullptr)
-      return res;
+      start = res;
   }
-  return nullptr;
+  return start;
 }
 
 Node *GraphEvaluator::findControl(Node *control) {

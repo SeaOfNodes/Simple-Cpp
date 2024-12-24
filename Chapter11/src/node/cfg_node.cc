@@ -9,6 +9,10 @@ bool CFGNode::isPinned() {return true;}
 CFGNode* CFGNode::cfg(int idx) {
     return dynamic_cast<CFGNode*>(in(idx));
 }
+unsigned long long Tomi::hash<CFGNode*>::operator()(CFGNode *val) {
+    return val->hash();
+}
+
 bool CFGNode::blockHead() {
     return false;
 }
@@ -40,15 +44,25 @@ CFGNode* CFGNode::idom(CFGNode* rhs) {
 }
 
 int CFGNode::loopDepth() {
+    if(!cfg(0)) {
+        std::cerr << "Null";
+    }
     return loopDepth_ == 0? (loopDepth_ = cfg(0)->loopDepth()) : loopDepth_;
 }
-void CFGNode::walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> unreach) {
+void CFGNode::walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach) {
     if(visited.test(nid)) return;
     visited.set(nid);
+    if(nid == 2) {
+        std::cerr << "Null";
+    }
     walkUnreach_(visited, unreach);
     unreach.remove(this);
 }
 
-void CFGNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> unreach) {
+void CFGNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach) {
+    if(!cfg(0)) {
+        // should not get here
+        std::cerr << "Null";
+    }
     cfg(0)->walkUnreach(visited, unreach);
 }

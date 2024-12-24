@@ -11,16 +11,16 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Enable AddressSanitizer for Clang or GCC in Debug builds
-#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#    message(STATUS "Enabling AddressSanitizer")
-#
-#    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-#        # For Clang and GCC, enable AddressSanitizer
-#        set(SANITIZER_FLAGS "-fsanitize=address")
-#        add_compile_options(${SANITIZER_FLAGS})
-#        add_link_options(${SANITIZER_FLAGS})
-#    endif()
-#endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Enabling AddressSanitizer")
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # For Clang and GCC, enable AddressSanitizer
+        set(SANITIZER_FLAGS "-fsanitize=address")
+        add_compile_options(${SANITIZER_FLAGS})
+        add_link_options(${SANITIZER_FLAGS})
+    endif()
+endif()
 
 
 # Add the include directory to the search path

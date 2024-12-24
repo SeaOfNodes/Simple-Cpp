@@ -59,7 +59,7 @@ Node *RegionNode::idealize() {
     }
     idom_ = nullptr;
     if (isDead())
-      return Parser::XCTRL();
+      return Parser::XCTRL;
     else
       return delDef(path);
   }
@@ -119,7 +119,7 @@ return lca;
 Node* RegionNode::getBlockStart() {
     return this;
 }
-void RegionNode::walkUnreach_(Tomi::BitArray<10> &visit, Tomi::HashSet<CFGNode*> unreach){
+void RegionNode::walkUnreach_(Tomi::BitArray<10> &visit, Tomi::HashSet<CFGNode*>& unreach){
     for(int i =1; i <nIns(); i++) {
         cfg(i)->walkUnreach(visit, unreach);
     }

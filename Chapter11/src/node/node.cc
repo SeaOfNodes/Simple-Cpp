@@ -3,12 +3,13 @@
 
 #include "../../Include/IR_printer.h"
 #include "../../Include/parser.h"
+#include "../../Include/utils.h"
 
 #include <typeinfo> // For typeid
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if (nid == 54) {
+    if (nid == 20) {
         std::cerr << "Here";
     }
     for (Node *n: inputNodes) {
@@ -46,9 +47,10 @@ std::string Node::glabel() { return label(); }
 
 std::size_t Node::nIns() const { return inputs.size(); }
 
-Node *Node::keep() { return addUse(nullptr); }
+Node *Node::keep() { KEEP++; return addUse(nullptr); }
 
-Node *Node::unkeep() {
+Node *Node::unkeep(){
+    UNKEEP++;
     delUse(nullptr);
     return this;
 }
@@ -95,9 +97,6 @@ std::ostringstream &Node::print(std::ostringstream &b) {
 std::size_t Node::nOuts() const { return outputs.size(); }
 
 void Node::unlock() {
-    if (this == nullptr) {
-        std::cerr << "Stop here\n";
-    }
     if (hash_ == 0)
         return;
     GVN.remove(this);
@@ -122,6 +121,9 @@ Node *Node::setDef(int idx, Node *new_def) {
 }
 
 Node *Node::addUse(Node *n) {
+    if(nid == 19) {
+        std::cerr << "Here";
+    }
     outputs.push_back(n);
     return this;
 }
@@ -150,10 +152,14 @@ Node *Node::addDef(Node *new_def) {
 }
 
 bool Node::delUse(Node *use) {
-    auto it = std::find(outputs.begin(), outputs.end(), use);
-    if (it != outputs.end()) {
-        outputs.erase(it);
+    if(nid == 19) {
+        std::cerr << "Here";
     }
+    Utils::delVal(outputs, use);
+//    auto it = std::find(outputs.begin(), outputs.end(), use);
+//    if (it != outputs.end()) {
+//        outputs.erase(it);
+//    }
     return outputs.empty();
 }
 
@@ -168,6 +174,9 @@ void Node::subsume(Node *nnn) {
         // N should not be null, as that means that the node you try to subsume is still in a keep-unkeep block.
         assert(n != nullptr);
         outputs.pop_back();
+        if(n == nullptr) {
+            std::cerr << "Here";
+        }
         n->unlock();
         auto it = std::find(n->inputs.begin(), n->inputs.end(), this);
 
@@ -207,7 +216,8 @@ Node *Node::peepholeOpt() {
 
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
-    if (!(a) && type_->isHighOrConst()) {
+    auto* b = dynamic_cast<XCtrlNode *>(this);
+    if (!(a) && !(b) && type_->isHighOrConst()) {
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
         if (type_ == Type::XCONTROL()) {
             return alloc.new_object<XCtrlNode>();
@@ -298,7 +308,7 @@ Node *Node::idom() {
     Node *idom = in(0);
     return idom;
 }
-
+// Todo: use DelVal here
 Node *Node::delDef(int idx) {
     unlock();
     Node **old_def = &inputs[idx];
@@ -365,6 +375,9 @@ void Node::reset() {
 }
 
 int Node::UNIQUE_ID = 1;
+
+int Node::KEEP  = 0;
+int Node::UNKEEP = 0;
 
 bool Node::isDead() { return isUnused() && nIns() == 0 && type_ == nullptr; }
 

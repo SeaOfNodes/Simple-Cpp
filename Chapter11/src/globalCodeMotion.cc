@@ -15,6 +15,7 @@ void GlobalCodeMotion::fixLoops(StopNode *stop) {
     Tomi::BitArray<10> visited;
     Tomi::HashSet<CFGNode *> unreach;
     unreach.put(Parser::START);
+
     for (Node *ret: stop->inputs) {
         ((ReturnNode *) ret)->walkUnreach(visited, unreach);
     }
@@ -75,7 +76,7 @@ void GlobalCodeMotion::schedEarly() {
 
 void GlobalCodeMotion::rpo_cfg(Node *n, Tomi::BitArray<10> &visited, Tomi::Vector<CFGNode *> &rpo) {
     auto *cfg = dynamic_cast<CFGNode *>(n);
-    if (!cfg && visited.test(cfg->nid)) {
+    if (!cfg || visited.test(cfg->nid)) {
         return;
     }
     visited.set(cfg->nid);
@@ -112,8 +113,8 @@ void GlobalCodeMotion::schedEarly_(Node *n, Tomi::BitArray<10> &visit) {
 }
 
 void GlobalCodeMotion::schedLate(StartNode *start) {
-    Tomi::Vector<CFGNode *> late(Node::UID());
-    Tomi::Vector<Node *> ns(Node::UID());
+    Tomi::Vector<CFGNode *> late(Node::UID(), nullptr);
+    Tomi::Vector<Node *> ns(Node::UID(), nullptr);
 
     schedLate_(start, ns, late);
     for (int i = 0; i < late.size(); i++) {

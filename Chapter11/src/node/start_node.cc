@@ -9,6 +9,9 @@ StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
 Tomi::HashMap<std::string, int>  StartNode::aliasStarts = Tomi::HashMap<std::string, int>();
 bool StartNode::isCFG() { return true; }
 
+bool StartNode::blockHead() {
+    return true;
+}
 std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
   builder << label();
   return builder;
@@ -35,6 +38,10 @@ void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
         scope->define(name, args_->types_[alias], n);
     }
 }
+void StartNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> &unreach) {
+
+}
+int StartNode::loopDepth() {loopDepth_ = 1; return loopDepth_;}
 Type *StartNode::compute() { return args_; }
 
 std::string StartNode::label() { return "Start"; }
@@ -44,3 +51,4 @@ Node *StartNode::idealize() { return nullptr; }
 bool StartNode::isMultiHead() {return true;}
 // No immediate dominator, and idepth==0
 CFGNode *StartNode::idom() { return nullptr; }
+int StartNode::idepth() { return 0; }

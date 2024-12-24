@@ -72,13 +72,16 @@ Node *IfNode::idealize() {
   return nullptr;
 }
 
-void IfNode::walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *> unreach) {
+void IfNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach) {
     for(Node* proj: outputs) {
+        if(proj == nullptr) {
+            std::cerr << "Null";
+        }
         if(dynamic_cast<CProjNode*>(proj)->loopDepth_ == 0) {
             unreach.put((CProjNode*)proj);
         }
     }
-    CFGNode::walkUnreach_(vitisted, unreach);
+    CFGNode::walkUnreach_(visited, unreach);
 }
 
 Node* IfNode::getBlockStart() {

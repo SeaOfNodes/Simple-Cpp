@@ -3,6 +3,13 @@
 
 #include "node.h"
 
+class CFGNode;
+
+template<>
+struct Tomi::hash<CFGNode*> {
+    unsigned long long operator()(CFGNode *val);
+};
+
 class CFGNode : public Node {
 public:
     CFGNode() = default;
@@ -47,9 +54,9 @@ public:
 
 // Tik-tok recursion pattern.  This method is final, and every caller does
 // this work.
-    virtual void walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> unreach);
+    virtual void walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach);
 
-    virtual void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *> unreach);
+    virtual void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach);
 
 };
 

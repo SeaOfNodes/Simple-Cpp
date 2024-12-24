@@ -15,11 +15,11 @@
 #include "../../Include/tomi.h"
 #include "../../Include/type/type.h"
 
-// Custom hashing for Node:
 class Node;
 
 class CFGNode;
 
+// Custom hashing for Node:
 template<>
 struct Tomi::hash<Node *> {
     unsigned long long operator()(Node *val);
@@ -101,7 +101,9 @@ private:
      * uninitialized values.
      * */
     static int UNIQUE_ID;
-
+    // debug info for keep and unkeep calls
+    static int KEEP;
+    static int UNKEEP;
 
 public:
     Node() = default;

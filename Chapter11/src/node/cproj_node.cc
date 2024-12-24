@@ -4,7 +4,7 @@
 #include "../../Include/node/if_node.h"
 #include "../../Include/node/not_node.h"
 
-CProjNode::CProjNode(Node *ctrl, int idx, std::string label) : CFGNode({nullptr}), idx_(idx), label_(label) {
+CProjNode::CProjNode(Node *ctrl, int idx, std::string label) : CFGNode({ctrl}), idx_(idx), label_(label) {
 }
 
 std::string CProjNode::label() {

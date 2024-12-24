@@ -82,11 +82,12 @@ class Parser {
 public:
     ScopeNode *scope_node;
     static StartNode *START;
-    static ConstantNode* ZERO();
-    static XCtrlNode *XCTRL();
     static bool SCHEDULED;
 
     static StopNode *STOP;
+    static ConstantNode* ZERO;
+    static XCtrlNode* XCTRL;
+
     Tomi::Vector<ScopeNode *> xScopes;
 
     ScopeNode *continueScope;

@@ -65,5 +65,5 @@ void LoopNode::forceExit(StopNode *stop) {
     CProjNode*f = alloc.new_object<CProjNode>(iff, 1, "False");
 
     setDef(2, f);
-    stop->addDef(alloc.new_object<ReturnNode>(t, Parser::ZERO(), nullptr));
+    stop->addDef(alloc.new_object<ReturnNode>(t, Parser::ZERO, nullptr));
 }

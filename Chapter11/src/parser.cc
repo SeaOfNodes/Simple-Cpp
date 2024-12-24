@@ -8,6 +8,8 @@
 // Todo: static fiasco?
 StopNode *Parser::STOP = nullptr;
 StartNode *Parser::START = nullptr;
+ConstantNode *Parser::ZERO = nullptr;
+XCtrlNode* Parser::XCTRL = nullptr;
 
 Tomi::HashMap<std::string, TypeStruct *> Parser::OBJS = {};
 
@@ -24,19 +26,13 @@ Parser::Parser(std::string source, TypeInteger *arg) {
 
     START = alloc.new_object<StartNode>(std::initializer_list<Type *>{Type::CONTROL(), arg});
     STOP = alloc.new_object<StopNode>(std::initializer_list<Node *>{});
+    ZERO = (dynamic_cast<ConstantNode*>(alloc.new_object<ConstantNode>(TypeInteger::constant(0),
+                                            Parser::START)->peephole()->keep()));
+    XCTRL = dynamic_cast<XCtrlNode*>((alloc.new_object<XCtrlNode>())->peephole()->keep());
     START->peephole();
 }
 
 bool Parser::SCHEDULED = false;
-
-ConstantNode *Parser::ZERO() {
-    return dynamic_cast<ConstantNode *>((alloc.new_object<ConstantNode>(TypeInteger::constant(0),
-                                                          Parser::START))->peephole()->keep());
-}
-
-XCtrlNode *Parser::XCTRL() {
-    return dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
-}
 
 Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT()) {}
 
@@ -53,7 +49,7 @@ StopNode *Parser::parse(bool show) {
     xScopes.push_back(scope_node);
     scope_node->push();
     scope_node->define(ScopeNode::CTRL, Type::CONTROL(),
-                       (alloc.new_object<ProjNode>(START, 0, ScopeNode::CTRL))->peephole());
+                       (alloc.new_object<CProjNode>(START, 0, ScopeNode::CTRL))->peephole());
     scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(),
                        (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
     parseBlock();
@@ -98,7 +94,7 @@ Node *Parser::parseBreak() {
 
 ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
     ScopeNode *cur = scope_node->dup();
-    ctrl(XCTRL());
+    ctrl(XCTRL);
 //  ctrl((alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START))
 //           ->peephole()); // Kill current scope
     // Prune nested lexical scopes that have depth > than the loop head.
@@ -265,14 +261,14 @@ Node *Parser::parseIf() {
     // Parse predicate
     Node *pred = require(parseExpression(), ")")->keep();
     // IfNode takes current control and predicate
-    auto *ifNode = ((alloc.new_object<IfNode>(ctrl(), pred))->keep())->peephole();
+    auto *ifNode = ((alloc.new_object<IfNode>(ctrl(), pred)))->peephole();
     // Setup projection nodes
-    Node *ifT = (alloc.new_object<CProjNode>((IfNode *) ifNode->keep(), 0, "True"))->peephole();
+    Node *ifT = (alloc.new_object<CProjNode>(ifNode->keep(), 0, "True"))->peephole();
     // should be the if statement itself
     ifT->keep();
 
     Node *ifF =
-            (alloc.new_object<CProjNode>((IfNode *) ifNode->unkeep(), 1, "False"))->peephole();
+            (alloc.new_object<CProjNode>(ifNode->unkeep(), 1, "False"))->peephole();
     // In if true branch, the ifT proj node becomes the ctrl
     // But first clone the scope and set it as current
     ifF->keep();
@@ -375,7 +371,7 @@ Node *Parser::parseReturn() {
     Node *expr = require(parseExpression(), ";");
     Node *bpeep = (alloc.new_object<ReturnNode>(ctrl(), expr, scope_node))->peephole();
     auto *ret = STOP->addReturn(bpeep);
-    ctrl(XCTRL()); // kill control
+    ctrl(XCTRL); // kill control
     return ret;
 }
 
@@ -492,14 +488,13 @@ Node *Parser::memAlias(int alias, Node *st) {
 
 Node *Parser::newStruct(TypeStruct *obj) {
     Node *n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
-    Node *initValue = (new ConstantNode(TypeInteger::constant(0), Parser::START))->peephole();
     int *alias = StartNode::aliasStarts.get(obj->name_);
     assert(alias != nullptr);
 
     for (Field *field: obj->fields_) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
-        memAlias(*alias, (new StoreNode(field->fname_, *alias,ctrl(),  memAlias(*alias), n, ZERO()))->peephole());
+        memAlias(*alias, (new StoreNode(field->fname_, *alias,ctrl(),  memAlias(*alias), n, ZERO))->peephole());
         alias++;
     }
     return n->unkeep();
@@ -540,7 +535,7 @@ Node *Parser::parsePrimary() {
     if (matchx("true"))
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(1), START))->peephole();
     if (matchx("false"))
-        return ZERO();
+        return ZERO;
     if (matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
     if (matchx("new")) {
         std::string structName = requireId();

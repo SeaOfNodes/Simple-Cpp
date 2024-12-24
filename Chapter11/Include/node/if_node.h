@@ -23,7 +23,7 @@ public:
 
   Type *compute() override;
   Node *idealize() override;
-  void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *> unreach) override;
+  void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach) override;
   Node* getBlockStart() override;
 };
 #endif

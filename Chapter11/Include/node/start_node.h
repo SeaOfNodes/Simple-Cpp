@@ -34,6 +34,10 @@ public:
 
   bool isMultiHead() override;
 
+  virtual void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach) override;
+  int loopDepth() override;
+  int idepth() override;
+  bool blockHead() override;
   std::string label() override;
 };
 
