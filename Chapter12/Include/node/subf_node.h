@@ -1,18 +1,19 @@
-#ifndef DIV_NODE_H
-#define DIV_NODE_H
+#ifndef SUBF_NODE_H
+#define SUBF_NODE_H
+
 #include "../../Include/node/node.h"
 
-class DivNode : public Node {
+class SubfNode : public Node {
 public:
-  DivNode(Node *lhs, Node *rhs);
+    SubfNode(Node *lhs, Node *rhs);
   std::string label();
   std::string glabel();
 
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
-  Type *compute() override;
-  Node *idealize() override;
-  Node *copy(Node *lhs, Node *rhs) override;
+  Type *compute();
+  Node *idealize();
   Node* copyF();
 };
+
 #endif

@@ -58,3 +58,4 @@ Node *MulNode::idealize() {
 }
 
 Node *MulNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<MulNode>(lhs, rhs); }
+Node* MulNode::copyF() { return alloc.new_object<MulFNode>(nullptr, nullptr); }

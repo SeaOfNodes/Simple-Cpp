@@ -29,3 +29,7 @@ Node *MinusNode::idealize() {
     }
     return nullptr;
 }
+
+Node* MinusNode::copyF() {
+return alloc.new_object<MinusFNode>(nullptr);
+}

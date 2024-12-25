@@ -58,6 +58,7 @@ public:
 
     std::string matchId();
 
+    int isLongOrDouble();
     std::size_t position = 0;
     bool peekIsId();
 
@@ -93,7 +94,7 @@ public:
     ScopeNode *continueScope;
     ScopeNode *breakScope;
 
-    static Tomi::HashMap<std::string, TypeStruct *> OBJS;
+    static Tomi::HashMap<std::string, Type *> TYPES;
 
     explicit Parser(std::string source, TypeInteger *arg);
 
@@ -128,7 +129,7 @@ private:
 
     // replace this with custom data structure
     const std::unordered_set <std::string> KEYWORDS = {
-            "break", "continue", "else", "false", "if", "int", "return", "true", "while", "null", "new", "struct"};
+            "break", "continue", "else", "false", "if", "int", "return", "true", "while", "null", "new", "struct", "flt"};
 
     Node *parseStatement();
 
@@ -173,7 +174,7 @@ private:
 
     Node* parsePostFix(Node* expr);
 
-    Node *parseIntegerLiteral();
+    Node *parseLiteral();
 
     Node *showGraph();
 

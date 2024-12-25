@@ -15,5 +15,6 @@ public:
   Type *compute() override;
   Node *idealize() override;
   Node *copy(Node *lhs, Node *rhs) override;
+  Node* copyF();
 };
 #endif

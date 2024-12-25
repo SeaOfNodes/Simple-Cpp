@@ -5,7 +5,6 @@
 #include <algorithm>
 
 void GlobalCodeMotion::buildCFG(StopNode *stop) {
-    fixLoops(stop);
     schedEarly();
     Parser::SCHEDULED = true;
     schedLate(Parser::START);
@@ -213,10 +212,13 @@ CFGNode *GlobalCodeMotion::find_anti_dep(CFGNode *lca, LoadNode *load, CFGNode *
             }
         } else if (dynamic_cast<LoadNode *>(mem)) {
             // Loads do not cause anti-deps on other loads
-            continue;
+            break;
         } else if (dynamic_cast<ReturnNode *>(mem)) {
             // Load must already be ahead of Return
-            continue;
+            break;
+            else if(dynamic_cast<NeverNode*>(mem)) {
+                break;
+            }
         } else {
             throw std::runtime_error("TODO");
         }
@@ -230,7 +232,7 @@ CFGNode *GlobalCodeMotion::anti_dep(LoadNode *load, CFGNode *stblk, CFGNode *def
     for (; stblk != defblk->idom(); stblk = stblk->idom()) {
         // Store and Load overlap, need anti-dependence
         if (stblk->anti_ == load->nid) {
-            lca = lca->idom(stblk);
+            lca = lca->idom(stblk, nullptr);
             if (lca == stblk && st != nullptr &&
                 std::find(st->inputs.begin(), st->inputs.end(), load) == st->inputs.end()) {
                 st->addDef(load);

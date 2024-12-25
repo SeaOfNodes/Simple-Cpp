@@ -107,6 +107,8 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
     /*std::cerr << (new GraphVisualiser().generateDotOutput(stop, nullptr,
      * nullptr));*/
   }
+    // Break infinite loops, forcing a Never-branch to exit
+  GlobalCodeMotion::fixLoops(stop);
   GlobalCodeMotion::buildCFG(stop);
   return stop;
 }

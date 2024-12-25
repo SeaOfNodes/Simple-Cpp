@@ -76,7 +76,12 @@ add_library(simple_lib
         src/node/never_node.cc
         src/node/xctrl_node.cc
         src/globalCodeMotion.cc
-
+        # float
+        src/node/divf_node.cc
+        src/node/mulf_node.cc
+        src/node/minusf_node.cc
+        src/node/addf_node.cc
+        src/node/subf_node.cc
         # type
         src/type/integer_type.cc
         src/type/type.cc
@@ -85,6 +90,7 @@ add_library(simple_lib
         src/type/type_struct.cc
         src/type/type_mem.cc
         src/type/type_mem_ptr.cc
+        src/type/type_float.cc
 
         # GCM
         src/globalCodeMotion.cc

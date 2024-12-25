@@ -32,6 +32,7 @@ public:
   Node *idealize() override;
 
   Node *copy(Node *lhs, Node *rhs) override;
+  Node* copyF();
   /*
    *
    * Rotation is only valid for associative ops, e.g. Add, Mul, And, Or.

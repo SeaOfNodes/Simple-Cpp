@@ -13,6 +13,7 @@ public:
 
   Type *compute();
   Node *idealize();
+  Node* copyF();
 };
 
 #endif

@@ -38,14 +38,14 @@ CFGNode *CFGNode::idom() {
 }
 
 
-CFGNode *CFGNode::idom(CFGNode *rhs) {
+CFGNode *CFGNode::idom(CFGNode *rhs, Node* dep) {
     if (rhs == nullptr) return this;
     CFGNode *lhs = this; // this->nid: 76
 
     while (lhs != rhs) {
         int comp = lhs->idepth() - rhs->idepth();
-        if (comp >= 0) lhs = lhs->idom();
-        if (comp <= 0) rhs = rhs->idom();
+        if (comp >= 0) lhs = dynamic_cast<CFGNode*>((lhs->addDep(dep)))->idom();
+        if (comp <= 0) rhs = dynamic_cast<CFGNode*>((rhs->addDep(dep)))->idom();
     }
     return lhs;
 }

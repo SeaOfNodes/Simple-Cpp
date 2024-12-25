@@ -47,3 +47,7 @@ Node *SubNode::idealize() {
 }
 
 Node *SubNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<SubNode>(lhs, rhs); }
+
+Node *SubNode::copyF() {
+    return alloc.new_object<SubNode>(nullptr, nullptr);
+}

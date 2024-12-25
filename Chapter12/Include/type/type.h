@@ -35,11 +35,12 @@ public:
   // All integers; see TypeInteger
   static constexpr unsigned int TINT = 5;
   // Tuples; finite collections of unrelated Types, kept in parallel
-  static constexpr unsigned int TTUPLE = 6;
-  static constexpr unsigned int TMEM = 7;
-  static constexpr unsigned int TMEMPTR = 8;
-  static constexpr unsigned int TSTRUCT = 9;
-  static constexpr unsigned int TFLD = 10;
+  static constexpr unsigned int TFLT = 6;
+  static constexpr unsigned int TTUPLE = 7;
+  static constexpr unsigned int TMEM = 8;
+  static constexpr unsigned int TMEMPTR = 9;
+  static constexpr unsigned int TSTRUCT = 10;
+  static constexpr unsigned int TFLD = 11;
 
   unsigned int type_{};
 

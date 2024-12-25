@@ -4,31 +4,39 @@
 #include "../Include/node/store_node.h"
 #include "../Include/node/load_node.h"
 #include "../Include/node/cproj_node.h"
+#include "../Include/type/type_float.h"
+#include "../Include/node/to_float_node.h"
+
+#include <cmath> // For std::abs
 
 // Todo: static fiasco?
 StopNode *Parser::STOP = nullptr;
 StartNode *Parser::START = nullptr;
 ConstantNode *Parser::ZERO = nullptr;
-XCtrlNode* Parser::XCTRL = nullptr;
+XCtrlNode *Parser::XCTRL = nullptr;
 
-Tomi::HashMap<std::string, TypeStruct *> Parser::OBJS = {};
+Tomi::HashMap<std::string, Type *> Parser::TYPES = {};
 
 Parser::Parser(std::string source, TypeInteger *arg) {
     Node::reset();
     IterPeeps::reset();
 
-    OBJS.clear();
+    TYPES.clear();
 
+    TYPES.put("int", TypeInteger::BOT());
+    TYPES.put("flt", TypeFloat::BOT());
+
+    SCHEDULED = false;
     lexer = alloc.new_object<Lexer>(source);
     scope_node = alloc.new_object<ScopeNode>();
     continueScope = nullptr;
     breakScope = nullptr;
 
-    START = alloc.new_object<StartNode>(std::initializer_list<Type *>{Type::CONTROL(), arg});
-    STOP = alloc.new_object<StopNode>(std::initializer_list<Node *>{});
-    ZERO = (dynamic_cast<ConstantNode*>(alloc.new_object<ConstantNode>(TypeInteger::constant(0),
-                                            Parser::START)->peephole()->keep()));
-    XCTRL = dynamic_cast<XCtrlNode*>((alloc.new_object<XCtrlNode>())->peephole()->keep());
+    START = alloc.new_object<StartNode>(std::initializer_list < Type * > {Type::CONTROL(), arg});
+    STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
+    ZERO = (dynamic_cast<ConstantNode *>(alloc.new_object<ConstantNode>(TypeInteger::constant(0),
+                                                                        Parser::START)->peephole()->keep()));
+    XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
     START->peephole();
 }
 
@@ -54,8 +62,9 @@ StopNode *Parser::parse(bool show) {
                        (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
     parseBlock();
     if (ctrl()->type_ == Type::CONTROL()) {
-        STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), (alloc.new_object<ConstantNode>(TypeInteger::constant(0), Parser::START))->peephole(),
-                                        scope_node))->peephole());
+        STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), (alloc.new_object<ConstantNode>(TypeInteger::constant(0),
+                                                                                              Parser::START))->peephole(),
+                                                      scope_node))->peephole());
 
     }
     // before pop
@@ -125,7 +134,7 @@ Node *Parser::parseContinue() {
 Node *Parser::parseStruct() {
     if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
     std::string typeName = requireId();
-    if (OBJS.get(typeName) != nullptr) throw std::runtime_error("Redefining struct: " + typeName);
+    if (TYPES.get(typeName) != nullptr) throw std::runtime_error("Redefining struct: " + typeName);
     Tomi::Vector<Field *> fields;
     require("{");
     while (!peek('}') && !lexer->isEof()) {
@@ -138,24 +147,23 @@ Node *Parser::parseStruct() {
     require("}");
     // Build and install the TypeStruct
     TypeStruct *type = TypeStruct::make(typeName, fields);
-    OBJS.put(typeName, type);
+    TYPES.put(typeName, type);
     START->addMemProj(type, scope_node);
     return parseStatement();
 }
 
 Field *Parser::parseField(std::string name) {
-    if (matchx("int")) {
-        return require(Field::make(requireId(), TypeInteger::BOT()), ";");
+    Type *t = type();
+    if (t == nullptr) {
+        throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
     }
-    throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
+    return require(Field::make(requireId(), TypeInteger::BOT()), ";");
 
 }
 
 Node *Parser::parseStatement() {
     if (matchx("return"))
         return parseReturn();
-    else if (matchx("int"))
-        return parseDecl(TypeInteger::BOT());
     else if (match("{"))
         return require(parseBlock(), "}");
     else if (matchx("if"))
@@ -312,11 +320,16 @@ Type *Parser::type() {
     std::string tname = lexer->matchId();
     if (tname.empty()) return nullptr;
     if (tname == "int") return TypeInteger::BOT();
-    TypeStruct **obj = OBJS.get(tname);
-    if (obj != nullptr) return TypeMemPtr::make(*obj, match("?"));
-    // Not a type; unwind the parse
-    lexer->position = old;
-    return nullptr;
+    Type **t = TYPES.get(tname);
+    if (t == nullptr) {
+        // Not a type; unwind the parse
+        lexer->position = old;
+        return nullptr;
+    }
+    if (auto *obj = dynamic_cast<TypeStruct *>(*t)) {
+        TypeMemPtr::make(obj, match("?"));
+    }
+    return *t;
 }
 
 Node *Parser::parseBlock() {
@@ -355,14 +368,15 @@ Node *Parser::parseExpressionStatement() {
         if (scope_node->define(name, t, expr) == nullptr) error("Redefining name `" + name + "`");
     } else {
         Node *n = scope_node->lookup(name);
-        t = scope_node->lookUpDeclaredType(name);
         if (n == nullptr) error("Undefined name: '" + name + "'");
-        scope_node->update(name, expr);
+        t = scope_node->lookUpDeclaredType(name);
     }
-    TypeMemPtr *ta = dynamic_cast<TypeMemPtr *>(t);
-    TypeMemPtr *tb = dynamic_cast<TypeMemPtr *>(expr->type_);
+    // Auto-widen int to float
+    if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
+        expr = (new ToFloatNode(expr))->peephole();
+    }
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
-    return expr;
+    return scope_node->update(name, expr);
 
 }
 
@@ -380,16 +394,22 @@ Node *Parser::ctrl(Node *n) {
     return scope_node->ctrl(n);
 }
 
-Node *Parser::parseIntegerLiteral() {
+Node *Parser::parseLiteral() {
     return (alloc.new_object<ConstantNode>(lexer->parseNumber(), START))->peephole();
 }
 
 Type *Lexer::parseNumber() {
-    std::string snum = parseNumberString();
-    if (snum.length() > 1 && snum[0] == '0')
-        throw std::runtime_error(
-                "Syntax error: integer values cannot start with '0'");
-    return dynamic_cast<Type *>(TypeInteger::constant(std::stol(snum)));
+    int old = position;
+    int len = isLongOrDouble();
+    if (len > 0) {
+        if (len > 1 && input[old] == '0') {
+            throw std::runtime_error(
+                    "Syntax error: integer values cannot start with '0'");
+        }
+        return dynamic_cast<Type *>(TypeInteger::constant(std::stoi(input.substr(old, len)));
+    }
+    // TBD;
+    return TypeFloat::constant(std::stod(input.substr(old, len)));
 }
 
 bool Lexer::peek(char ch) {
@@ -429,7 +449,7 @@ Node *Parser::parseComparison() {
         } else
             break;
         lhs->setDef(idx, parseAddition());
-        lhs = lhs->peephole();
+        lhs = lhs->widen()->peephole();
         if (negate) {
             lhs = (alloc.new_object<NotNode>(lhs))->peephole();
         }
@@ -449,7 +469,7 @@ Node *Parser::parseAddition() {
         } else
             break;
         lhs->setDef(2, parseMultiplication());
-        lhs = lhs->peephole(); // new id because new replacement WRONG!!
+        lhs = lhs->widen()->peephole(); // new id because new replacement WRONG!!
     }
     return lhs;
 }
@@ -465,14 +485,14 @@ Node *Parser::parseMultiplication() {
         } else
             break;
         lhs->setDef(2, parseUnary());
-        lhs = lhs->peephole();
+        lhs = lhs->widen()->peephole();
     }
     return lhs;
 }
 
 Node *Parser::parseUnary() {
     if (match("-"))
-        return (alloc.new_object<MinusNode>(parseUnary()))->peephole();
+        return (alloc.new_object<MinusNode>(parseUnary()))->widen()->peephole();
     if (match("!")) return (new NotNode(parseUnary()))->peephole();
     return parsePostFix(parsePrimary());
 }
@@ -493,7 +513,7 @@ Node *Parser::newStruct(TypeStruct *obj) {
     for (Field *field: obj->fields_) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
-        memAlias(*alias, (new StoreNode(field->fname_, *alias,ctrl(),  memAlias(*alias), n, ZERO))->peephole());
+        memAlias(*alias, (new StoreNode(field->fname_, *alias, ctrl(), memAlias(*alias), n, ZERO))->peephole());
         alias++;
     }
     return n->unkeep();
@@ -508,6 +528,7 @@ Node *Parser::parsePostFix(Node *expr) {
         error("Expected struct reference but got " + expr->type_->str());
     }
     std::string name = requireId();
+    if (expr->type_ == TypeMemPtr::TOP()) throw std::runtime_error("Accessing field '" + name + "'from nullptr");
     int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
     if (idx == -1) error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
     int alias = *(StartNode::aliasStarts.get(ptr->obj_->name_)) + idx;
@@ -527,8 +548,8 @@ Node *Parser::parsePostFix(Node *expr) {
 
 Node *Parser::parsePrimary() {
     lexer->skipWhiteSpace();
-    if (lexer->isNumber())
-        return parseIntegerLiteral();
+    if (lexer->isNumber(lexer->peek()))
+        return parseLiteral();
     if (match("("))
         return require(parseExpression(), ")");
     if (matchx("true"))
@@ -538,8 +559,8 @@ Node *Parser::parsePrimary() {
     if (matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
     if (matchx("new")) {
         std::string structName = requireId();
-        TypeStruct **obj = OBJS.get(structName);
-        if (obj == nullptr) error("Undefined struct: " + structName);
+        Type **t = TYPES.get(structName);
+        if (t == nullptr || !(dynamic_cast<TypeStruct *>(*t))) error("Undefined struct: " + structName);
         return newStruct(*obj);
     }
     std::string name = lexer->matchId();
@@ -686,22 +707,28 @@ std::string Lexer::matchId() {
 }
 
 std::string Lexer::parseNumberString() {
-    std::size_t start = position;
-    while (isNumber(nextChar()));
-    return std::string(input, start, --position - start);
+    int old = position;
+    int len = std::abs(isLongOrDouble());
+    position += len;
+
+    return std::string(input, old, len);
 }
 
 bool Lexer::isWhiteSpace() { return peek() <= ' ' && peek() != '\0'; }
 
+int Lexer::isLongOrDouble() {
+    return 0;
+}
+
 void Lexer::skipWhiteSpace() {
-    while(true) {
-        if(isWhiteSpace()) position++;
-        // Skip // to the end of line
-        else if(position + 2 < input.length() &&
-        input[position] == '/' &&
-        input[position + 1] == '/') {
+    while (true) {
+        if (isWhiteSpace()) position++;
+            // Skip // to the end of line
+        else if (position + 2 < input.length() &&
+                 input[position] == '/' &&
+                 input[position + 1] == '/') {
             position += 2;
-            while(!isEof() && input[position] != '\n') position++;
+            while (!isEof() && input[position] != '\n') position++;
         } else break;
     }
     while (isWhiteSpace())

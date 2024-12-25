@@ -16,9 +16,13 @@ std::ostringstream &AddNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
+Node* AddNode::copyF() {
+    return alloc.new_object<AddNode>(nullptr, nullptr);
+}
 Node *AddNode::phiCon(Node *op, bool rotate) {
   Node *lhs = op->in(1);
   Node *rhs = op->in(2);
+  if(rhs->type_ == TypeInteger::TOP()) return nullptr;
 
   // LHS is either a Phi of constants, or another op with Phi of constants
   PhiNode *lphi = pcon(lhs, op);

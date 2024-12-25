@@ -41,7 +41,7 @@ public:
     virtual CFGNode *idom();
 
     // Return the LCA of two idoms
-    virtual CFGNode *idom(CFGNode *rhs);
+    virtual CFGNode *idom(CFGNode *rhs, Node* dep);
 
     int loopDepth_{};
 
