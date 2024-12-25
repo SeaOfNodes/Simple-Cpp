@@ -17,7 +17,7 @@ std::ostringstream &MinusNode::print_1(std::ostringstream &builder,
 Type *MinusNode::compute() {
   auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
   if (i0) {
-    return i0->isConstant() ? TypeInteger::constant(-i0->value()) : i0;
+    return i0->isConstant() ? TypeInteger::constant(-(i0->value())) : i0;
   }
   return TypeInteger::TOP()->meet(in(1)->type_);
 }

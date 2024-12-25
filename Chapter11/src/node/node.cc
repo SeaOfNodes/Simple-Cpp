@@ -118,9 +118,6 @@ Node *Node::setDef(int idx, Node *new_def) {
 }
 
 Node *Node::addUse(Node *n) {
-    if(nid == 17) {
-        std::cerr << "Here";
-    }
     outputs.push_back(n);
     return this;
 }
