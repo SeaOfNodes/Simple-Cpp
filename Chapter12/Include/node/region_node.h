@@ -19,7 +19,7 @@ public:
   Node *idom_; // Immediate dominator cache
   // Immediate dominator of Region is a little more complicated.
   int idepth() override;
-  CFGNode *idom() override;
+  CFGNode *idom(Node* dep) override;
   bool isMultiHead() override;
   // True if last input is null
   bool blockHead() override;

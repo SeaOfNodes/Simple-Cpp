@@ -1,4 +1,6 @@
 #include "../../Include/node/subf_node.h"
+#include "../../Include/type/integer_type.h"
+#include "../../Include/type/type_float.h"
 
 SubfNode::SubfNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {
 }

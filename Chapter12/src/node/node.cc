@@ -5,6 +5,10 @@
 #include "../../Include/parser.h"
 #include "../../Include/utils.h"
 
+#include "../../Include/type/type.h"
+#include "../../Include/type/type_float.h"
+#include "../../Include/node/to_float_node.h"
+
 #include <typeinfo> // For typeid
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
@@ -101,6 +105,31 @@ void Node::unlock() {
     hash_ = 0;
 }
 
+Node* Node::copyF() {
+    return nullptr;
+}
+Node* Node::widen() {
+    if(!hasFloatInput()) return this;
+    Node*flt = copyF();
+    if(flt == nullptr) return this;
+    // ignore control node
+    for(int i =1; i < nIns(); i++) {
+        auto*a = dynamic_cast<TypeFloat*>(in(i)->type_);
+
+        flt->setDef(i, a ? in(i) : (alloc.new_object<ToFloatNode>(in(i))->peephole()));
+    }
+    kill();
+    return flt;
+}
+
+bool Node::hasFloatInput() {
+    for(int i =1; i < nIns(); i++) {
+        if(dynamic_cast<TypeFloat*>(in(i)->type_)) {
+            return true;
+        }
+    }
+    return false;
+}
 Node *Node::setDef(int idx, Node *new_def) {
     unlock();
     Node *old_def = in(idx);
@@ -330,6 +359,7 @@ bool Node::isPinned() {
 
 void Node::kill() {
     unlock();
+    moveDepsToWorkList();
     assert(isUnused()); // has no uses so it is dead
     type_ = nullptr;
     while (nIns() >

@@ -1,4 +1,5 @@
 #include "../../Include/node/addf_node.h"
+#include "../../Include/type/type_float.h"
 
 AddFNode::AddFNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 std::string AddFNode::label() { return "AddF"; }

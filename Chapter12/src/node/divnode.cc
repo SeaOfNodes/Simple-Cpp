@@ -1,5 +1,6 @@
 #include "../../Include/node/divnode.h"
 #include "../../Include/type/integer_type.h"
+#include "../../Include/node/divf_node.h"
 
 DivNode::DivNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 

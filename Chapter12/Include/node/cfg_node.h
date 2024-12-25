@@ -18,6 +18,7 @@ public:
 
     bool isPinned() override;
 
+
     CFGNode *cfg(int idx);
 
     // Block head is Start, Region, CProj, but not e.g. If, Return, Stop
@@ -39,7 +40,7 @@ public:
 
     // Return the immediate dominator of this Node and compute dom tree depth.
     virtual CFGNode *idom();
-
+    virtual CFGNode *idom(Node* dep);
     // Return the LCA of two idoms
     virtual CFGNode *idom(CFGNode *rhs, Node* dep);
 

@@ -406,7 +406,7 @@ Type *Lexer::parseNumber() {
             throw std::runtime_error(
                     "Syntax error: integer values cannot start with '0'");
         }
-        return dynamic_cast<Type *>(TypeInteger::constant(std::stoi(input.substr(old, len)));
+        return dynamic_cast<Type *>(TypeInteger::constant(std::stoi(input.substr(old, len))));
     }
     // TBD;
     return TypeFloat::constant(std::stod(input.substr(old, len)));
@@ -560,8 +560,9 @@ Node *Parser::parsePrimary() {
     if (matchx("new")) {
         std::string structName = requireId();
         Type **t = TYPES.get(structName);
-        if (t == nullptr || !(dynamic_cast<TypeStruct *>(*t))) error("Undefined struct: " + structName);
-        return newStruct(*obj);
+        auto* obj = dynamic_cast<TypeStruct *>(*t);
+        if (t == nullptr || !(obj)) error("Undefined struct: " + structName);
+        return newStruct(obj);
     }
     std::string name = lexer->matchId();
     if (name == "")

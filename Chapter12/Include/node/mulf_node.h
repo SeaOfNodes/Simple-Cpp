@@ -3,9 +3,9 @@
 
 #include "../../Include/node/node.h"
 
-class MulfNode: public Node {
+class MulFNode: public Node {
 public:
-    MulfNode(Node* lhs, Node* rhs);
+    MulFNode(Node* lhs, Node* rhs);
     std::string label() override;
     std::string glabel() override;
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>&) override;
@@ -13,6 +13,5 @@ public:
     Node *idealize() override;
     Node *copy(Node *lhs, Node *rhs) override;
 };
-}
 
 #endif

@@ -62,6 +62,7 @@ public:
     std::size_t position = 0;
     bool peekIsId();
 
+    char peek();
 private:
     std::string input;
 
@@ -70,7 +71,6 @@ private:
 
     bool isIdLetter(char ch);
 
-    char peek();
 
     char nextChar();
 

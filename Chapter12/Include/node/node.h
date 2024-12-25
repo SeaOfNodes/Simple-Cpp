@@ -91,6 +91,13 @@ public:
 
 
     static int UID();
+    Node* copyF();
+
+    // Semantic change to the graph (so NOT a peephole), used by the Parser.
+    // If any input is a float, flip to a float-flavored opcode and widen any
+    // non-float input.
+    Node* widen();
+    bool hasFloatInput();
 
 private:
     Tomi::Vector<bool> bitset;

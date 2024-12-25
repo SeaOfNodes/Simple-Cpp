@@ -11,9 +11,9 @@ public:
 
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
-  Type *compute();
-  Node *idealize();
-  Node* copyF();
+  Type *compute() override;
+  Node *idealize() override;
+  Node* copy(Node* lhs, Node* rhs);
 };
 
 #endif

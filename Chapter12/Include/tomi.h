@@ -744,7 +744,7 @@ namespace Tomi {
             delete[] oldTable;
         }
 
-        std::string print() {
+        void print() {
             std::cerr << *this;
         }
 

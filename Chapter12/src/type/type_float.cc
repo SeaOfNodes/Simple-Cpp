@@ -19,14 +19,14 @@ TypeFloat::TypeFloat(bool is_con, long con) : Type(TFLT), is_con_(is_con), con_(
 }
 
 TypeFloat *TypeFloat::make(bool is_con, long con) {
-    return (alloc.new_object<TypeFloat>(is_con, con))->intern();
+    return dynamic_cast<TypeFloat*>((alloc.new_object<TypeFloat>(is_con, con))->intern());
 }
 
 TypeFloat *TypeFloat::constant(double con) {
     return make(true, con);
 }
 
-TypeFloat::gather(Tomi::Vector<Type *> &ts) {
+void TypeFloat::gather(Tomi::Vector<Type *> &ts) {
     ts.push_back(ZERO());
     ts.push_back(BOT());
 }
@@ -90,5 +90,5 @@ int TypeFloat::hash() {
 
 bool TypeFloat::eq(Type *other) {
     auto *t = dynamic_cast<TypeFloat *>(other);
-    return (con_ == t->con_) && (is_con_ == i->is_con_);
+    return (con_ == t->con_) && (is_con_ == t->is_con_);
 }

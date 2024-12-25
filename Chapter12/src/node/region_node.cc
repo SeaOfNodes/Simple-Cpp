@@ -108,11 +108,11 @@ int RegionNode::idepth() {
     idepth_ = d;
     return d;
 }
-CFGNode *RegionNode::idom() {
+CFGNode *RegionNode::idom(Node* dep) {
 CFGNode* lca = nullptr;
 
 for(int i = 1; i< nIns(); i++) {
-    lca = cfg(i)->idom(lca);
+    lca = cfg(i)->idom(lca, dep);
 }
 return lca;
 }

@@ -1,5 +1,6 @@
 #include "../../Include/node/mul_node.h"
 #include "../../Include/type/integer_type.h"
+#include "../../Include/node/mulf_node.h"
 
 MulNode::MulNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 

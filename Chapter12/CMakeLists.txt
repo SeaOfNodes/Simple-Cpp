@@ -76,6 +76,8 @@ add_library(simple_lib
         src/node/never_node.cc
         src/node/xctrl_node.cc
         src/globalCodeMotion.cc
+        src/node/to_float_node.cc
+
         # float
         src/node/divf_node.cc
         src/node/mulf_node.cc

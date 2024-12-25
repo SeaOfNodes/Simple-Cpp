@@ -1,6 +1,7 @@
 #include "../Include/globalCodeMotion.h"
 #include "../Include/parser.h"
 #include "../Include/node/store_node.h"
+#include "../Include/node/never_node.h"
 #include <cassert>
 #include <algorithm>
 
@@ -216,9 +217,8 @@ CFGNode *GlobalCodeMotion::find_anti_dep(CFGNode *lca, LoadNode *load, CFGNode *
         } else if (dynamic_cast<ReturnNode *>(mem)) {
             // Load must already be ahead of Return
             break;
-            else if(dynamic_cast<NeverNode*>(mem)) {
-                break;
-            }
+        } else if (dynamic_cast<NeverNode *>(mem)) {
+            break;
         } else {
             throw std::runtime_error("TODO");
         }

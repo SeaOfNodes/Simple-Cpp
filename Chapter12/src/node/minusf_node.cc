@@ -1,5 +1,5 @@
 #include "../../Include/node/minusf_node.h"
-
+#include "../../Include/type/type_float.h"
 MinusFNode::MinusFNode(Node *in) : Node({nullptr, in}) {
 }
 
@@ -12,7 +12,7 @@ std::string MinusFNode::glabel() {
 }
 
 std::ostringstream &MinusFNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
-    builder << "-("
+    builder << "-(";
     in(1)->print(builder);
     builder << ")";
     return builder;
@@ -20,8 +20,8 @@ std::ostringstream &MinusFNode::print_1(std::ostringstream &builder, Tomi::Vecto
 
 Type *MinusFNode::compute() {
     if (auto *i0 = dynamic_cast<TypeFloat *>(in(1)->type_)) {
-        if (i0.isConstant()) {
-            return TypeFloat::constant(-i0.value());
+        if (i0->isConstant()) {
+            return TypeFloat::constant(-i0->value());
         }
         return i0;
     }
@@ -30,7 +30,7 @@ Type *MinusFNode::compute() {
 
 Node *MinusFNode::idealize() {
     // -(-x) is x
-    if(dynamic_cast<MinusFNode*>((1)) {
+    if(auto*minus = dynamic_cast<MinusFNode*>(in(1))) {
         return minus->in(1);
     }
     return nullptr;

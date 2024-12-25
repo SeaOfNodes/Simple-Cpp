@@ -1,4 +1,5 @@
 #include "../../Include/node/divf_node.h"
+#include "../../Include/type/type_float.h"
 
 DivFNode::DivFNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 

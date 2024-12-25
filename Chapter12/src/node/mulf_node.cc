@@ -1,15 +1,16 @@
 #include "../../Include/node/mulf_node.h"
+#include "../../Include/type/type_float.h"
 
-MulfNode::MulfNode(Node* lhs, Node* rhs) : Node({nullptr, lhs, rhs}) {}
+MulFNode::MulFNode(Node* lhs, Node* rhs) : Node({nullptr, lhs, rhs}) {}
 
-std::string MulfNode::label() {
+std::string MulFNode::label() {
     return "MulF";
 }
-std::string MulfNode::glabel() {
+std::string MulFNode::glabel() {
     return "*";
 }
 
-std::ostringstream &MulfNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
+std::ostringstream &MulFNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
     builder << "(";
     in(1)->print_0(builder, visited);
 
@@ -21,7 +22,7 @@ std::ostringstream &MulfNode::print_1(std::ostringstream &builder, Tomi::Vector<
     return builder;
 }
 
-Type *MulfNode::compute() {
+Type *MulFNode::compute() {
     auto i0 = dynamic_cast<TypeFloat *>(in(1)->type_);
     auto i1 = dynamic_cast<TypeFloat *>(in(2)->type_);
 
@@ -34,7 +35,7 @@ Type *MulfNode::compute() {
     return in(1)->type_->meet(in(2)->type_);
 }
 
-Node *MulfNode::idealize() {
+Node *MulFNode::idealize() {
     Node *lhs = in(1);
     Node *rhs = in(2);
 
@@ -55,6 +56,6 @@ Node *MulfNode::idealize() {
     return nullptr;
 }
 
-Node *MulfNode::copy(Node *lhs, Node *rhs) {
-    return alloc.new_object<MulfNode>(lhs, rhs);
+Node *MulFNode::copy(Node *lhs, Node *rhs) {
+    return alloc.new_object<MulFNode>(lhs, rhs);
 }

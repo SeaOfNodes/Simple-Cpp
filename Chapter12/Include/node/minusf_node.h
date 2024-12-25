@@ -12,5 +12,5 @@ public:
 
     Type *compute() override;
     Node *idealize() override;
-}
+};
 #endif

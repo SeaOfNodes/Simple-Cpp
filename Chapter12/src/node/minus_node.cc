@@ -1,5 +1,6 @@
 #include "../../Include/node/minus_node.h"
 #include "../../Include/type/integer_type.h"
+#include "../../Include/node/minusf_node.h"
 
 MinusNode::MinusNode(Node *in) : Node({nullptr, in}) {}
 

@@ -2,7 +2,7 @@
 #define ADDF_NODE_H
 #include "../../Include/node/node.h"
 
-class AddFNode: public {
+class AddFNode: public Node{
 public:
     AddFNode(Node* lhs, Node* rhs);
     std::string label() override;

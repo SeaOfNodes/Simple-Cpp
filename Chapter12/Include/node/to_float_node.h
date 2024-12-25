@@ -15,5 +15,5 @@ public:
     Node *idealize() override;
 
     Node *copy(Node *lhs);
-}
+};
 #endif

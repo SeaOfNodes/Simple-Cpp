@@ -50,6 +50,7 @@ CFGNode *CFGNode::idom(CFGNode *rhs, Node* dep) {
     return lhs;
 }
 
+CFGNode *CFGNode::idom(Node *dep) {return cfg(0);}
 int CFGNode::loopDepth() {
     return loopDepth_ == 0 ? (loopDepth_ = cfg(0)->loopDepth()) : loopDepth_;
 }
