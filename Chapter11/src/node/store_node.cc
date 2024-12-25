@@ -46,7 +46,7 @@ bool StoreNode::checkNoUseBeyond(Node *that) {
     // when the other uses go away we can retry.
     for (Node *use: outputs) {
         if (use != that) {
-            use->addDef(that);
+            use->addDep(that);
         }
     }
     return false;

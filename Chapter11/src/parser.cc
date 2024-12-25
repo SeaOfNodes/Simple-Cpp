@@ -208,10 +208,10 @@ Node *Parser::parseWhile() {
     // IfNode takes current control and predicate
     auto *ifNode = (IfNode *) ((alloc.new_object<IfNode>(ctrl(), pred)))->peephole();
     // Setup projection nodes
-    Node *ifT = (alloc.new_object<CProjNode>((IfNode *) ifNode->keep(), 0, "True"))->peephole();
+    Node *ifT = (alloc.new_object<CProjNode>(ifNode->keep(), 0, "True"))->peephole();
     ifT->keep();
     Node *ifF =
-            (alloc.new_object<CProjNode>((IfNode *) ifNode->unkeep(), 1, "False"))->peephole();
+            (alloc.new_object<CProjNode>(ifNode->unkeep(), 1, "False"))->peephole();
 
     // Clone the body Scope to create the exit Scope
     // which accounts for any side effects in the predicate
@@ -281,7 +281,6 @@ Node *Parser::parseIf() {
     ctrl(ifT->unkeep()); // set ctrl token to ifTrue projection
     scope_node->upcast(ifT, pred, false); // up-cast predicate
     parseStatement();    // Parse true-side
-
     ScopeNode *tScope = scope_node;
 
     scope_node = fScope;
@@ -576,6 +575,7 @@ Node *Parser::parseDecl(Type *t) {
     auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
             require("=")->parseExpression(), ";");
     if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
+
     if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
     return expr;
 }

@@ -54,7 +54,7 @@ void GlobalCodeMotion::schedEarly() {
     // Reverse Post-Order on CFG
     for (int j = rpo.size() - 1; j >= 0; j--) {
         CFGNode *cfg = rpo[j];
-        cfg->loopDepth();
+        cfg->loopDepth(); // have to calculate loopDepth from backwards
         for (Node *n: cfg->inputs) {
             schedEarly_(n, visit);
             // Strictly for dead infinite loops, we can have entire code blocks
@@ -146,6 +146,7 @@ void GlobalCodeMotion::schedLate_(Node *n, Tomi::Vector<Node *> &ns, Tomi::Vecto
     CFGNode *early = (CFGNode *) n->in(0);
     assert(early != nullptr);
     CFGNode *lca = nullptr;
+
     for (Node *use: n->outputs) {
         lca = use_block(n, use, late)->idom(lca);
     }
@@ -157,6 +158,7 @@ void GlobalCodeMotion::schedLate_(Node *n, Tomi::Vector<Node *> &ns, Tomi::Vecto
     // lowest execution frequency, approximated by least loop depth and
     // deepest control flow.
     CFGNode *best = lca;
+
     lca = lca->idom();
     for (; lca != early->idom(); lca = lca->idom()) {
         if (better(lca, best)) best = lca;

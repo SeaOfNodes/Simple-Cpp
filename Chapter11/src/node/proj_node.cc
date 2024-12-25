@@ -52,9 +52,6 @@ Node *ProjNode::idealize() {
 }
 
 bool ProjNode::eq(Node *n) {
-    if (!dynamic_cast<ProjNode *>(n)) {
-        std::cerr << "messed up";
-    }
     return idx_ == dynamic_cast<ProjNode *>(n)->idx_;
 }
 

@@ -35,13 +35,13 @@ public:
  */
     int idepth_{};
 
-    int idepth();
+    virtual int idepth();
 
     // Return the immediate dominator of this Node and compute dom tree depth.
-    CFGNode *idom();
+    virtual CFGNode *idom();
 
     // Return the LCA of two idoms
-    CFGNode *idom(CFGNode *rhs);
+    virtual CFGNode *idom(CFGNode *rhs);
 
     int loopDepth_{};
 

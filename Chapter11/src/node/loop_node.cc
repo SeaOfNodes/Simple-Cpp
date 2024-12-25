@@ -20,24 +20,24 @@ Node *LoopNode::idealize() {
   return inProgress() ? nullptr : RegionNode::idealize();
 }
 
-int LoopNode::idepth() {return _idepth(1); }
-CFGNode *LoopNode::idom() { return cfg(0); }
+int LoopNode::idepth() {return idepth_ == 0 ? (idepth_ = idom()->idepth() + 1) : idepth_; }
+CFGNode *LoopNode::idom() { return entry(); }
 
 int LoopNode::loopDepth() {
     if(loopDepth_ != 0) return loopDepth_;
     loopDepth_ = entry()->loopDepth_ + 1;
     // One-time tag loop exists
 
-    for(CFGNode* idom = back(); idom != this; idom = idom->idom()) {
+    for(CFGNode* idom_ = back(); idom_ != this; idom_ = idom_->idom()) {
         // Walk idom in loop, setting depth
-        idom->loopDepth_ = loopDepth_;
+        idom_->loopDepth_ = loopDepth_;
         // Loop exit hits the CProj before the If, instead of jumping from
         // Region directly to If.
-        if(auto* proj = dynamic_cast<CProjNode*>(idom)) {
+        if(auto* proj = dynamic_cast<CProjNode*>(idom_)) {
             assert(dynamic_cast<IfNode*>(proj->in(0)));
             // Find the loop exit CProj, and set loop_depth
             for(Node* use: proj->in(0)->outputs) {
-                if(auto* proj2 = dynamic_cast<CProjNode*>(use); proj2 != idom) {
+                if(auto* proj2 = dynamic_cast<CProjNode*>(use); proj2 != idom_) {
                     proj2->loopDepth_ = loopDepth_ + 1;
                 }
             }

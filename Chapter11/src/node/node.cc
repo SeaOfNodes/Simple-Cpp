@@ -9,9 +9,6 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if (nid == 20) {
-        std::cerr << "Here";
-    }
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -121,7 +118,7 @@ Node *Node::setDef(int idx, Node *new_def) {
 }
 
 Node *Node::addUse(Node *n) {
-    if(nid == 19) {
+    if(nid == 17) {
         std::cerr << "Here";
     }
     outputs.push_back(n);
@@ -152,9 +149,6 @@ Node *Node::addDef(Node *new_def) {
 }
 
 bool Node::delUse(Node *use) {
-    if(nid == 19) {
-        std::cerr << "Here";
-    }
     Utils::delVal(outputs, use);
 //    auto it = std::find(outputs.begin(), outputs.end(), use);
 //    if (it != outputs.end()) {
@@ -174,9 +168,6 @@ void Node::subsume(Node *nnn) {
         // N should not be null, as that means that the node you try to subsume is still in a keep-unkeep block.
         assert(n != nullptr);
         outputs.pop_back();
-        if(n == nullptr) {
-            std::cerr << "Here";
-        }
         n->unlock();
         auto it = std::find(n->inputs.begin(), n->inputs.end(), this);
 
@@ -213,15 +204,14 @@ Node *Node::peepholeOpt() {
     Type *inner = compute();
     Type *old = setType(inner);
 
-
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
     auto* b = dynamic_cast<XCtrlNode *>(this);
     if (!(a) && !(b) && type_->isHighOrConst()) {
-        auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
         if (type_ == Type::XCONTROL()) {
             return alloc.new_object<XCtrlNode>();
         }
+        auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
         return peepholedNode->peepholeOpt();
     }
     // Global Value Numbering
@@ -304,10 +294,6 @@ bool Node::allCons(Node *dep) {
     return true;
 }
 
-Node *Node::idom() {
-    Node *idom = in(0);
-    return idom;
-}
 // Todo: use DelVal here
 Node *Node::delDef(int idx) {
     unlock();
@@ -412,14 +398,6 @@ bool Node::eq(Node *n) { return true; }
 
 std::string Node::err() {
     return "";
-}
-
-int Node::_idepth(int idx) {
-    return idepth_ == 0 ? idepth_ = in(idx)->idepth() + 1 : idepth_;
-}
-
-int Node::idepth() {
-    return _idepth(0);
 }
 
 Node *Node::idealize() { return nullptr; }

@@ -49,11 +49,11 @@ Type *IfNode::compute() {
 
 Node *IfNode::idealize() {
   if (!pred()->type_->isHighOrConst()) {
-    Node *dom = idom();
-    Node *prior = this;
+    CFGNode *dom = idom();
+    CFGNode *prior = this;
 
     while (dom != nullptr) {
-      Node *result = dom->addDep(this);
+      Node* result = dom->addDep(this);
       auto *iff = dynamic_cast<IfNode *>(result);
       auto *prj = dynamic_cast<ProjNode *>(prior);
 
@@ -74,9 +74,6 @@ Node *IfNode::idealize() {
 
 void IfNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach) {
     for(Node* proj: outputs) {
-        if(proj == nullptr) {
-            std::cerr << "Null";
-        }
         if(dynamic_cast<CProjNode*>(proj)->loopDepth_ == 0) {
             unreach.put((CProjNode*)proj);
         }

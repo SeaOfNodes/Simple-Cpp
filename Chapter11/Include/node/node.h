@@ -249,21 +249,6 @@ public:
     // Ignores i(0), as is usually control.
     virtual bool allCons(Node *dep);
 
-    /**
-     * Immediate dominator tree depth, used to approximate a real IDOM depth
-     * during parsing where we do not have the whole program, and also
-     * peepholes change the CFG incrementally.
-     * <p>
-     * See {@link <a href="https://en.wikipedia.org/wiki/Dominator_(graph_theory)">...</a>}
-     */
-    int idepth_{};    // IDOM depth approx; Zero is unset; non-zero is cached legit
-    int _idepth(int idx);
-
-    virtual int idepth();
-
-    // Return the immediate dominator of this Node and compute dom tree depth.
-    virtual Node *idom();
-
     virtual Node *copy(Node *lhs, Node *rhs);
 
     Node *find(Tomi::Vector<bool> visit, int nid_);

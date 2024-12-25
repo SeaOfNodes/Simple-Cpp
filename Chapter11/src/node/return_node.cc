@@ -5,8 +5,8 @@
 ReturnNode::ReturnNode(Node *ctrl, Node *data, ScopeNode* scope) : CFGNode({ctrl, data}) {
     // We lookup memory slices by the naming convention that they start with $
     // We could also use implicit knowledge that all memory projects are at offset >= 2
-    Tomi::Vector<std::string> names = scope->reverseNames();
     if(scope != nullptr) {
+    Tomi::Vector<std::string> names = scope->reverseNames();
     for(std::string name: names) {
         if(name != "$ctrl" && name[0] == '$') {
             addDef(scope->lookup(name));

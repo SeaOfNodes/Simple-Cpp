@@ -71,9 +71,7 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
       continue;
     cnt++;
     Node *x = n->peepholeOpt();
-    if(n->nid == 46 && n != x && x != nullptr) {
-        std::cerr << "Hi";
-    }
+
     if (x != nullptr) {
       if (x->isDead())
         continue;
@@ -94,9 +92,6 @@ StopNode *IterPeeps::iterate(StopNode *stop, bool show) {
         if (x != n) {
           for (Node *z : n->inputs) {
               WORK.push(z);
-          }
-          if(n->nid == 46 && x->nid == 54) {
-            std::cerr << "Hi";
           }
           n->subsume(x);
         }

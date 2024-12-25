@@ -54,7 +54,7 @@ int StopNode::idepth() {
     int d = 0;
     for(Node* n: inputs) {
         if(n != nullptr) {
-            d = std::max(d, n->idepth()+1);
+            d = std::max(d, dynamic_cast<CFGNode*>(n)->idepth()+1);
         }
     }
     idepth_ = d;

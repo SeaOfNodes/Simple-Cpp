@@ -44,7 +44,7 @@ Node *CProjNode::idealize() {
         }
         // Flip a negating if-test,to remove the not
         if (auto *NOT = dynamic_cast<NotNode *>(iff->pred()->addDep(this))) {
-            return new ProjNode((MultiNode *) (new IfNode(iff->ctrl(), NOT->in(1)))->peephole(), 1 - idx_,
+            return alloc.new_object<CProjNode>((alloc.new_object<IfNode>(iff->ctrl(), NOT->in(1)))->peephole(), 1 - idx_,
                                 idx_ == 0 ? "False" : "True");
         }
     }
@@ -60,9 +60,6 @@ Node *CProjNode::getBlockStart() {
 }
 
 bool CProjNode::eq(Node *n) {
-    if (!dynamic_cast<CProjNode *>(n)) {
-        std::cerr << "messed up";
-    }
     return idx_ == dynamic_cast<CProjNode *>(n)->idx_;
 }
 
