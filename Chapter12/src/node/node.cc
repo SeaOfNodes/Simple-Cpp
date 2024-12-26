@@ -236,8 +236,9 @@ Node *Node::peepholeOpt() {
         if (type_ == Type::XCONTROL()) {
             return alloc.new_object<XCtrlNode>();
         }
-        auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START));
-        return peepholedNode->peepholeOpt();
+        auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START))->peepholeOpt();
+
+        return peepholedNode;
     }
     // Global Value Numbering
     if (hash_ == 0) {

@@ -1,5 +1,6 @@
 #include "../../Include/node/add_node.h"
 #include "../../Include/parser.h"
+#include "../../Include/node/addf_node.h"
 
 AddNode::AddNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 
@@ -16,9 +17,6 @@ std::ostringstream &AddNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
-Node* AddNode::copyF() {
-    return alloc.new_object<AddNode>(nullptr, nullptr);
-}
 Node *AddNode::phiCon(Node *op, bool rotate) {
   Node *lhs = op->in(1);
   Node *rhs = op->in(2);
@@ -203,4 +201,7 @@ bool AddNode::spine_cmp(Node *hi, Node *lo, Node *dep) {
   return lo->nid > hi->nid;
 }
 
-Node *AddNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<AddNode>(lhs, rhs); }
+Node *AddNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<AddFNode>(lhs, rhs); }
+Node* AddNode::copyF() {
+    return alloc.new_object<AddFNode>(nullptr, nullptr);
+}

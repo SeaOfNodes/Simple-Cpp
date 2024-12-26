@@ -40,7 +40,6 @@ Node *DivFNode::idealize() {
 
     // Div of 1
     if (t2->isConstant() && i && i->value() == 1) return lhs;
-    return lhs;
 
     return nullptr;
 }

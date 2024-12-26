@@ -50,7 +50,7 @@ return guess;
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ(result,
-              "return Phi(Loop9,(flt)arg,(((ToFloat/Phi_guess)+Phi_guess)/2.0))");
+              "return Phi(Loop9,(flt)arg,(((ToFloat/Phi_guess)+Phi_guess)/2.0));");
 }
 
 
@@ -63,7 +63,6 @@ return x+1==x;
     auto *parser = new Parser(source);
     StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
-    std::cerr << ret->p(99);
     std::string result = ret->print(builder).str();
     EXPECT_EQ(result,
               "return ((flt)arg==(ToFloat+1.0));");
