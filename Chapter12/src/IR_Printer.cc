@@ -29,9 +29,8 @@ void IRPrinter::printLine_(Node *n, std::ostringstream &builder) {
         if (def == nullptr) builder << "____";
         else builder << std::format("{:>4} ", def->nid);;
     }
-    for (size_t i = n->inputs.size(); i < 3; i++) {
-        builder << "      ";
-    }
+    builder << std::string(4 * 5, ' ').c_str();
+
     builder << " [[  ";
     for (Node *use: n->outputs) {
         if (use == nullptr) builder << "____";
@@ -41,7 +40,7 @@ void IRPrinter::printLine_(Node *n, std::ostringstream &builder) {
     for (size_t i = n->outputs.size(); i < lim; i++) {
         builder << "      ";
     }
-    builder << "]] ";
+    builder << " ]] ";
     if (n->type_ != nullptr) n->type_->print_1(builder);
     builder << "\n";
 }
@@ -156,9 +155,9 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
             }
         }
         ds.remove(blk);
-        builder << label(blk) << ":\n";
+        builder << label(blk) << ":";
         builder << std::string(4 * 5, ' ').c_str();
-        builder << " [[ ";
+        builder << "[[ ";
         if (dynamic_cast<RegionNode *>(blk) || dynamic_cast<StopNode *>(blk)) {
             auto *ifa = dynamic_cast<StopNode *>(blk);
             for (int i = (ifa ? 0 : 1); i < blk->nIns(); i++) {
@@ -167,7 +166,7 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
         } else if (!dynamic_cast<StartNode *>(blk)) {
             label(builder, blk->cfg(0));
         }
-        builder << " ]]";
+        builder << "]]\n";
         // Collect block contents that are in the depth limit
         bns.clear();
         int xd = std::numeric_limits<int>::max();
@@ -203,7 +202,7 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
 
 void IRPrinter::label(std::ostringstream &sb, CFGNode *blk) {
     if (!blk->blockHead()) blk = blk->cfg(0);
-    sb << label(blk);
+    sb << label(blk) << " ";
 
 }
 
