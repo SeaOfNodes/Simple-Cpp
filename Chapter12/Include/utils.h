@@ -19,12 +19,11 @@ public:
 
             E tmp = array.back();
             array.pop_back();
-            array[i] = tmp;
+            if(i < array.size()) array[i] = tmp;
 
             return tmp;
         }
-
-        throw std::out_of_range("Index out of range");
+       return nullptr;
     };
 
     template<typename E>

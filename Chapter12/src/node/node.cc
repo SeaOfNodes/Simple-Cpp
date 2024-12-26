@@ -115,8 +115,7 @@ Node* Node::widen() {
     // ignore control node
     for(int i =1; i < nIns(); i++) {
         auto*a = dynamic_cast<TypeFloat*>(in(i)->type_);
-
-        flt->setDef(i, a ? in(i) : (alloc.new_object<ToFloatNode>(in(i))->peephole()));
+        flt->setDef(i, a ? in(i) : (alloc.new_object<ToFloatNode>(in(i)))->peephole());
     }
     kill();
     return flt;

@@ -6,7 +6,7 @@
 
 class ToFloatNode : public Node {
 public:
-    ToFloatNode(Node* lhs);
+    explicit ToFloatNode(Node* lhs);
     std::string label() override;
     std::string glabel() override;
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>&) override;

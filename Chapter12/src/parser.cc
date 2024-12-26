@@ -409,7 +409,7 @@ Type *Lexer::parseNumber() {
         return dynamic_cast<Type *>(TypeInteger::constant(std::stoi(input.substr(old, len))));
     }
     // TBD;
-    return TypeFloat::constant(std::stod(input.substr(old, len)));
+    return TypeFloat::constant(std::stod(input.substr(old, -len)));
 }
 
 bool Lexer::peek(char ch) {
@@ -726,7 +726,6 @@ int Lexer::isLongOrDouble() {
     }
     while (isdigit(c = nextChar()) || c == 'e' || c == '.') { }
     return -(--position - old);
-    return 0;
 }
 
 void Lexer::skipWhiteSpace() {

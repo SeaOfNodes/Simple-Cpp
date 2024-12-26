@@ -21,7 +21,7 @@ Type *ToFloatNode::compute() {
     auto *t1 = dynamic_cast<TypeInteger *>(in(1)->type_);
     if (t1) {
         if (t1->isConstant()) {
-            return TypeFloat::constant(t1->value());
+            return TypeFloat::constant(static_cast<double>(t1->value()));
         }
     }
     return TypeFloat::BOT();

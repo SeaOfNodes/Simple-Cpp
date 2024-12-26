@@ -20,10 +20,11 @@ void IRPrinter::printLine(Node *n, std::ostringstream &sb, Tomi::Vector<Node *> 
 
 void IRPrinter::printLine_(Node *n, std::ostringstream &builder) {
     builder << std::format("{:>4} {:<7.7}", n->nid, n->label());
-//    if(inputs.empty()) {
-//        builder << "DEAD\n";
-//        return;
-//    }
+    if(n->inputs.empty()) {
+        builder << "DEAD\n";
+        return;
+    }
+
     for (Node *def: n->inputs) {
         if (def == nullptr) builder << "____";
         else builder << std::format("{:>4} ", def->nid);;
@@ -144,6 +145,7 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
     walk_(ds, node, depth);
     std::ostringstream builder;
     Tomi::Vector<Node *> bns;
+    int counter{}; // debugging purposes
     while (!ds.isEmpty()) {
         CFGNode *blk = nullptr;
         for (auto n: ds) {
@@ -163,7 +165,7 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
                 label(builder, blk->cfg(i));
             }
         } else if (!dynamic_cast<StartNode *>(blk)) {
-            label(builder, blk);
+            label(builder, blk->cfg(0));
         }
         builder << " ]]";
         // Collect block contents that are in the depth limit
@@ -188,11 +190,13 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
         for (; !bns.empty(); xd++) {
             for (int i = 0; i < bns.size(); i++) {
                 if (*ds.get(bns[i]) == xd) {
-                    printLine(bns[i], builder, bns, i--, ds);
+                    auto current = bns[i];
+                    printLine(current, builder, bns, i--, ds);
                 }
             }
         }
         builder << "\n";
+        counter++;
     }
     return builder.str();
 }
@@ -211,7 +215,7 @@ std::string IRPrinter::label(CFGNode *blk) {
 
 void IRPrinter::walk_(Tomi::HashMap<Node *, int> &ds, Node *node, int d) {
     int *nd = ds.get(node);
-    if (nd != nullptr && nd) return;
+    if (nd != nullptr && d <= *nd) return;
     ds.put(node, d);
     if (d == 0) return;
     for (Node *def: node->inputs) {

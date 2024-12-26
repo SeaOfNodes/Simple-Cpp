@@ -1,5 +1,7 @@
 #include "../../Include/type/type_float.h"
-
+#include <iostream>
+#include <iomanip>
+#include <cmath>
 TypeFloat *TypeFloat::TOP() {
     static TypeFloat *top = make(false, 0);
     return top;
@@ -15,10 +17,10 @@ TypeFloat *TypeFloat::ZERO() {
     return zero;
 }
 
-TypeFloat::TypeFloat(bool is_con, long con) : Type(TFLT), is_con_(is_con), con_(con) {
+TypeFloat::TypeFloat(bool is_con, double con) : Type(TFLT), is_con_(is_con), con_(con) {
 }
 
-TypeFloat *TypeFloat::make(bool is_con, long con) {
+TypeFloat *TypeFloat::make(bool is_con, double con) {
     return dynamic_cast<TypeFloat*>((alloc.new_object<TypeFloat>(is_con, con))->intern());
 }
 
@@ -36,7 +38,11 @@ std::ostringstream &TypeFloat::print_1(std::ostringstream &builder) {
         builder << "FloatTop";
     if (this == BOT())
         builder << "FloatBot";
-    builder << con_;
+    if(std::floor(con_) == con_) {
+        builder << std::fixed << std::setprecision(1) << con_;
+    } else {
+        builder << con_;
+    }
     return builder;
 }
 
@@ -60,7 +66,7 @@ bool TypeFloat::isConstant() {
     return is_con_;
 }
 
-long TypeFloat::value() {
+double TypeFloat::value() {
     return con_;
 }
 
@@ -85,10 +91,13 @@ TypeFloat *TypeFloat::makeInit() {
 }
 
 int TypeFloat::hash() {
-    return con_ ^ (is_con_ ? 0: 0x4000);
+    return static_cast<int>(con_) ^ (is_con_ ? 0: 0x4000);
 }
 
 bool TypeFloat::eq(Type *other) {
     auto *t = dynamic_cast<TypeFloat *>(other);
     return (con_ == t->con_) && (is_con_ == t->is_con_);
+}
+unsigned long long Tomi::hash<TypeFloat*>::operator()(TypeFloat* val) {
+    return val->hashCode();
 }

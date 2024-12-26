@@ -2,6 +2,12 @@
 #define TYPE_FLOAT_H
 
 #include "type.h"
+
+class TypeFloat;
+
+template<> struct Tomi::hash<TypeFloat*> {
+    unsigned long long operator()(TypeFloat* val);
+};
 class TypeFloat: public Type {
 public:
     static TypeFloat* TOP();
@@ -13,9 +19,9 @@ public:
     * The constant value or
     * if not constant then 1=bottom, 0=top.
     */
-    long con_;
-    TypeFloat(bool is_con, long con);
-    static TypeFloat* make(bool is_con, long con);
+    double con_;
+    TypeFloat(bool is_con, double con);
+    static TypeFloat* make(bool is_con, double con);
 
     static TypeFloat* constant(double con);
     static void gather(Tomi::Vector<Type *> &ts);
@@ -25,7 +31,7 @@ public:
     std::ostringstream& typeName(std::ostringstream& builder) override;
     bool isHighOrConst() override;
     bool isConstant() override;
-    long value();
+    double value();
 
     Type* xmeet(Type *other) override;
     Type* dual() override;

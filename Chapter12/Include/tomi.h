@@ -543,7 +543,7 @@ namespace Tomi {
         detail::HashNode<K, V> *end;
 
         void skipEmptyNodes() {
-            while (current != end && current->hash == -1) {
+            while (current != end && (current->hash == -1 || current->isTombStone)) {
                 ++current;
             }
         }
@@ -578,7 +578,7 @@ namespace Tomi {
         detail::HashNodeSingle<V>* end;
 
         void skipEmptyNodes() {
-            while (current != end && current->hash == -1) {
+            while (current != end && current->hash == -1 || current->isTombStone) {
                 ++current;
             }
         }
