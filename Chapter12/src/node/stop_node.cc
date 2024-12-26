@@ -33,7 +33,7 @@ int StopNode::loopDepth() {
 Node* StopNode::getBlockStart() {
     return this;
 }
-CFGNode* StopNode::idom() { return nullptr; }
+CFGNode* StopNode::idom(Node* dep) { return nullptr; }
 
 Type *StopNode::compute() { return Type::BOTTOM(); }
 

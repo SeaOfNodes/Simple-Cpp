@@ -139,10 +139,10 @@ Node *PhiNode::idealize() {
         if(in(2)->type_ == in(2)->type_->makeInit()) nullx = 2;
         if(nullx != -1) {
             Node* val = in(3-nullx);
-            if(auto* iff = dynamic_cast<IfNode*>(region()->idom()); iff && iff->pred()->addDep(this) == val) {
+            if(auto* iff = dynamic_cast<IfNode*>(region()->idom(this)); iff && iff->pred()->addDep(this) == val) {
                 // Must walk the idom on the null side to make sure we hit False.
                 CFGNode* idom = (CFGNode*)region()->in(nullx);
-                while(idom->in(0) != iff) idom = idom->idom();
+                while(idom->nIns() > 0 &&  idom->in(0) != iff) idom = idom->idom();
                 if(auto* proj = dynamic_cast<CProjNode*>(idom); proj->idx_ == 1) {
                     return val;
                 }

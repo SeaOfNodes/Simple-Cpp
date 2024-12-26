@@ -24,7 +24,7 @@ public:
   Type *compute() override;
 
   Node *idealize() override;
-  CFGNode *idom() override;
+  CFGNode *idom(Node* dep) override;
 
     /**
    * Creates a projection for each of the struct's fields, using the field alias

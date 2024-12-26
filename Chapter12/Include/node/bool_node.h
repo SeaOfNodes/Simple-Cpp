@@ -12,6 +12,9 @@ public:
   virtual std::string op();
 
   [[nodiscard]] virtual bool doOp(long lhs, long rhs) const;
+  [[nodiscard]] virtual bool doOp(double lhs, double rhs) const;
+
+  Node* copyF(Node* lhs, Node* rhs);
 
   BoolNode(Node *lhs, Node *rhs);
 
@@ -64,5 +67,26 @@ public:
   std::string label() override;
 
   bool doOp(long lhs, long rhs) const override;
+};
+class EQF: public EQ {
+public:
+    EQF(Node *lhs, Node *rhs);
+    bool doOp(double lhs, double rhs) const override;
+    Node* copyF() override;
+    std::string label() override;
+};
+class LTF: public LT {
+public:
+    LTF(Node *lhs, Node *rhs);
+    bool doOp(double lhs, double rhs) const override;
+    Node* copyF() override;
+    std::string label() override;
+};
+class LEF: public LE {
+public:
+    LEF(Node *lhs, Node *rhs);
+    bool doOp(double lhs, double rhs) const override;
+    Node* copyF() override;
+    std::string label() override;
 };
 #endif

@@ -6,5 +6,5 @@ std::ostringstream &NeverNode::print_1(std::ostringstream &builder, Tomi::Vector
     builder << "Never";
     return builder;
 }
-Type *NeverNode::compute() { return TypeInteger::BOT(); }
+Type *NeverNode::compute() { return TypeTuple::IF_BOTH(); }
 Node *NeverNode::idealize() { return nullptr; }

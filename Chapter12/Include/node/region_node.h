@@ -40,7 +40,7 @@ public:
   std::string label() override;
   Type *compute() override;
   Node *idealize() override;
-  CFGNode *idom() override;
+  CFGNode *idom(Node* dep) override;
   void forceExit(StopNode* stop);
   int loopDepth() override;
   int idepth() override;

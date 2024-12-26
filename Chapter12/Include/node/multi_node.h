@@ -4,6 +4,7 @@
 
 // forward declare
 class ProjNode;
+class CProjNode;
 
 class MultiNode : public CFGNode {
 public:
@@ -11,5 +12,7 @@ public:
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
   ProjNode* proj(int idx);
+  CProjNode* cproj(int idx);
+
 };
 #endif

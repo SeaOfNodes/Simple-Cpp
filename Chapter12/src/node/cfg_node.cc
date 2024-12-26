@@ -34,7 +34,7 @@ int CFGNode::idepth() {
 }
 
 CFGNode *CFGNode::idom() {
-    return cfg(0);
+    return idom(nullptr);
 }
 
 

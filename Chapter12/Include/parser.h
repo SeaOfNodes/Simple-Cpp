@@ -58,7 +58,10 @@ public:
 
     std::string matchId();
 
+    // Return +len that ends a long
+    // Return -len that ends a double
     int isLongOrDouble();
+    
     std::size_t position = 0;
     bool peekIsId();
 

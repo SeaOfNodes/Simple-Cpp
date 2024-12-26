@@ -91,7 +91,8 @@ public:
 
 
     static int UID();
-    Node* copyF();
+
+    virtual Node* copyF();
 
     // Semantic change to the graph (so NOT a peephole), used by the Parser.
     // If any input is a float, flip to a float-flavored opcode and widen any

@@ -20,8 +20,8 @@ Node *LoopNode::idealize() {
   return inProgress() ? nullptr : RegionNode::idealize();
 }
 
-int LoopNode::idepth() {return idepth_ == 0 ? (idepth_ = idom()->idepth() + 1) : idepth_; }
-CFGNode *LoopNode::idom() { return entry(); }
+int LoopNode::idepth() {return idepth_ == 0 ? (idepth_ = CFGNode::idom()->idepth() + 1) : idepth_; }
+CFGNode *LoopNode::idom(Node* dep) { return entry(); }
 
 int LoopNode::loopDepth() {
     if(loopDepth_ != 0) return loopDepth_;
@@ -51,7 +51,15 @@ void LoopNode::forceExit(StopNode *stop) {
     // directly on the If) we found our exit.
     CFGNode* x = back();
     while(x != this) {
-        if(dynamic_cast<CProjNode*>(x)) return;
+        auto* exit = dynamic_cast<CProjNode*>(x);
+        auto* iff = dynamic_cast<IfNode*>(exit->in(0));
+        if(exit && iff) {
+            Node* other = iff->cproj(1-exit->idx_);
+            auto* ou = dynamic_cast<LoopNode*>(other->out(0));
+            if(!ou || ou->entry() == exit) {
+                return;
+            }
+        }
         x = x->idom();
     }
     // Found a no-exit loop.  Insert an exit

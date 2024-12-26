@@ -20,7 +20,7 @@ public:
   ReturnNode *ret();
   Type *compute() override;
   Node *idealize() override;
-  CFGNode*idom() override;
+  CFGNode*idom(Node* dep) override;
   int idepth() override;
   StopNode* typeCheck();
 

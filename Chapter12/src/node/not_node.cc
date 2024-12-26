@@ -1,6 +1,7 @@
 #include "../../Include/node/not_node.h"
 #include "../../Include/type/integer_type.h"
 #include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/type/type_float.h"
 
 NotNode::NotNode(Node *in) : Node({nullptr, in}) {
 }
@@ -20,6 +21,13 @@ std::ostringstream &NotNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 Type *NotNode::compute() {
     if (auto *i = dynamic_cast<TypeInteger *>(in(1)->type_)) {
         return i->isConstant() ? TypeInteger::constant(i->value() == 0 ? 1 : 0) : i;
+    }
+    if (auto* i = dynamic_cast<TypeFloat*>(in(1)->type_)) {
+        if (i->isConstant()) {
+            return TypeInteger::constant(i->value() == 0 ? 1 : 0);
+        } else {
+            return i;
+        }
     }
     if(auto* p0 = dynamic_cast<TypeMemPtr*>(in(1)->type_)) {
         // top->top, bot->bot, null->1, *void->0, not-null ptr->0, ptr/nil->bot

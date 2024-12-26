@@ -718,6 +718,14 @@ std::string Lexer::parseNumberString() {
 bool Lexer::isWhiteSpace() { return peek() <= ' ' && peek() != '\0'; }
 
 int Lexer::isLongOrDouble() {
+    int old = position;
+    char c;
+    while (isdigit(c = nextChar())) { }
+    if (!(c == 'e' || c == '.')) {
+        return --position - old;
+    }
+    while (isdigit(c = nextChar()) || c == 'e' || c == '.') { }
+    return -(--position - old);
     return 0;
 }
 

@@ -1,6 +1,8 @@
 #include "../../Include/node/load_node.h"
 #include "../../Include/node/store_node.h"
 #include "../../Include/node/phi_node.h"
+#include "../../Include/node/new_node.h"
+#include "../../Include/node/cast_node.h"
 
 LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *memSlice, Node *memPtr) : MemOpNode(name, alias, {nullptr, memSlice, memPtr}), declaredType(glb) {}
 
@@ -26,9 +28,13 @@ Node* LoadNode::idealize() {
     }
     if(stm && stm->region()->type_ == Type::CONTROL() && stm->nIns() == 3) {
         if(profit(stm, 2) || (!dynamic_cast<LoopNode*>(stm->region()) && profit(stm, 1))) {
-            Node*ld1 = (new LoadNode(name_, alias_, declaredType, stm->in(1), ptr()))->peephole();
-            Node*ld2 = (new LoadNode(name_, alias_, declaredType, stm->in(2), ptr()))->peephole();
-            return new PhiNode(name_, type_, std::initializer_list<Node*>{stm->region(), ld1, ld2});
+            if (dynamic_cast<NewNode *>(ptr()) || !dynamic_cast<CastNode *>(ptr())) {
+                if(!dynamic_cast<NewNode*>(ptr())) throw std::runtime_error("TODO");
+
+                Node *ld1 = (new LoadNode(name_, alias_, declaredType, stm->in(1), ptr()))->peephole();
+                Node *ld2 = (new LoadNode(name_, alias_, declaredType, stm->in(2), ptr()))->peephole();
+                return new PhiNode(name_, type_, std::initializer_list < Node * > {stm->region(), ld1, ld2});
+            }
         }
     }
     // Push a Load up through a Phi, as long as it collapses on at least

@@ -148,7 +148,7 @@ void GlobalCodeMotion::schedLate_(Node *n, Tomi::Vector<Node *> &ns, Tomi::Vecto
     CFGNode *lca = nullptr;
 
     for (Node *use: n->outputs) {
-        lca = use_block(n, use, late)->idom(lca);
+        lca = use_block(n, use, late)->idom(lca, nullptr);
     }
     // Loads may need anti-dependencies, raising their LCA
     if (auto *load = dynamic_cast<LoadNode *>(n)) {
@@ -232,7 +232,7 @@ CFGNode *GlobalCodeMotion::anti_dep(LoadNode *load, CFGNode *stblk, CFGNode *def
     for (; stblk != defblk->idom(); stblk = stblk->idom()) {
         // Store and Load overlap, need anti-dependence
         if (stblk->anti_ == load->nid) {
-            lca = lca->idom(stblk, nullptr);
+            lca = stblk->idom(lca, nullptr);
             if (lca == stblk && st != nullptr &&
                 std::find(st->inputs.begin(), st->inputs.end(), load) == st->inputs.end()) {
                 st->addDef(load);
