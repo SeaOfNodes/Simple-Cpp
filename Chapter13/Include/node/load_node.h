@@ -10,7 +10,6 @@
 
 class LoadNode: public MemOpNode {
 public:
-    Type* declaredType;
     // Load a value from a ptr.field.
     LoadNode(std::string name, int alias, Type* glb, Node* memSlice, Node* memPtr);
 

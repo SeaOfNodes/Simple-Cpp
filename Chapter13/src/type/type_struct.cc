@@ -9,7 +9,7 @@ TypeStruct::TypeStruct(std::string name, Tomi::Vector<Field *> fields) : Type(TS
 }
 
 TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
-    return dynamic_cast<TypeStruct *>((new TypeStruct(name, fields))->intern());
+    return dynamic_cast<TypeStruct *>((alloc.new_object<TypeStruct>(name, fields))->intern());
 }
 
 TypeStruct* TypeStruct::make(std::string name) {
@@ -63,8 +63,8 @@ void TypeStruct::gather(Tomi::Vector<Type *> &ts) {
 }
 
 int TypeStruct::find(std::string fname) {
-    for (int i = 0; i < fields_.size(); i++) {
-        if (fields_[i]->fname_ == fname) {
+    for (int i = 0; i < fields_.value().size(); i++) {
+        if (fields_.value()[i]->fname_ == fname) {
             return i;
         }
     }
@@ -88,13 +88,13 @@ Type *TypeStruct::xmeet(Type *t) {
     if (name_ != that->name_) {
         return BOT();  // It's a struct; that's about all we know
     }
-    if(fields_.empty()) return this;
-    if(that->fields_.empty()) return that;
+    if(!fields_) return this;
+    if(!that->fields_) return that;
     // Now all fields should be the same, so just do field meets
-    assert(fields_.size() == that->fields_.size());
-    Tomi::Vector<Field *> newFields(fields_.size());
-    for (int i = 0; i < fields_.size(); i++) {
-        newFields[i] = fields_[i]->xmeet(that->fields_[i]);
+    assert(fields_.value().size() == that->fields_.value().size());
+    Tomi::Vector<Field *> newFields(fields_.value().size());
+    for (int i = 0; i < fields_.value().size(); i++) {
+        newFields[i] = fields_.value()[i]->xmeet(that->fields_.value()[i]);
     }
     return make(name_, newFields);
 }
@@ -102,27 +102,27 @@ Type *TypeStruct::xmeet(Type *t) {
 TypeStruct *TypeStruct::dual() {
     if (this == TOP()) return BOT();
     if (this == BOT()) return TOP();
-    if(!fields_.empty()) return this;
+    if(!fields_) return this;
 
-    Tomi::Vector<Field *> newFields(fields_.size());
-    for (int i = 0; i < fields_.size(); i++) {
-        newFields[i] = fields_[i]->dual();
+    Tomi::Vector<Field *> newFields(fields_.value().size());
+    for (int i = 0; i < fields_.value().size(); i++) {
+        newFields[i] = fields_.value()[i]->dual();
     }
     return make(name_, newFields);
 }
 
 TypeStruct *TypeStruct::glb() {
     if (glb_()) return this;
-    Tomi::Vector<Field *> newFields(fields_.size());
-    for (int i = 0; i < fields_.size(); i++) {
-        newFields[i] = fields_[i]->glb();
+    Tomi::Vector<Field *> newFields(fields_.value().size());
+    for (int i = 0; i < fields_.value().size(); i++) {
+        newFields[i] = fields_.value()[i]->glb();
     }
     return make(name_, newFields);
 }
 
 bool TypeStruct::glb_() {
-    if(!fields_.empty()) {
-        for (Field *f: fields_) {
+    if(!fields_) {
+        for (Field *f: fields_.value()) {
             if (f->glb() != f) return false;
 
         }
@@ -134,17 +134,17 @@ bool TypeStruct::eq(Type *t) {
     TypeStruct *that = dynamic_cast<TypeStruct *>(t);
     if (name_ != that->name_) return false;
     if(fields_ == that->fields_) return true;
-    if (fields_.size() != that->fields_.size()) return false;
-    for (int i = 0; i < fields_.size(); i++) {
-        if (fields_[i] != that->fields_[i]) return false;
+    if (fields_.value().size() != that->fields_.value().size()) return false;
+    for (int i = 0; i < fields_.value().size(); i++) {
+        if (fields_.value()[i] != that->fields_.value()[i]) return false;
     }
     return true;
 }
 
 int TypeStruct::hash() {
     long hash = std::hash < std::string > {}(name_);
-    if(!fields_.empty()) {
-        for (Field *f: fields_) {
+    if(!fields_) {
+        for (Field *f: fields_.value()) {
             hash ^= f->hash();
         }
     }
@@ -155,10 +155,10 @@ int TypeStruct::hash() {
 std::ostringstream &TypeStruct::print_1(std::ostringstream &builder) {
     builder << name_ << "{";
     // Forward reference struct, just print the name
-    if(fields_.empty()) return builder;
-    for (int i = 0; i < fields_.size(); i++) {
-        fields_[i]->print_1(builder);
-        if (i < fields_.size() - 1) {
+    if(!fields_) return builder;
+    for (int i = 0; i < fields_.value().size(); i++) {
+        fields_.value()[i]->print_1(builder);
+        if (i < fields_.value().size() - 1) {
             builder << ",";
         }
     }

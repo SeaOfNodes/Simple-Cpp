@@ -325,21 +325,22 @@ Type *Parser::type() {
     bool nullable = match("?");
     Type **t = TYPES.get(tname);
     // Assume a forward-reference type
-    if (tname == "int") return TypeInteger::BOT();
+    Type*a;
     if (t == nullptr) {
-        int old2 = lexer->position;
+        std::size_t old2 = lexer->position;
         std::string id = lexer->matchId();
         if(id.empty()) {
             lexer->position = old;
             return nullptr;
         }
-        *t = TypeStruct::make(tname);
+        a = TypeStruct::make(tname);
         // Not a type; unwind the parse
+        TYPES.put(tname, a);
         lexer->position = old2;
-        return nullptr;
     }
-    auto*obj = dynamic_cast<TypeStruct*>(*t);
-    return obj ? TypeMemPtr::make(obj, nullable) : *t;
+    auto*c = t ? *t : a;
+    auto*obj = dynamic_cast<TypeStruct*>(c);
+    return obj ? TypeMemPtr::make(obj, nullable) : c;
 }
 
 Node *Parser::parseBlock() {
@@ -389,10 +390,10 @@ Node *Parser::parseExpressionStatement() {
     // Auto-deepen forward ref types
     Type* e = expr->type_;
     auto* tmp = dynamic_cast<TypeMemPtr*>(e);
-    if(tmp && tmp->obj_->fields_.empty()) {
+    if(tmp && !tmp->obj_->fields_) {
         e = tmp->make_from(dynamic_cast<TypeStruct*>(*TYPES.get(tmp->obj_->name_)));
     }
-    if (e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
+    if (!e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
     return scope_node->update(name, expr);
 
 }
@@ -527,7 +528,7 @@ Node *Parser::newStruct(TypeStruct *obj) {
     int *alias = StartNode::aliasStarts.get(obj->name_);
     assert(alias != nullptr);
 
-    for (Field *field: obj->fields_) {
+    for (Field *field: obj->fields_.value()) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
 
@@ -548,13 +549,16 @@ Node *Parser::parsePostFix(Node *expr) {
     if (!match_s) return expr;
     auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
 
+    if(expr->nid == 30) {
+        std::cout << "here";
+    }
     if (!ptr) {
         error("Expected struct reference but got " + expr->type_->str());
     }
     std::string name = requireId();
     if (expr->type_ == TypeMemPtr::TOP()) throw std::runtime_error("Accessing field '" + name + "'from nullptr");
     if(ptr->obj_ == nullptr) throw std::runtime_error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
-    TypeStruct* base = dynamic_cast<TypeStruct*>(*TYPES.get(ptr->obj_->name_));
+    auto* base = dynamic_cast<TypeStruct*>(*TYPES.get(ptr->obj_->name_));
     int idx = base == nullptr ? -1 : base->find(name);
 
     if (idx == -1) error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
@@ -564,14 +568,14 @@ Node *Parser::parsePostFix(Node *expr) {
         if (peek('=')) lexer->position--;
         else {
             Node *val = parseExpression();
-            Type*glb = base->fields_[idx]->type_;
-            memAlias(alias, (new StoreNode(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
+            Type*glb = base->fields_.value()[idx]->type_;
+            memAlias(alias, (alloc.new_object<StoreNode>(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
             return expr;    // "obj.a = expr" returns the expression while updating memory
 
         }
     }
-    Type *declaredType = base->fields_[idx]->type_;
-    return parsePostFix((new LoadNode(name, alias, declaredType, memAlias(alias), expr))->peephole());
+    Type *declaredType = base->fields_.value()[idx]->type_;
+    return parsePostFix((alloc.new_object<LoadNode>(name, alias, declaredType->glb(), memAlias(alias), expr))->peephole());
 }
 
 Node *Parser::parsePrimary() {
@@ -589,7 +593,7 @@ Node *Parser::parsePrimary() {
         std::string structName = requireId();
         Type **t = TYPES.get(structName);
         auto* obj = dynamic_cast<TypeStruct *>(*t);
-        if (!(obj) || obj->fields_.empty()) error("Undefined struct: " + structName);
+        if (!(obj) || !obj->fields_) error("Undefined struct: " + structName);
         return newStruct(obj);
     }
     std::string name = lexer->matchId();

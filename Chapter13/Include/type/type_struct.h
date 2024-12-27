@@ -3,6 +3,7 @@
 #include "../type/type.h"
 #include "../type/field.h"
 #include <cassert>
+#include <optional>
 
 // A Struct has a name and a set of fields; the fields themselves have
 // names and types.  Briefly during parsing its allowed to have a
@@ -15,7 +16,7 @@
 class TypeStruct: public Type {
 public:
     std::string name_;
-    Tomi::Vector<Field*> fields_;
+    std::optional<Tomi::Vector<Field*>> fields_;
     TypeStruct(std::string name, Tomi::Vector<Field*> fields);
     // Forward-ref version
     static TypeStruct* make(std::string name);

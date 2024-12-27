@@ -6,7 +6,7 @@ TypeMemPtr::TypeMemPtr(TypeStruct *obj, bool nil) : Type(TMEMPTR), obj_(obj), ni
 }
 
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj, bool nil) {
-  return dynamic_cast<TypeMemPtr*>((new TypeMemPtr(obj, nil))->intern());
+  return dynamic_cast<TypeMemPtr*>((alloc.new_object<TypeMemPtr>(obj, nil))->intern());
 }
 
 TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
@@ -61,7 +61,6 @@ TypeMemPtr* TypeMemPtr::dual() {
     return TypeMemPtr::make( obj_->dual(), !nil_);
 }
 TypeMemPtr* TypeMemPtr::glb() {
-    if(obj_ == nullptr) return BOT();
     return make(obj_->glb(), true);
 }
 

@@ -13,6 +13,9 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
+    if(nid == 30) {
+        std::cerr << "Node 30\n";
+    }
     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {

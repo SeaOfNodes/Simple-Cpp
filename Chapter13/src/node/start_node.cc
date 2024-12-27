@@ -22,7 +22,7 @@ void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
     aliasStarts.put(ts->name_, len);
 
     // resize the tuple's type array to include all fields of the struct
-    int max = len + static_cast<int>(ts->fields_.size());
+    int max = len + static_cast<int>(ts->fields_.value().size());
     args_->types_.resize(max);
 
     // The new members of the tuple get a mem type with an alias
