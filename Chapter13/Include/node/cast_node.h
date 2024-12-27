@@ -9,6 +9,7 @@ public:
     std::string label() override;
     std::string uniqueName() override;
 
+    bool isPinned() override;
     std::ostringstream& print_1(std::ostringstream& builder, Tomi::Vector<bool>& visited) override;
     Type* compute() override;
     Node* idealize() override;

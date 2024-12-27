@@ -12,6 +12,7 @@ public:
 
   std::string label() override;
 
+  StopNode* GCM(bool show);
   bool blockHead() override;
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 

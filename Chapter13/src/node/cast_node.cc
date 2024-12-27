@@ -20,3 +20,6 @@ Type* CastNode::compute() {
 Node* CastNode::idealize() {
    return in(1)->type_->isa(t) ? in(1) : nullptr;
 }
+bool CastNode::isPinned() {
+    return true;
+}

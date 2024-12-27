@@ -1,6 +1,12 @@
 #include "../../Include/node/stop_node.h"
+#include "../../Include/globalCodeMotion.h"
 #include <functional>
 
+StopNode *StopNode::GCM(bool show) {
+    GlobalCodeMotion::fixLoops(this);
+    GlobalCodeMotion::buildCFG(this);
+    return this;
+}
 StopNode::StopNode(std::initializer_list<Node *> inputs) : CFGNode(inputs) {}
 std::string StopNode::label() { return "Stop"; }
 std::ostringstream &StopNode::print_1(std::ostringstream &builder,

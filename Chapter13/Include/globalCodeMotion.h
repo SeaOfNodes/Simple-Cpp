@@ -17,6 +17,10 @@ public:
     // loop becomes reachable.  Also, set loop nesting depth
     static void fixLoops(StopNode* stop);
 
+    static void doSchedLate_(Node* n, Tomi::Vector<Node*>& ns, Tomi::Vector<CFGNode*>& late);
+
+    static void breadth(Node* stop, Tomi::Vector<Node*>& ns, Tomi::Vector<CFGNode*>& late);
+
     // Forwards walk over previously unreachable, looking for loops with no
     // exit test.
     static void walkInfinite(CFGNode* n, Tomi::BitArray<10>& visited, StopNode* stop);

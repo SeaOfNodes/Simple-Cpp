@@ -2,6 +2,7 @@
 #include "../Include/parser.h"
 #include "../Include/node/store_node.h"
 #include "../Include/node/never_node.h"
+#include "../Include/Iter_peeps.h"
 #include <cassert>
 #include <algorithm>
 
@@ -112,11 +113,64 @@ void GlobalCodeMotion::schedEarly_(Node *n, Tomi::BitArray<10> &visit) {
     }
 }
 
+void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vector<CFGNode *> &late) {
+    // Things on the worklist have some (but perhaps not all) uses done.
+    IterPeeps::WorkList work;
+    work.push(stop);
+    Node* n;
+    while((n = work.pop()) != nullptr) {
+        assert(late[n->nid] == nullptr);
+        // These I know the late schedule of, and need to set early for loops
+        auto*cfg = dynamic_cast<CFGNode*>(n);
+        if(cfg) {
+            late[n->nid] = cfg->blockHead() ? cfg : cfg->cfg(0);
+        }
+        else if (auto* phi = dynamic_cast<PhiNode*>(n)) {
+            late[n->nid] = phi->region();
+        }
+        else if(n->isPinned()) {
+            late[n->nid] = n->cfg0();
+        }
+        else {
+            // All uses done?
+            for(Node* use: n->outputs) {
+                if(late[use->nid] == nullptr) {
+                    continue;
+                }
+            }
+
+            // Loads need their memory inputs' uses also done
+            if(auto* ld = dynamic_cast<LoadNode*>(n)) {
+                for(Node* memuse: ld->mem()->outputs) {
+                    if(dynamic_cast<TypeMem*>(memuse->type_) && late[memuse->nid] == nullptr) {
+                        continue;
+                    }
+                }
+            }
+            // All uses done, schedule
+            doSchedLate_(n, ns, late);
+            // Walk all inputs and put on worklist, as their last-use might now be done
+            for(Node* def: n->inputs) {
+                if(def != nullptr && late[def->nid] == nullptr) {
+                    work.push(def);
+                    // if the def has a load use, maybe the load can fire
+                    for(Node* ld: def->outputs) {
+                        if(dynamic_cast<LoadNode*>(ld) && late[ld->nid] == nullptr) {
+                            work.push(ld);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 void GlobalCodeMotion::schedLate(StartNode *start) {
     Tomi::Vector<CFGNode *> late(Node::UID(), nullptr);
     Tomi::Vector<Node *> ns(Node::UID(), nullptr);
+    // Breadth first scheduling
+    breadth(start, ns, late);
 
-    schedLate_(start, ns, late);
+    // Copy the best placement placement choice into the control slot
     for (int i = 0; i < late.size(); i++) {
         if (ns[i] != nullptr) {
             ns[i]->setDef(0, late[i]);
@@ -124,25 +178,25 @@ void GlobalCodeMotion::schedLate(StartNode *start) {
     }
 }
 
-void GlobalCodeMotion::schedLate_(Node *n, Tomi::Vector<Node *> &ns, Tomi::Vector<CFGNode *> &late) {
-    if (late[n->nid] != nullptr) return; // been there done that
-    // These I know the late schedule of, and need to set early for loops
-    if (auto *cfg = dynamic_cast<CFGNode *>(n)) late[n->nid] = cfg->blockHead() ? cfg : cfg->cfg(0);
-    if (auto *phi = dynamic_cast<PhiNode *>(n)) late[n->nid] = phi->region();
-
-    // Walk Stores before Loads, so we can get the anti-deps right
-    for (Node *use: n->outputs) {
-        if (isForwardsEdge(use, n) && dynamic_cast<TypeMem *>(use->type_)) schedLate_(use, ns, late);
-
-    }
-    // Walk everybody now
-    for (Node *use: n->outputs) {
-        if (isForwardsEdge(use, n)) schedLate_(use, ns, late);
-    }
-    // Already implicitly scheduled
-    if (n->isPinned()) return;
-    // Need to schedule n
-    // Walk uses, gathering the LCA (Least Common Ancestor) of uses
+void GlobalCodeMotion::doSchedLate_(Node *n, Tomi::Vector<Node *> &ns, Tomi::Vector<CFGNode *> &late) {
+//    if (late[n->nid] != nullptr) return; // been there done that
+//    // These I know the late schedule of, and need to set early for loops
+//    if (auto *cfg = dynamic_cast<CFGNode *>(n)) late[n->nid] = cfg->blockHead() ? cfg : cfg->cfg(0);
+//    if (auto *phi = dynamic_cast<PhiNode *>(n)) late[n->nid] = phi->region();
+//
+//    // Walk Stores before Loads, so we can get the anti-deps right
+//    for (Node *use: n->outputs) {
+//        if (isForwardsEdge(use, n) && dynamic_cast<TypeMem *>(use->type_)) schedLate_(use, ns, late);
+//
+//    }
+//    // Walk everybody now
+//    for (Node *use: n->outputs) {
+//        if (isForwardsEdge(use, n)) schedLate_(use, ns, late);
+//    }
+//    // Already implicitly scheduled
+//    if (n->isPinned()) return;
+//    // Need to schedule n
+//    // Walk uses, gathering the LCA (Least Common Ancestor) of uses
     CFGNode *early = (CFGNode *) n->in(0);
     assert(early != nullptr);
     CFGNode *lca = nullptr;
