@@ -25,6 +25,7 @@ public:
     TypeMemPtr(TypeStruct* obj, bool nil);
     static TypeMemPtr* make(TypeStruct* obj, bool nil);
     static TypeMemPtr* make(TypeStruct* obj);
+    TypeMemPtr* make_from(TypeStruct* obj);
 
     static TypeMemPtr* BOT();
     static TypeMemPtr* TOP();

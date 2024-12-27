@@ -8,8 +8,8 @@ class CFGNode;
 
 class ConstantNode : public Node {
 public:
+    ConstantNode();
     ConstantNode(Type *type, CFGNode *START);
-
     std::ostringstream builder;
   Type *con_;
   bool isMultiTail() override;

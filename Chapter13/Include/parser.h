@@ -151,7 +151,7 @@ private:
    */
     Node *parseStruct();
 
-    Field *parseField(std::string name);
+    Field *parseField();
 
     Node *parseWhile();
 

@@ -8,9 +8,11 @@
 
 class MemOpNode : public Node {
 public:
+    MemOpNode() = default;
     std::string name_;
-    int alias_;
-    MemOpNode(std::string name, int alias, std::initializer_list<Node*> nodes);
+    Type* declaredType;
+    int alias_{};
+    MemOpNode(std::string name, int alias, Type*glb, std::initializer_list<Node*> nodes);
     Node* mem();
     Node* ptr();
 

@@ -9,7 +9,9 @@
 #include "../../Include/node/mem_op_node.h"
  class StoreNode: public MemOpNode {
  public:
-     StoreNode(std::string name, int alias, Node*ctrl, Node* memSlice, Node* memPtr, Node* value);
+     bool init; // Initializing writes are allowed to write null
+     StoreNode() = default;
+     StoreNode(std::string name, int alias, Type* glb, Node*ctrl, Node* memSlice, Node* memPtr, Node* value, bool init);
      std::string label() override;
      std::string glabel() override;
 
@@ -20,5 +22,7 @@
      Type* compute() override;
      Node* idealize() override;
      bool checkNoUseBeyond(Node* that);
+     std::string err() override;
+
  };
 #endif

@@ -134,11 +134,14 @@ Node *Parser::parseContinue() {
 Node *Parser::parseStruct() {
     if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
     std::string typeName = requireId();
+    Type** t = TYPES.get(typeName);
+    if(t != nullptr && !(dynamic_cast<TypeStruct*>(*t))) throw std::runtime_error("struct " + typeName + " cannot be redefiend");
+
     if (TYPES.get(typeName) != nullptr) throw std::runtime_error("Redefining struct: " + typeName);
     Tomi::Vector<Field *> fields;
     require("{");
     while (!peek('}') && !lexer->isEof()) {
-        Field *field = parseField(typeName);
+        Field *field = parseField();
         auto *it = std::find(fields.begin(), fields.end(), field);
         if (it != fields.end())
             throw std::runtime_error("Field '" + field->fname_ + "' already defined in struct '" + typeName + "'");
@@ -149,10 +152,10 @@ Node *Parser::parseStruct() {
     TypeStruct *type = TypeStruct::make(typeName, fields);
     TYPES.put(typeName, type);
     START->addMemProj(type, scope_node);
-    return parseStatement();
+    return nullptr;
 }
 
-Field *Parser::parseField(std::string name) {
+Field *Parser::parseField() {
     Type *t = type();
     if (t == nullptr) {
         throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
@@ -293,8 +296,8 @@ Node *Parser::parseIf() {
 
     scope_node = fScope;
     ctrl(ifF->unkeep());
+    scope_node->upcast(ifF, pred, true); // Up-cast predicate
     if (matchx("else")) {
-        scope_node->upcast(ifF, pred, true); // Up-cast predicate
         parseStatement();
         fScope = scope_node;
     }
@@ -319,17 +322,24 @@ Type *Parser::type() {
     size_t old = lexer->position;
     std::string tname = lexer->matchId();
     if (tname.empty()) return nullptr;
-    if (tname == "int") return TypeInteger::BOT();
+    bool nullable = match("?");
     Type **t = TYPES.get(tname);
+    // Assume a forward-reference type
+    if (tname == "int") return TypeInteger::BOT();
     if (t == nullptr) {
+        int old2 = lexer->position;
+        std::string id = lexer->matchId();
+        if(id.empty()) {
+            lexer->position = old;
+            return nullptr;
+        }
+        *t = TypeStruct::make(tname);
         // Not a type; unwind the parse
-        lexer->position = old;
+        lexer->position = old2;
         return nullptr;
     }
-    if (auto *obj = dynamic_cast<TypeStruct *>(*t)) {
-        TypeMemPtr::make(obj, match("?"));
-    }
-    return *t;
+    auto*obj = dynamic_cast<TypeStruct*>(*t);
+    return obj ? TypeMemPtr::make(obj, nullable) : *t;
 }
 
 Node *Parser::parseBlock() {
@@ -371,11 +381,18 @@ Node *Parser::parseExpressionStatement() {
         if (n == nullptr) error("Undefined name: '" + name + "'");
         t = scope_node->lookUpDeclaredType(name);
     }
+
     // Auto-widen int to float
     if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
         expr = (new ToFloatNode(expr))->peephole();
     }
-    if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
+    // Auto-deepen forward ref types
+    Type* e = expr->type_;
+    auto* tmp = dynamic_cast<TypeMemPtr*>(e);
+    if(tmp && tmp->obj_->fields_.empty()) {
+        e = tmp->make_from(dynamic_cast<TypeStruct*>(*TYPES.get(tmp->obj_->name_)));
+    }
+    if (e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
     return scope_node->update(name, expr);
 
 }
@@ -513,7 +530,14 @@ Node *Parser::newStruct(TypeStruct *obj) {
     for (Field *field: obj->fields_) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
-        memAlias(*alias, (new StoreNode(field->fname_, *alias, ctrl(), memAlias(*alias), n, ZERO))->peephole());
+
+        Node* cs =  (alloc.new_object<ConstantNode>(field->type_->makeInit(), Parser::START))->peephole();
+
+        memAlias(*alias,
+                 (alloc.new_object<StoreNode>(field->fname_, *alias, field->type_, ctrl(),
+                 memAlias(*alias), n, cs,
+                 true))->peephole());
+
         alias++;
     }
     return n->unkeep();
@@ -529,7 +553,10 @@ Node *Parser::parsePostFix(Node *expr) {
     }
     std::string name = requireId();
     if (expr->type_ == TypeMemPtr::TOP()) throw std::runtime_error("Accessing field '" + name + "'from nullptr");
-    int idx = ptr->obj_ == nullptr ? -1 : ptr->obj_->find(name);
+    if(ptr->obj_ == nullptr) throw std::runtime_error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
+    TypeStruct* base = dynamic_cast<TypeStruct*>(*TYPES.get(ptr->obj_->name_));
+    int idx = base == nullptr ? -1 : base->find(name);
+
     if (idx == -1) error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
     int alias = *(StartNode::aliasStarts.get(ptr->obj_->name_)) + idx;
     if (match("=")) {
@@ -537,12 +564,13 @@ Node *Parser::parsePostFix(Node *expr) {
         if (peek('=')) lexer->position--;
         else {
             Node *val = parseExpression();
-            memAlias(alias, (new StoreNode(name, alias, ctrl(), memAlias(alias), expr, val)))->peephole();
+            Type*glb = base->fields_[idx]->type_;
+            memAlias(alias, (new StoreNode(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
             return expr;    // "obj.a = expr" returns the expression while updating memory
 
         }
     }
-    Type *declaredType = ptr->obj_->fields_[idx]->type_;
+    Type *declaredType = base->fields_[idx]->type_;
     return parsePostFix((new LoadNode(name, alias, declaredType, memAlias(alias), expr))->peephole());
 }
 
@@ -561,7 +589,7 @@ Node *Parser::parsePrimary() {
         std::string structName = requireId();
         Type **t = TYPES.get(structName);
         auto* obj = dynamic_cast<TypeStruct *>(*t);
-        if (t == nullptr || !(obj)) error("Undefined struct: " + structName);
+        if (!(obj) || obj->fields_.empty()) error("Undefined struct: " + structName);
         return newStruct(obj);
     }
     std::string name = lexer->matchId();

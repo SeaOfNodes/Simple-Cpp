@@ -2,14 +2,14 @@
 #include "../../Include/type/type_mem.h"
 #include "../../Include/type/type_mem_ptr.h"
 
-StoreNode::StoreNode(std::string name, int alias, Node* ctrl, Node *memSlice, Node *memPtr, Node *value) : MemOpNode(name, alias,
-                                                                                                                     {ctrl, memSlice,
+StoreNode::StoreNode(std::string name, int alias, Type*glb,  Node* ctrl, Node *memSlice, Node *memPtr, Node *value, bool init_) : MemOpNode(name, alias,
+                                                                                                                     glb, {ctrl, memSlice,
                                                                                                          memPtr,
-                                                                                                         value}) {}
+                                                                                                         value}), init(init_) {}
 
-std::string StoreNode::label() { return "Store"; }
+std::string StoreNode::label() { return "." + name_ + "="; }
 
-std::string StoreNode::glabel() { return "." + name_ + " ="; }
+std::string StoreNode::glabel() { return "." + name_ + "="; }
 
 bool StoreNode::isMem() { return true; }
 
@@ -50,4 +50,11 @@ bool StoreNode::checkNoUseBeyond(Node *that) {
         }
     }
     return false;
+}
+
+std::string StoreNode::err() {
+    std::string err = MemOpNode::err();
+    if (!err.empty()) return err;
+    Type* ptr = val()->type_;
+    return (init || ptr->isa(declaredType) ? "" : "Cannot store '" + ptr->str() + "' into '" + declaredType->str() + name_);
 }

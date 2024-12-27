@@ -33,7 +33,7 @@ Type *TypeMem::dual() {
 }
 
 Type *TypeMem::glb() {
-    return TypeMem::BOT();
+    return make(alias_);
 }
 
 int TypeMem::hash() {

@@ -1,9 +1,16 @@
 #include "../../Include/type/type_mem_ptr.h"
+#include <cassert>
 
-TypeMemPtr::TypeMemPtr(TypeStruct *obj, bool nil) : Type(TMEMPTR), obj_(obj), nil_(nil) {}
+TypeMemPtr::TypeMemPtr(TypeStruct *obj, bool nil) : Type(TMEMPTR), obj_(obj), nil_(nil) {
+    assert(obj != nullptr);
+}
 
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj, bool nil) {
   return dynamic_cast<TypeMemPtr*>((new TypeMemPtr(obj, nil))->intern());
+}
+
+TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
+    return make(obj, nil_);
 }
 
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj) {
@@ -51,7 +58,7 @@ Type *TypeMemPtr::xmeet(Type *other) {
 }
 
 TypeMemPtr* TypeMemPtr::dual() {
-    return TypeMemPtr::make(obj_ == nullptr ? nullptr: obj_->dual(), !nil_);
+    return TypeMemPtr::make( obj_->dual(), !nil_);
 }
 TypeMemPtr* TypeMemPtr::glb() {
     if(obj_ == nullptr) return BOT();

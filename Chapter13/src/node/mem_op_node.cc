@@ -2,8 +2,8 @@
 #include "../../Include/type/type_mem_ptr.h"
 
 // Todo: Bug prone(follow what main implementation does)
-MemOpNode::MemOpNode(std::string name, int alias, std::initializer_list<Node*> nodes) : Node(
-        nodes), name_(name), alias_(alias) {}
+MemOpNode::MemOpNode(std::string name, int alias, Type*glb, std::initializer_list<Node*> nodes) : Node(
+        nodes), name_(name), alias_(alias), declaredType(glb) {}
 
 Node *MemOpNode::mem() { return in(1); }
 

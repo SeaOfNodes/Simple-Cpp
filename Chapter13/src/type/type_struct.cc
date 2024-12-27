@@ -1,4 +1,8 @@
 #include "../../Include/type/type_struct.h"
+#include "../../Include/type/field.h"
+#include "../../Include/type/integer_type.h"
+#include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/type/type_float.h"
 
 TypeStruct::TypeStruct(std::string name, Tomi::Vector<Field *> fields) : Type(TSTRUCT), name_(name), fields_(fields) {
 
@@ -6,6 +10,35 @@ TypeStruct::TypeStruct(std::string name, Tomi::Vector<Field *> fields) : Type(TS
 
 TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
     return dynamic_cast<TypeStruct *>((new TypeStruct(name, fields))->intern());
+}
+
+TypeStruct* TypeStruct::make(std::string name) {
+    return dynamic_cast<TypeStruct*>((alloc.new_object<TypeStruct>(name, Tomi::Vector<Field*>{})->intern()));
+}
+
+TypeStruct* TypeStruct::S1F() {
+    TypeStruct* s1f = make("S1");
+    return s1f;
+}
+TypeStruct* TypeStruct::S2F() {
+    TypeStruct* s2f = make("S2");
+    return s2f;
+}
+TypeStruct* TypeStruct::S1() {
+    Tomi::Vector<Field*> fields;
+    fields.push_back(Field::make("a", TypeInteger::BOT()));
+    fields.push_back(Field::make("s2", TypeMemPtr::make(S2F(), false)));
+    TypeStruct* s1 = TypeStruct::make("S1", fields);
+    return s1;
+}
+
+TypeStruct* TypeStruct::S2() {
+    Tomi::Vector<Field*> fields;
+    fields.push_back(Field::make("S1", TypeMemPtr::make(S1F(), false)));
+    fields.push_back(Field::make("b", TypeFloat::BOT()));
+
+    TypeStruct* s2 = TypeStruct::make("S2", fields);
+    return s2;
 }
 
 TypeStruct *TypeStruct::TOP() {
@@ -55,6 +88,8 @@ Type *TypeStruct::xmeet(Type *t) {
     if (name_ != that->name_) {
         return BOT();  // It's a struct; that's about all we know
     }
+    if(fields_.empty()) return this;
+    if(that->fields_.empty()) return that;
     // Now all fields should be the same, so just do field meets
     assert(fields_.size() == that->fields_.size());
     Tomi::Vector<Field *> newFields(fields_.size());
@@ -67,6 +102,8 @@ Type *TypeStruct::xmeet(Type *t) {
 TypeStruct *TypeStruct::dual() {
     if (this == TOP()) return BOT();
     if (this == BOT()) return TOP();
+    if(!fields_.empty()) return this;
+
     Tomi::Vector<Field *> newFields(fields_.size());
     for (int i = 0; i < fields_.size(); i++) {
         newFields[i] = fields_[i]->dual();
@@ -84,9 +121,11 @@ TypeStruct *TypeStruct::glb() {
 }
 
 bool TypeStruct::glb_() {
-    for (Field *f: fields_) {
-        if (f->glb() != f) return false;
+    if(!fields_.empty()) {
+        for (Field *f: fields_) {
+            if (f->glb() != f) return false;
 
+        }
     }
     return true;
 }
@@ -94,6 +133,7 @@ bool TypeStruct::glb_() {
 bool TypeStruct::eq(Type *t) {
     TypeStruct *that = dynamic_cast<TypeStruct *>(t);
     if (name_ != that->name_) return false;
+    if(fields_ == that->fields_) return true;
     if (fields_.size() != that->fields_.size()) return false;
     for (int i = 0; i < fields_.size(); i++) {
         if (fields_[i] != that->fields_[i]) return false;
@@ -103,14 +143,19 @@ bool TypeStruct::eq(Type *t) {
 
 int TypeStruct::hash() {
     long hash = std::hash < std::string > {}(name_);
-    for (Field *f: fields_) {
-        hash ^= f->hash();
+    if(!fields_.empty()) {
+        for (Field *f: fields_) {
+            hash ^= f->hash();
+        }
     }
-    return hash;
+    // fold long into int (64 bits into 32 bits);
+    return (int) (hash ^ (hash >> 32));
 }
 
 std::ostringstream &TypeStruct::print_1(std::ostringstream &builder) {
     builder << name_ << "{";
+    // Forward reference struct, just print the name
+    if(fields_.empty()) return builder;
     for (int i = 0; i < fields_.size(); i++) {
         fields_[i]->print_1(builder);
         if (i < fields_.size() - 1) {

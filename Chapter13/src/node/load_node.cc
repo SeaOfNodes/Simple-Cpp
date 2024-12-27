@@ -4,7 +4,7 @@
 #include "../../Include/node/new_node.h"
 #include "../../Include/node/cast_node.h"
 
-LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *memSlice, Node *memPtr) : MemOpNode(name, alias, {nullptr, memSlice, memPtr}), declaredType(glb) {}
+LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *memSlice, Node *memPtr) : MemOpNode(name, alias, glb, {nullptr, memSlice, memPtr}), declaredType(glb) {}
 
 std::string LoadNode::label() {return "Load";}
 std::string LoadNode::glabel() {return "."+name_;}

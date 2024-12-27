@@ -175,6 +175,18 @@ namespace Tomi {
             endPtr = array + current;
         };
 
+        bool operator==(const Tomi::Vector<Type> &other) const{
+            if (size() != other.size()) {
+                return false;
+            }
+            for (size_t i = 0; i < size(); i++) {
+                if (array[i] != other[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         template<class... Args>
         iterator emplace(const_iterator pos, Args &&...args) noexcept {
             auto value = type(args...);
