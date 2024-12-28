@@ -4,7 +4,7 @@
 Field::Field(std::string fname, Type *type) : Type(TFLD), fname_(fname), type_(type) {}
 
 Field *Field::make(std::string fname, Type *type) {
-    return dynamic_cast<Field *>((new Field(fname, type))->intern());
+    return dynamic_cast<Field *>((alloc.new_object<Field>(fname, type))->intern());
 }
 
 Field *Field::test() {

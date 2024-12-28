@@ -48,7 +48,7 @@ Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
 
         }
         // Upcast the ptr to not-null ptr, and replace in scope
-        return replace(pred, (new CastNode(TypeMemPtr::VOIDPTR(), ctrl, pred))->peephole());
+        return replace(pred, (alloc.new_object<CastNode>(TypeMemPtr::VOIDPTR(), ctrl, pred))->peephole());
 
     }
     if(auto* NOT = dynamic_cast<NotNode*>(pred)) {
@@ -57,7 +57,7 @@ Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
         if(it != inputs.end()) {
             Type*tinit = NOT->in(1)->type_->makeInit();
             if(NOT->in(1)->type_->isa(tinit)) return nullptr;
-            return replace(NOT->in(1), (new ConstantNode(tinit, Parser::START))->peephole());
+            return replace(NOT->in(1), (alloc.new_object<ConstantNode>(tinit, Parser::START))->peephole());
         }
     }
     return nullptr;

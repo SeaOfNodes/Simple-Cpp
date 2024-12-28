@@ -17,7 +17,7 @@ class TypeStruct: public Type {
 public:
     std::string name_;
     std::optional<Tomi::Vector<Field*>> fields_;
-    TypeStruct(std::string name, Tomi::Vector<Field*> fields);
+    explicit TypeStruct(std::string name, std::optional<Tomi::Vector<Field*>> fields);
     // Forward-ref version
     static TypeStruct* make(std::string name);
     // All fields directly listed

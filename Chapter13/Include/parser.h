@@ -171,8 +171,6 @@ private:
 
     Node *parseComparison();
 
-    Node *parseDecl(Type *t);
-
     Node *parsePrimary();
 
     Node* parsePostFix(Node* expr);

@@ -96,7 +96,7 @@ return n.next;
 )";
 auto *parser = new Parser(source);
 StopNode *ret = parser->parse(true)->iterate();
-EXPECT_EQ("return null;", ret->ToString());
+EXPECT_EQ("return NULLPTR;", ret->ToString());
 }
 
 
@@ -127,7 +127,7 @@ try {
 StopNode *ret = parser->parse(true)->iterate();
 } catch (std::exception &e) {
     std::string error = e.what();
-    EXPECT_EQ(error, "Cannot store null into field *N next");
+    EXPECT_EQ(error, "Cannot store NULLPTR into field *N next");
 }
 }
 
@@ -145,7 +145,7 @@ try {
 StopNode *ret = parser->parse(true)->iterate();
 } catch (std::exception &e) {
 std::string error = e.what();
-EXPECT_EQ(error, "Cannot store 3.14 into field IntBot i");
+EXPECT_EQ(error, "Cannot store 3.140000 into field _int i");
 }
 }
 
@@ -172,7 +172,7 @@ StopNode *ret = parser->parse(true)->iterate();
 std::exception &e
 ) {
     std::string error = e.what();
-EXPECT_EQ("Unknown struct type 'S2", error);
+EXPECT_EQ("Unknown struct type: S2", error);
 }
 }
 

@@ -59,5 +59,5 @@ std::string StoreNode::err() {
     if(auto* ptr1 = dynamic_cast<TypeMemPtr*>(ptr)) {
         std::cerr << "T";
     }
-    return (init || ptr->isa(declaredType) ? "" : "Cannot store '" + ptr->str() + "' into '" + declaredType->str() + name_);
+    return (init || ptr->isa(declaredType) ? "" : "Cannot store " + ptr->str() + " into field " + declaredType->str() + " " + name_);
 }

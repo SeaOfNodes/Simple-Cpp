@@ -137,7 +137,6 @@ Node *Parser::parseStruct() {
     Type** t = TYPES.get(typeName);
     if(t != nullptr && !(dynamic_cast<TypeStruct*>(*t))) throw std::runtime_error("struct " + typeName + " cannot be redefiend");
 
-    if (TYPES.get(typeName) != nullptr) throw std::runtime_error("Redefining struct: " + typeName);
     Tomi::Vector<Field *> fields;
     require("{");
     while (!peek('}') && !lexer->isEof()) {
@@ -200,7 +199,7 @@ Node *Parser::parseWhile() {
     // used as an indicator to switch off peepholes of the region and
     // associated phis; see {@code inProgress()}.
     ctrl(
-            (new LoopNode(ctrl()))->peephole()); // Note we set back edge to null here
+            (alloc.new_object<LoopNode>(ctrl()))->peephole()); // Note we set back edge to null here
 
     // At loop head, we clone the current Scope (this includes all
     // names in every nesting level within the Scope).
@@ -365,7 +364,7 @@ Node *Parser::parseExpressionStatement() {
     if (match(";")) {
         // No type and no expr is an error
         if (t == nullptr) error("Expected a type or expression");
-        expr = (new ConstantNode(t->makeInit(), Parser::START))->peephole();
+        expr = (alloc.new_object<ConstantNode>(t->makeInit(), Parser::START))->peephole();
     } else if (match("=")) {
         // Assign "= expr;"
         expr = require(parseExpression(), ";");
@@ -385,7 +384,7 @@ Node *Parser::parseExpressionStatement() {
 
     // Auto-widen int to float
     if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
-        expr = (new ToFloatNode(expr))->peephole();
+        expr = (alloc.new_object<ToFloatNode>(expr))->peephole();
     }
     // Auto-deepen forward ref types
     Type* e = expr->type_;
@@ -568,9 +567,6 @@ Node *Parser::parsePostFix(Node *expr) {
             Node *val = parseExpression();
             Type*glb = base->fields_.value()[idx]->type_;
             auto*glbt = dynamic_cast<TypeMemPtr*>(glb);
-            if(name == "next") {
-                std::cerr << "here";
-            }
             memAlias(alias, (alloc.new_object<StoreNode>(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
             return expr;    // "obj.a = expr" returns the expression while updating memory
 
@@ -590,12 +586,12 @@ Node *Parser::parsePrimary() {
         return (alloc.new_object<ConstantNode>(TypeInteger::constant(1), START))->peephole();
     if (matchx("false"))
         return ZERO;
-    if (matchx("null")) return (new ConstantNode(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
+    if (matchx("null")) return (alloc.new_object<ConstantNode>(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
     if (matchx("new")) {
         std::string structName = requireId();
         Type **t = TYPES.get(structName);
         auto* obj = dynamic_cast<TypeStruct *>(*t);
-        if (!(obj) || !obj->fields_) error("Undefined struct: " + structName);
+        if (!(obj) || !obj->fields_) error("Unknown struct type: " + structName);
         return newStruct(obj);
     }
     std::string name = lexer->matchId();
@@ -623,17 +619,6 @@ bool Lexer::peekIsId() {
 Parser *Parser::require(std::string syntax) {
     require(nullptr, syntax);
     return this;
-}
-
-Node *Parser::parseDecl(Type *t) {
-    std::string name = requireId();
-    // p is good here
-    auto expr = match(";") ? (new ConstantNode(t->makeInit(), Parser::START))->peephole() : require(
-            require("=")->parseExpression(), ";");
-    if (!expr->type_->isa(t)) error("Type " + expr->type_->str() + " is not of declared type " + t->str());
-
-    if (scope_node->define(name, t, expr) == nullptr) error("Redefining name '" + name + "'");
-    return expr;
 }
 
 std::string Parser::memName(int alias) {

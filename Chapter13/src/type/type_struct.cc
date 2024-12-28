@@ -4,8 +4,7 @@
 #include "../../Include/type/type_mem_ptr.h"
 #include "../../Include/type/type_float.h"
 
-TypeStruct::TypeStruct(std::string name, Tomi::Vector<Field *> fields) : Type(TSTRUCT), name_(name), fields_(fields) {
-
+TypeStruct::TypeStruct(std::string name, std::optional<Tomi::Vector<Field *>> fields) : Type(TSTRUCT), name_(name), fields_(fields) {
 }
 
 TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
@@ -13,7 +12,9 @@ TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
 }
 
 TypeStruct* TypeStruct::make(std::string name) {
-    return dynamic_cast<TypeStruct*>((alloc.new_object<TypeStruct>(name, Tomi::Vector<Field*>{})->intern()));
+
+    auto*a = dynamic_cast<TypeStruct*>((alloc.new_object<TypeStruct>(name, std::nullopt))->intern());
+    return a;
 }
 
 TypeStruct* TypeStruct::S1F() {
@@ -124,7 +125,7 @@ TypeStruct *TypeStruct::glb() {
 }
 
 bool TypeStruct::glb_() {
-    if(!fields_) {
+    if(fields_.has_value()) {
         for (Field *f: fields_.value()) {
             if (f->glb() != f) return false;
 
@@ -136,7 +137,11 @@ bool TypeStruct::glb_() {
 bool TypeStruct::eq(Type *t) {
     TypeStruct *that = dynamic_cast<TypeStruct *>(t);
     if (name_ != that->name_) return false;
+    if(!fields_.has_value()) {
+        std::cerr << "st";
+    }
     if(fields_ == that->fields_) return true;
+    if(!fields_.has_value() || !that->fields_.has_value()) return false;
     if (fields_.value().size() != that->fields_.value().size()) return false;
     for (int i = 0; i < fields_.value().size(); i++) {
         if (fields_.value()[i] != that->fields_.value()[i]) return false;
@@ -146,7 +151,7 @@ bool TypeStruct::eq(Type *t) {
 
 int TypeStruct::hash() {
     long hash = std::hash < std::string > {}(name_);
-    if(!fields_) {
+    if(fields_.has_value()) {
         for (Field *f: fields_.value()) {
             hash ^= f->hash();
         }
