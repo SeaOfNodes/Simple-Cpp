@@ -13,7 +13,10 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 30) {
+    if(nid == 21) {
+        std::cerr << "Node 21\n";
+    }
+    if(nid == 25) {
         std::cerr << "Node 30\n";
     }
     for (Node *n: inputNodes) {

@@ -72,7 +72,7 @@ int TypeStruct::find(std::string fname) {
 }
 
 Type *TypeStruct::xmeet(Type *t) {
-    TypeStruct *that = dynamic_cast<TypeStruct *>(t);
+    auto *that = dynamic_cast<TypeStruct *>(t);
     if (this == TOP()) return that;
     if (that == TOP()) return this;
     if (this == BOT()) return BOT();
@@ -88,9 +88,12 @@ Type *TypeStruct::xmeet(Type *t) {
     if (name_ != that->name_) {
         return BOT();  // It's a struct; that's about all we know
     }
-    if(!fields_) return this;
-    if(!that->fields_) return that;
+    if(!fields_.has_value()) return this;
+    if(!that->fields_.has_value()) return that;
     // Now all fields should be the same, so just do field meets
+    if(fields_.value().size() != that->fields_.value().size()) {
+        std::cerr << "st";
+    }
     assert(fields_.value().size() == that->fields_.value().size());
     Tomi::Vector<Field *> newFields(fields_.value().size());
     for (int i = 0; i < fields_.value().size(); i++) {

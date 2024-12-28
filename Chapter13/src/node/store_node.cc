@@ -56,5 +56,8 @@ std::string StoreNode::err() {
     std::string err = MemOpNode::err();
     if (!err.empty()) return err;
     Type* ptr = val()->type_;
+    if(auto* ptr1 = dynamic_cast<TypeMemPtr*>(ptr)) {
+        std::cerr << "T";
+    }
     return (init || ptr->isa(declaredType) ? "" : "Cannot store '" + ptr->str() + "' into '" + declaredType->str() + name_);
 }

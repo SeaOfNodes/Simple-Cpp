@@ -160,7 +160,7 @@ Field *Parser::parseField() {
     if (t == nullptr) {
         throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
     }
-    return require(Field::make(requireId(), TypeInteger::BOT()), ";");
+    return require(Field::make(requireId(), t), ";");
 
 }
 
@@ -511,7 +511,7 @@ Node *Parser::parseMultiplication() {
 Node *Parser::parseUnary() {
     if (match("-"))
         return (alloc.new_object<MinusNode>(parseUnary()))->widen()->peephole();
-    if (match("!")) return (new NotNode(parseUnary()))->peephole();
+    if (match("!")) return (alloc.new_object<NotNode>(parseUnary()))->peephole();
     return parsePostFix(parsePrimary());
 }
 
@@ -524,7 +524,7 @@ Node *Parser::memAlias(int alias, Node *st) {
 }
 
 Node *Parser::newStruct(TypeStruct *obj) {
-    Node *n = (new NewNode(TypeMemPtr::make(obj), ctrl()))->peephole();
+    Node *n = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ctrl()))->peephole();
     int *alias = StartNode::aliasStarts.get(obj->name_);
     assert(alias != nullptr);
 
@@ -532,11 +532,9 @@ Node *Parser::newStruct(TypeStruct *obj) {
         //             memAlias(alias, new StoreNode(field._fname, alias, memAlias(alias), n, initValue).peephole());
 
 
-        Node* cs =  (alloc.new_object<ConstantNode>(field->type_->makeInit(), Parser::START))->peephole();
-
         memAlias(*alias,
                  (alloc.new_object<StoreNode>(field->fname_, *alias, field->type_, ctrl(),
-                 memAlias(*alias), n, cs,
+                 memAlias(*alias), n, (alloc.new_object<ConstantNode>(field->type_->makeInit(), Parser::START))->peephole(),
                  true))->peephole());
 
         alias++;
@@ -569,6 +567,10 @@ Node *Parser::parsePostFix(Node *expr) {
         else {
             Node *val = parseExpression();
             Type*glb = base->fields_.value()[idx]->type_;
+            auto*glbt = dynamic_cast<TypeMemPtr*>(glb);
+            if(name == "next") {
+                std::cerr << "here";
+            }
             memAlias(alias, (alloc.new_object<StoreNode>(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
             return expr;    // "obj.a = expr" returns the expression while updating memory
 
