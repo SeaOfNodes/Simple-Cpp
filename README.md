@@ -6,7 +6,7 @@ C++ implementation of https://github.com/SeaOfNodes/Simple
 
 This is still a **work in progress** and the code is not very readable.
 
-The code is currently equivalent to chapter7 of the main implementation.
+The code is currently equivalent to chapter13 of the main implementation.
 
 Custom Arena allocator comes in chapter 8.
 
