@@ -54,6 +54,7 @@ public:
 
   // Is high or on the lattice centerline.
   virtual bool isHighOrConst();
+  virtual bool isHigh();
   // Strict constant values, things on the lattice centerline.
   // Excludes both high and low values
   virtual bool isConstant();

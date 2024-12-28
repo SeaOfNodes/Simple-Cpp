@@ -72,6 +72,9 @@ int TypeMemPtr::hash() {
     return (obj_ == nullptr ? 0xDEADBEEF : obj_->hash())^ ( nil_ ? 1024: 0);
 }
 
+bool TypeMemPtr::isHigh() {
+    return this == TOP();
+}
 bool TypeMemPtr::eq(Type *other) {
     if (other == this) return true;
     auto* that = dynamic_cast<TypeMemPtr*>(other);

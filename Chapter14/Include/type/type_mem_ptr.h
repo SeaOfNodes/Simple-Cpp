@@ -38,6 +38,7 @@ public:
     TypeMemPtr* dual();
     TypeMemPtr* glb();
 
+    bool isHigh() override;
     TypeMemPtr* makeInit() override;
 
     int hash();

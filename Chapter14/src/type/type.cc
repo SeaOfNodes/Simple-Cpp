@@ -3,12 +3,14 @@
 #include "../../Include/type/integer_type.h"
 #include "../../Include/type/type_mem_ptr.h"
 #include "../../Include/type/tuple_type.h"
+#include "../../Include/type/type_float.h"
 #include <iostream>
 
 int Type::get_hash() { return hash_; }
 bool Type::isHighOrConst() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isConstant() { return false; }
 
+bool Type::isHigh() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isSimple() { return type_ < TSIMPLE; }
 std::ostringstream &Type::print_1(std::ostringstream &builder) {
   if (isSimple())
@@ -141,6 +143,7 @@ Tomi::Vector<Type *> Type::gather() {
     ts.push_back(CONTROL());
     Field::gather(ts);
     TypeInteger::gather(ts);
+    TypeFloat::gather(ts);
     TypeMemPtr::gather(ts);
     TypeStruct::gather(ts);
     TypeTuple::gather(ts);
