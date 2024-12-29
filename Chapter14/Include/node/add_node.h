@@ -29,6 +29,8 @@ public:
    * */
   Type *compute() override;
 
+  bool overflow(long x, long y);
+
   Node *idealize() override;
 
   Node *copy(Node *lhs, Node *rhs) override;

@@ -18,16 +18,20 @@ std::ostringstream &DivNode::print_1(std::ostringstream &builder,
 }
 
 Type *DivNode::compute() {
-    auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
-    auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
-    if (i0 && i1) {
-        if (i0->isConstant() && i1->isConstant()) {
+    Type*t1 = in(1)->type_;
+    Type*t2 = in(2)->type_;
+    if(t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
+
+    auto i1 = dynamic_cast<TypeInteger *>(t1);
+    auto i2 = dynamic_cast<TypeInteger *>(t2);
+    if (i1 && i2) {
+        if (i1->isConstant() && i2->isConstant()) {
             return i1->value() == 0
                    ? TypeInteger::ZERO()
-                   : TypeInteger::constant(i0->value() / i1->value());
+                   : TypeInteger::constant(i1->value() / i2->value());
         }
     }
-    return in(1)->type_->meet(in(2)->type_);
+    return TypeInteger::BOT();
 }
 
 Node *DivNode::idealize() { return nullptr; }

@@ -78,6 +78,15 @@ add_library(simple_lib
         src/globalCodeMotion.cc
         src/node/to_float_node.cc
 
+        # bitwise
+        src/node/xor_node.cc
+        src/node/shr_node.cc
+        src/node/shl_node.cc
+        src/node/sar_node.cc
+        src/node/round_f32_node.cc
+        src/node/or_node.cc
+        src/node/and_node.cc
+
         # float
         src/node/divf_node.cc
         src/node/mulf_node.cc

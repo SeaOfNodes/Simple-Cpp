@@ -7,7 +7,17 @@
 #include "../Include/type/type_float.h"
 #include "../Include/node/to_float_node.h"
 
+// bitiwse
+#include "../Include/node/and_node.h"
+#include "../Include/node/or_node.h"
+#include "../Include/node/xor_node.h"
+#include "../Include/node/shl_node.h"
+#include "../Include/node/shr_node.h"
+#include "../Include/node/sar_node.h"
+#include "../Include/node/roundf32_node.h"
+
 #include <cmath> // For std::abs
+#include <bit>
 
 // Todo: static fiasco?
 StopNode *Parser::STOP = nullptr;
@@ -25,6 +35,19 @@ Parser::Parser(std::string source, TypeInteger *arg) {
 
     TYPES.put("int", TypeInteger::BOT());
     TYPES.put("flt", TypeFloat::BOT());
+    TYPES.put("bool", TypeInteger::U1());
+    TYPES.put("byte", TypeInteger::U8());
+    TYPES.put("f32", TypeFloat::B32());
+    TYPES.put("f64", TypeFloat::BOT());
+    TYPES.put("flt", TypeFloat::BOT());
+    TYPES.put("i16", TypeInteger::I16());
+    TYPES.put("i32", TypeInteger::I32());
+    TYPES.put("i64", TypeInteger::BOT());
+    TYPES.put("i8", TypeInteger::I8());
+    TYPES.put("u1", TypeInteger::U1());
+    TYPES.put("u16", TypeInteger::U16());
+    TYPES.put("u32", TypeInteger::U32());
+    TYPES.put("u8", TypeInteger::U8());
 
     SCHEDULED = false;
     lexer = alloc.new_object<Lexer>(source);
@@ -151,7 +174,7 @@ Node *Parser::parseStruct() {
     TypeStruct *type = TypeStruct::make(typeName, fields);
     TYPES.put(typeName, type);
     START->addMemProj(type, scope_node);
-    return nullptr;
+    return parseStatement();
 }
 
 Field *Parser::parseField() {
@@ -386,6 +409,8 @@ Node *Parser::parseExpressionStatement() {
     if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
         expr = (alloc.new_object<ToFloatNode>(expr))->peephole();
     }
+    // Auto-narrow wide ints to narrow ints
+    expr = ZSMask(expr, t);
     // Auto-deepen forward ref types
     Type* e = expr->type_;
     auto* tmp = dynamic_cast<TypeMemPtr*>(e);
@@ -415,6 +440,38 @@ Node *Parser::parseLiteral() {
     return (alloc.new_object<ConstantNode>(lexer->parseNumber(), START))->peephole();
 }
 
+Node* Parser::parseBitWise() {
+    Node*lhs = parseComparison();
+    while(true) {
+        if(false);
+        else if(match("&")) {
+            lhs = (alloc.new_object<AndNode>(lhs, nullptr))->peephole();
+        } else if(match("|")) {
+            lhs = (alloc.new_object<OrNode>(lhs, nullptr))->peephole();
+        } else if(match("^")) {
+            lhs = (alloc.new_object<XorNode>(lhs, nullptr))->peephole();
+        } else break;
+        lhs->setDef(2, parseComparison());
+        lhs = lhs->peephole();
+    }
+    return lhs;
+}
+Node* Parser::parseShift() {
+    Node*lhs = parseAddition();
+    while(true) {
+        if(false);
+        else if(match("<<")) {
+            lhs = (alloc.new_object<ShlNode>(lhs, nullptr))->peephole();
+        } else if(match(">>>")) {
+            lhs = (alloc.new_object<ShrNode>(lhs, nullptr))->peephole();
+        } else if(match(">>")) {
+            lhs = (alloc.new_object<ShrNode>(lhs, nullptr))->peephole();
+        } else break;
+        lhs->setDef(2, parseAddition());
+        lhs = lhs->peephole();
+    }
+    return lhs;
+}
 Type *Lexer::parseNumber() {
     int old = position;
     int len = isLongOrDouble();
@@ -436,10 +493,10 @@ bool Lexer::peek(char ch) {
 
 bool Parser::peek(char ch) { return lexer->peek(ch); }
 
-Node *Parser::parseExpression() { return parseComparison(); }
+Node *Parser::parseExpression() { return parseBitWise(); }
 
 Node *Parser::parseComparison() {
-    auto lhs = parseAddition(); // Parse the left-hand side
+    auto lhs = parseShift(); // Parse the left-hand side
     while (true) {
         int idx = 0;
         bool negate = false;
@@ -541,6 +598,29 @@ Node *Parser::newStruct(TypeStruct *obj) {
     return n->unkeep();
 }
 
+Node* Parser::ZSMask(Node *val, Type *t) {
+    auto*tval = dynamic_cast<TypeInteger*>(val->type_);
+    auto*t0 = dynamic_cast<TypeInteger*>(t);
+    auto*tval1 =dynamic_cast<TypeFloat*>(val->type_);
+    auto*t1 = dynamic_cast<TypeFloat*>(t);
+    if(!(tval && t0 && !tval->isa(t0))) {
+        if(!tval1 && t1 && !tval1->isa(t1)) {
+            return val;
+        }
+        // Float rounding
+        return alloc.new_object<RoundF32Node>(val)->peephole();
+}
+    if(t0 && t0->min_ == 0)  // Unsigned
+        return (alloc.new_object<AndNode>(val, alloc.new_object<ConstantNode>(TypeInteger::constant(t0->max_), Parser::START))->peephole())->peephole();
+
+    // Signed extension
+    int shift = std::countl_zero(static_cast<std::uint64_t>(t0->max_-1));
+    Node*shf = alloc.new_object<ConstantNode>(TypeInteger::constant(shift), Parser::START)->peephole();
+
+    if(shf->type_ == TypeInteger::ZERO()) return val;
+    return (alloc.new_object<SarNode>((alloc.new_object<ShlNode>(val, shf))->peephole(), shf))->peephole();
+}
+
 Node *Parser::parsePostFix(Node *expr) {
     bool match_s = match(".");
     if (!match_s) return expr;
@@ -566,7 +646,8 @@ Node *Parser::parsePostFix(Node *expr) {
         else {
             Node *val = parseExpression();
             Type*glb = base->fields_.value()[idx]->type_;
-            auto*glbt = dynamic_cast<TypeMemPtr*>(glb);
+            // auto truncate when storing to narrow fields
+            val = ZSMask(val, glb);
             memAlias(alias, (alloc.new_object<StoreNode>(name, alias, glb, ctrl(), memAlias(alias), expr, val, false)))->peephole();
             return expr;    // "obj.a = expr" returns the expression while updating memory
 

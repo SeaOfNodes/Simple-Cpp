@@ -110,6 +110,9 @@ public:
     Type* type();
     StopNode *parse(bool show);
 
+    // zero/sign extend.  "i" is limited to either classic unsigned (min==0) or
+    // classic signed (min=minus-power-of-2); max=power-of-2-minus-1.
+    Node* ZSMask(Node* val, Type* t);
     std::string src();
 
     Node *ctrl();
@@ -132,7 +135,7 @@ private:
 
     // replace this with custom data structure
     const std::unordered_set <std::string> KEYWORDS = {
-            "break", "continue", "else", "false", "if", "int", "return", "true", "while", "null", "new", "struct", "flt"};
+            "bool", "break", "byte", "continue", "else", "f32", "f64", "i16", "i32", "i64", "i8", "false", "if", "int", "return", "true", "u1", "u16", "u32", "u8", "while", "null", "new", "struct", "flt"};
 
     Node *parseStatement();
 
@@ -160,6 +163,9 @@ private:
     ScopeNode *jumpTo(ScopeNode *toScope);
 
     Node *parseBreak();
+
+    Node* parseBitWise();
+    Node* parseShift();
 
     Node *parseContinue();
 

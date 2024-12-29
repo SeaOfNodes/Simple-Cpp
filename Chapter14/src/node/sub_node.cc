@@ -25,13 +25,14 @@ std::ostringstream &SubNode::print_1(std::ostringstream &builder,
 Type *SubNode::compute() {
     if (in(1) == in(2))
         return TypeInteger::ZERO();
+    auto t1 = dynamic_cast<TypeInteger *>(in(1)->type_);
+    auto t2 = dynamic_cast<TypeInteger *>(in(2)->type_);
+    if(t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
 
-    auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
-    auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
-    if (i0 && i0->isConstant() && i1 && i1->isConstant()) {
-        return TypeInteger::constant(i0->value() - i1->value());
+    if (t1 && t1->isConstant() && t2 && t2->isConstant()) {
+        return TypeInteger::constant(t1->value() - t2->value());
     }
-    return in(1)->type_->meet(in(2)->type_);
+    return TypeInteger::BOT();
 }
 
 Node *SubNode::idealize() {

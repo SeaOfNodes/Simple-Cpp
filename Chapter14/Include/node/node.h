@@ -304,6 +304,7 @@ public:
             }
         }
 
+        // Todo: unroll iterator to survice junkCME
         for (Node *use: outputs) {
             if (use != nullptr) {
                 T result = use->walk_(pred);

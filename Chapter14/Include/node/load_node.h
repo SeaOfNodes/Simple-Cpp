@@ -20,6 +20,7 @@ public:
     Type* compute() override;
     Node* idealize() override;
 
+    Node* copy(Node*mem, Node*ptr) override;
     // Profitable if we find a matching Store on this Phi arm.
     bool profit(PhiNode* phi, int idx);
 

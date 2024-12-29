@@ -54,3 +54,7 @@ bool LoadNode::profit(PhiNode* phi, int idx) {
     }
     return false;
 }
+
+Node* LoadNode::copy(Node *mem_, Node *ptr) {
+    return alloc.new_object<LoadNode>(name_, alias_, declaredType, mem_, ptr);
+}

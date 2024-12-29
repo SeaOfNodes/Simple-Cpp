@@ -9,84 +9,84 @@
 
 class BoolNode : public Node {
 public:
-  virtual std::string op();
+    virtual std::string op();
 
-  [[nodiscard]] virtual bool doOp(long lhs, long rhs) const;
-  [[nodiscard]] virtual bool doOp(double lhs, double rhs) const;
+    [[nodiscard]] virtual TypeInteger* doOp(TypeInteger* lhs, TypeInteger* rhs) const;
+    [[nodiscard]] virtual bool doOp(double lhs, double rhs) const;
 
-  Node* copyF(Node* lhs, Node* rhs);
+    Node* copyF(Node* lhs, Node* rhs);
 
-  BoolNode(Node *lhs, Node *rhs);
+    BoolNode(Node *lhs, Node *rhs);
 
-  std::string label() override;
+    std::string label() override;
 
-  std::string glabel() override;
+    std::string glabel() override;
 
-  std::ostringstream &print_1(std::ostringstream &builder,
-                              Tomi::Vector<bool>& visited) override;
+    std::ostringstream &print_1(std::ostringstream &builder,
+                                Tomi::Vector<bool>& visited) override;
 
-  Type *compute() override;
+    Type *compute() override;
 
-  Node *idealize() override;
+    Node *idealize() override;
 };
 
 class EQ : public BoolNode {
 public:
-  EQ(Node *lhs, Node *rhs);
+    EQ(Node *lhs, Node *rhs);
 
-  Node *copy(Node *rhs, Node *lhs) override;
+    Node *copy(Node *rhs, Node *lhs) override;
 
-  std::string op() override;
+    std::string op() override;
 
-  std::string label() override;
+    std::string label() override;
 
-  bool doOp(long lhs, long rhs) const override;
+    TypeInteger* doOp(TypeInteger* lhs, TypeInteger* rhs) const override;
 };
 
 class LT : public BoolNode {
 public:
-  LT(Node *lhs, Node *rhs);
+    LT(Node *lhs, Node *rhs);
 
-  Node *copy(Node *rhs, Node *lhs) override;
+    Node *copy(Node *rhs, Node *lhs) override;
 
-  std::string label() override;
+    std::string label() override;
 
-  std::string op() override;
+    std::string op() override;
 
-  bool doOp(long lhs, long rhs) const override;
+    TypeInteger* doOp(TypeInteger* lhs, TypeInteger* rhs) const override;
 };
 
 class LE : public BoolNode {
 public:
-  LE(Node *lhs, Node *rhs);
+    LE(Node *lhs, Node *rhs);
 
-  Node *copy(Node *rhs, Node *lhs) override;
+    Node *copy(Node *rhs, Node *lhs) override;
 
-  std::string op() override;
+    std::string op() override;
 
-  std::string label() override;
+    std::string label() override;
 
-  bool doOp(long lhs, long rhs) const override;
+    TypeInteger* doOp(TypeInteger* lhs, TypeInteger* rhs) const override;
 };
 class EQF: public EQ {
 public:
     EQF(Node *lhs, Node *rhs);
-    bool doOp(double lhs, double rhs) const override;
-    Node* copyF() override;
+    [[nodiscard]] bool doOp(double lhs, double rhs) const override;
+    Node* copy(Node*lhs, Node*rhs);
     std::string label() override;
 };
 class LTF: public LT {
 public:
     LTF(Node *lhs, Node *rhs);
-    bool doOp(double lhs, double rhs) const override;
-    Node* copyF() override;
+    [[nodiscard]]bool doOp(double lhs, double rhs) const override;
+    Node* copy(Node*lhs, Node*rhs);
     std::string label() override;
 };
 class LEF: public LE {
 public:
     LEF(Node *lhs, Node *rhs);
-    bool doOp(double lhs, double rhs) const override;
-    Node* copyF() override;
+    [[nodiscard]] bool doOp(double lhs, double rhs) const override;
+    Node* copy(Node*lhs, Node*rhs);
     std::string label() override;
 };
 #endif

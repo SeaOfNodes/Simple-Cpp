@@ -1,7 +1,7 @@
 #include "../../Include/node/bool_node.h"
 #include "../../Include/parser.h"
 #include "../../Include/type/type_float.h"
-
+#include "../../Include/type/integer_type.h"
 BoolNode::BoolNode(Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}) {}
 
 std::string BoolNode::label() { return "Bool Node"; }
@@ -10,8 +10,7 @@ std::string BoolNode::glabel() { return op(); }
 
 std::string BoolNode::op() { return "BoolNode"; }
 
-bool BoolNode::doOp(long lhs, long rhs) const { throw std::runtime_error("TODO!"); }
-
+TypeInteger* BoolNode::doOp(TypeInteger* lhs, TypeInteger* rhs) const { throw std::runtime_error("TODO!"); }
 bool BoolNode::doOp(double lhs, double rhs) const { throw std::runtime_error("TODO!"); }
 
 Node *BoolNode::copyF(Node *lhs, Node *rhs) {
@@ -29,21 +28,22 @@ std::ostringstream &BoolNode::print_1(std::ostringstream &builder,
 }
 
 Type *BoolNode::compute() {
-    auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
-    auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
-    if (i0 && i1) {
-        if (i0->isConstant() && i1->isConstant())
-            return TypeInteger::constant(doOp(i0->value(), i1->value()) ? 1 : 0);
-        return i0->meet(i1);
+    Type*t1 = in(1)->type_;
+    Type*t2 = in(2)->type_;
+    if(t1->isHigh() || t2->isHigh()) return TypeInteger::BOOL()->dual();
+    // Compare of same
+    if(in(1) == in(2)) return doOp(TypeInteger::ZERO(), TypeInteger::ZERO());
+    auto i0 = dynamic_cast<TypeInteger *>(t1);
+    auto i1 = dynamic_cast<TypeInteger *>(t2);
+    if(i0 && i1) {
+        return doOp(i0, i1);
     }
-    auto p0 = dynamic_cast<TypeFloat *>(in(1)->type_);
-    auto p1 = dynamic_cast<TypeFloat *>(in(2)->type_);
-    if (p0 && p1) {
-        if (p0->isConstant() && p1->isConstant())
-            return TypeInteger::constant(doOp(p0->value(), p1->value()) ? 1 : 0);
-        return p0->meet(p1);
+    auto p0 = dynamic_cast<TypeFloat *>(t1);
+    auto p1 = dynamic_cast<TypeFloat *>(t2);
+    if(p0 && p1 && p0->isConstant() && p1->isConstant()) {
+        return TypeInteger::constant(doOp(p0->value(), p1->value()) ? 1 : 0);
     }
-    return in(1)->type_->meet(in(2)->type_);
+    return TypeInteger::BOOL();
 }
 
 Node *BoolNode::idealize() {
@@ -69,14 +69,11 @@ Node *BoolNode::idealize() {
         if (in(2)->type_ == TypeInteger::ZERO() || in(2)->type_ == TypeMemPtr::NULLPTR()) {
             return alloc.new_object<NotNode>(in(1));
         }
+        // Equals bool =- 1 becomes bool
+        if(in(2)->type_ == TypeInteger::TRUE() && in(1)->type_ == TypeInteger::BOOL()) {
+            return in(1);
+        }
     }
-    // Do we have ((x * (phi cons)) * con) ?
-    // Do we have ((x * (phi cons)) * (phi cons)) ?
-    // Push constant up through the phi: x * (phi con0*con0 con1*con1...)
-
-    Node *phicon = AddNode::phiCon(this, false);
-    if (phicon != nullptr)
-        return phicon;
     return nullptr;
 }
 
@@ -89,7 +86,11 @@ std::string EQ::label() { return "EQ"; }
 
 std::string EQ::op() { return "=="; }
 
-bool EQ::doOp(long lhs, long rhs) const { return lhs == rhs; }
+TypeInteger* EQ::doOp(TypeInteger* i1, TypeInteger* i2) const {
+    if(i1 == i2 && i1->isConstant()) return TypeInteger::TRUE();
+    if(i1->max_ < i2->min_ || i1->min_ > i2->max_) return TypeInteger::FALSE();
+    return TypeInteger::BOOL();
+}
 
 // LT
 LT::LT(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
@@ -100,7 +101,11 @@ std::string LT::label() { return "LT"; }
 
 std::string LT::op() { return "<"; }
 
-bool LT::doOp(long lhs, long rhs) const { return lhs < rhs; }
+TypeInteger* LT::doOp(TypeInteger* i1, TypeInteger* i2) const {
+    if(i1->max_ < i2->min_) return TypeInteger::TRUE();
+    if(i1->min_ >= i2->max_) return TypeInteger::FALSE();
+    return TypeInteger::BOOL();
+}
 
 // LE
 LE::LE(Node *lhs, Node *rhs) : BoolNode(lhs, rhs) {}
@@ -111,7 +116,11 @@ std::string LE::label() { return "LE"; }
 
 std::string LE::op() { return "<="; }
 
-bool LE::doOp(long lhs, long rhs) const { return lhs <= rhs; }
+TypeInteger* LE::doOp(TypeInteger* i1, TypeInteger* i2) const {
+    if(i1->max_ <= i2->min_) return TypeInteger::TRUE();
+    if(i1->min_ > i2->max_) return TypeInteger::FALSE();
+    return TypeInteger::BOOL();
+}
 
 EQF::EQF(Node *lhs, Node *rhs) : EQ(lhs, rhs) {}
 
@@ -123,8 +132,8 @@ std::string EQF::label() {
     return "EQF";
 }
 
-Node *EQF::copyF() {
-    return nullptr;
+Node *EQF::copy(Node*lhs, Node*rhs) {
+    return alloc.new_object<EQF>(lhs, rhs);
 }
 
 LTF::LTF(Node *lhs, Node *rhs) : LT(lhs, rhs){}
@@ -136,8 +145,8 @@ std::string LTF::label() {
     return "LTF";
 }
 
-Node *LTF::copyF() {
-    return nullptr;
+Node *LTF::copy(Node*lhs, Node*rhs) {
+    return alloc.new_object<LTF>(lhs, rhs);
 }
 
 LEF::LEF(Node *lhs, Node *rhs) : LE(lhs, rhs){}
@@ -145,8 +154,8 @@ bool LEF::doOp(double lhs, double rhs) const {
     return lhs <= rhs;
 }
 
-Node* LEF::copyF() {
-    return nullptr;
+Node* LEF::copy(Node*lhs, Node*rhs) {
+    return alloc.new_object<LEF>(lhs, rhs);
 }
 
 std::string LEF::label() {
