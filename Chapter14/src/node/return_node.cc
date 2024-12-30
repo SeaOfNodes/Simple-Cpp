@@ -27,7 +27,9 @@ std::ostringstream &ReturnNode::print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &visited) {
   builder << "return ";
   Node *expr1 = expr();
+  std::string b = builder.str();
   expr1->print_0(builder, visited);
+  std::string a = builder.str();
   builder << ";";
   return builder;
 }

@@ -43,11 +43,7 @@ void TypeInteger::gather(Tomi::Vector<Type *> &ts) {
 }
 
 std::ostringstream &TypeInteger::print_1(std::ostringstream &builder) {
-    if (this == TOP())
-        builder << "IntTop";
-    if (this == BOT())
-        builder << "IntBot";
-    builder << con_;
+    builder << str();
     return builder;
 }
 
@@ -78,6 +74,10 @@ TypeInteger *TypeInteger::FALSE() {
 
 TypeInteger *TypeInteger::TRUE() {
     return make(static_cast<long>(1), static_cast<long>(1));
+}
+
+Type* TypeInteger::glb() {
+    return BOT();
 }
 
 TypeInteger *TypeInteger::I8() {
@@ -154,7 +154,8 @@ TypeInteger *TypeInteger::make(bool is_con, long con) {
 }
 
 TypeInteger *TypeInteger::make(long lo, long hi) {
-    return dynamic_cast<TypeInteger*>((alloc.new_object<TypeInteger>(lo, hi))->intern());
+    TypeInteger*obj = dynamic_cast<TypeInteger*>((alloc.new_object<TypeInteger>(lo, hi))->intern());
+    return obj;
 }
 
 long TypeInteger::value() { assert(isConstant()); return min_; }

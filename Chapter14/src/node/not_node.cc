@@ -12,8 +12,7 @@ std::string NotNode::glabel() { return "!"; }
 
 std::ostringstream &NotNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
     builder << "(!";
-
-    builder << in(1)->print_1(builder, visited).str();
+     in(1)->print_1(builder, visited);
     builder << ")";
     return builder;
 }

@@ -39,7 +39,6 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     TYPES.put("byte", TypeInteger::U8());
     TYPES.put("f32", TypeFloat::B32());
     TYPES.put("f64", TypeFloat::BOT());
-    TYPES.put("flt", TypeFloat::BOT());
     TYPES.put("i16", TypeInteger::I16());
     TYPES.put("i32", TypeInteger::I32());
     TYPES.put("i64", TypeInteger::BOT());
@@ -390,11 +389,15 @@ Node *Parser::parseExpressionStatement() {
         expr = (alloc.new_object<ConstantNode>(t->makeInit(), Parser::START))->peephole();
     } else if (match("=")) {
         // Assign "= expr;"
+        if(name == "i") {
+            std::cerr << "Here";
+        }
         expr = require(parseExpression(), ";");
     } else {
         lexer->position = old;
         return require(parseExpression(), ";");
     }
+
 
     // Defining a new variable vs updating an old one
     if (t != nullptr) {
@@ -409,6 +412,7 @@ Node *Parser::parseExpressionStatement() {
     if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
         expr = (alloc.new_object<ToFloatNode>(expr))->peephole();
     }
+
     // Auto-narrow wide ints to narrow ints
     expr = ZSMask(expr, t);
     // Auto-deepen forward ref types
@@ -416,6 +420,9 @@ Node *Parser::parseExpressionStatement() {
     auto* tmp = dynamic_cast<TypeMemPtr*>(e);
     if(tmp && !tmp->obj_->fields_) {
         e = tmp->make_from(dynamic_cast<TypeStruct*>(*TYPES.get(tmp->obj_->name_)));
+    }
+    if(!e->isa(t)) {
+        std::cerr << "Here";
     }
     if (!e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
     return scope_node->update(name, expr);
@@ -437,7 +444,8 @@ Node *Parser::ctrl(Node *n) {
 }
 
 Node *Parser::parseLiteral() {
-    return (alloc.new_object<ConstantNode>(lexer->parseNumber(), START))->peephole();
+    Type*t = lexer->parseNumber();
+    return (alloc.new_object<ConstantNode>(t, START))->peephole();
 }
 
 Node* Parser::parseBitWise() {
@@ -445,14 +453,18 @@ Node* Parser::parseBitWise() {
     while(true) {
         if(false);
         else if(match("&")) {
-            lhs = (alloc.new_object<AndNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<AndNode>(lhs, nullptr));
         } else if(match("|")) {
-            lhs = (alloc.new_object<OrNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<OrNode>(lhs, nullptr));
         } else if(match("^")) {
-            lhs = (alloc.new_object<XorNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<XorNode>(lhs, nullptr));
         } else break;
+        if(dynamic_cast<XorNode*>(lhs)) {
+            std::cerr << "Here";
+        }
         lhs->setDef(2, parseComparison());
         lhs = lhs->peephole();
+        std::cerr << "Here";
     }
     return lhs;
 }
@@ -461,11 +473,11 @@ Node* Parser::parseShift() {
     while(true) {
         if(false);
         else if(match("<<")) {
-            lhs = (alloc.new_object<ShlNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<ShlNode>(lhs, nullptr));
         } else if(match(">>>")) {
-            lhs = (alloc.new_object<ShrNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<ShrNode>(lhs, nullptr));
         } else if(match(">>")) {
-            lhs = (alloc.new_object<ShrNode>(lhs, nullptr))->peephole();
+            lhs = (alloc.new_object<SarNode>(lhs, nullptr));
         } else break;
         lhs->setDef(2, parseAddition());
         lhs = lhs->peephole();
@@ -480,7 +492,8 @@ Type *Lexer::parseNumber() {
             throw std::runtime_error(
                     "Syntax error: integer values cannot start with '0'");
         }
-        return dynamic_cast<Type *>(TypeInteger::constant(std::stoi(input.substr(old, len))));
+        long a = std::stol(input.substr(old, len));
+        return dynamic_cast<Type *>(TypeInteger::constant(a));
     }
     // TBD;
     return TypeFloat::constant(std::stod(input.substr(old, -len)));
@@ -533,7 +546,6 @@ Node *Parser::parseComparison() {
 
 Node *Parser::parseAddition() {
     Node *lhs = parseMultiplication();
-
     while (true) {
         if (false);
         else if (match("+")) {
@@ -543,7 +555,11 @@ Node *Parser::parseAddition() {
         } else
             break;
         lhs->setDef(2, parseMultiplication());
+        if(dynamic_cast<AddNode*>(lhs->in(1))) {
+            std::cerr << "Here";
+        }
         lhs = lhs->widen()->peephole(); // new id because new replacement WRONG!!
+        std::cerr << "Here";
     }
     return lhs;
 }
@@ -604,21 +620,23 @@ Node* Parser::ZSMask(Node *val, Type *t) {
     auto*tval1 =dynamic_cast<TypeFloat*>(val->type_);
     auto*t1 = dynamic_cast<TypeFloat*>(t);
     if(!(tval && t0 && !tval->isa(t0))) {
-        if(!tval1 && t1 && !tval1->isa(t1)) {
+        if(!(tval1 && t1 && !tval1->isa(t1))) {
             return val;
         }
         // Float rounding
-        return alloc.new_object<RoundF32Node>(val)->peephole();
+        return (alloc.new_object<RoundF32Node>(val))->peephole();
 }
     if(t0 && t0->min_ == 0)  // Unsigned
-        return (alloc.new_object<AndNode>(val, alloc.new_object<ConstantNode>(TypeInteger::constant(t0->max_), Parser::START))->peephole())->peephole();
-
+    {
+        return alloc.new_object<AndNode>(val, alloc.new_object<ConstantNode>(TypeInteger::constant(t0->max_),
+                                                                              Parser::START)->peephole())->peephole();
+    }
     // Signed extension
-    int shift = std::countl_zero(static_cast<std::uint64_t>(t0->max_-1));
+    int shift = std::countl_zero(static_cast<std::uint64_t>(t0->max_)) - 1;
     Node*shf = alloc.new_object<ConstantNode>(TypeInteger::constant(shift), Parser::START)->peephole();
 
     if(shf->type_ == TypeInteger::ZERO()) return val;
-    return (alloc.new_object<SarNode>((alloc.new_object<ShlNode>(val, shf))->peephole(), shf))->peephole();
+    return (alloc.new_object<SarNode>(alloc.new_object<ShlNode>(val, shf->keep())->peephole(), shf->unkeep())->peephole());
 }
 
 Node *Parser::parsePostFix(Node *expr) {
@@ -679,7 +697,9 @@ Node *Parser::parsePrimary() {
     if (name == "")
         errorSyntax("an identifier or expression");
     Node *n = scope_node->lookup(name);
-
+    if(name == "i") {
+        std::cerr << "Here";
+    }
     std::ostringstream b;
     std::string arg_type = n->type_->print_1(b).str();
     if (n != nullptr)

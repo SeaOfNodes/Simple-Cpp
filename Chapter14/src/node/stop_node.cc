@@ -23,9 +23,9 @@ std::ostringstream &StopNode::print_1(std::ostringstream &builder,
   return builder;
 }
 
-StopNode *StopNode::iterate() { return IterPeeps::iterate(this, false)->typeCheck(); }
+StopNode *StopNode::iterate() { return IterPeeps::iterate(this, false)->typeCheck()->GCM(false); }
 StopNode *StopNode::iterate(bool show) {
-  return IterPeeps::iterate(this, show)->typeCheck();
+  return IterPeeps::iterate(this, show)->typeCheck()->GCM(show);
 }
 
 bool StopNode::blockHead() { return true; }
@@ -82,4 +82,8 @@ Node *StopNode::idealize() {
   return nullptr;
 }
 
-Node *StopNode::addReturn(Node *node) { return addDef(node); }
+Node *StopNode::addReturn(Node *node) {
+    // TOdo: do smt here
+    std::cerr << "Called once";
+    return addDef(node);
+}

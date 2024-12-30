@@ -25,6 +25,8 @@ public:
   static TypeInteger* I16();
   static TypeInteger* I32();
 
+  Type*glb() override;
+
   static TypeInteger* U8();
   static TypeInteger* U16();
   static TypeInteger* U32();
@@ -71,7 +73,5 @@ public:
   bool eq(Type *) override;
 
   int hash() override;
-private:
-  long con_;
 };
 #endif

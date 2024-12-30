@@ -37,7 +37,7 @@ public:
     std::ostringstream& typeName(std::ostringstream& builder) override;
     bool isHighOrConst() override;
     bool isF32();
-    bool isHigh();
+    bool isHigh() override;
     bool isConstant() override;
     double value();
 

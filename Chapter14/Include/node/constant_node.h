@@ -8,7 +8,7 @@ class CFGNode;
 
 class ConstantNode : public Node {
 public:
-    ConstantNode();
+    ConstantNode() = default;
     ConstantNode(Type *type, CFGNode *START);
     std::ostringstream builder;
   Type *con_;

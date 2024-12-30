@@ -10,7 +10,7 @@ TypeFloat *TypeFloat::TOP() {
 }
 
 TypeFloat *TypeFloat::BOT() {
-    static TypeFloat *bot =  make(static_cast<std::int8_t>(-32), 0);
+    static TypeFloat *bot =  make(static_cast<std::int8_t>(64), 0);
     return bot;
 }
 
@@ -20,12 +20,12 @@ TypeFloat *TypeFloat::ZERO() {
 }
 
 TypeFloat *TypeFloat::T32() {
-    static TypeFloat *t32 =  make(static_cast<std::int8_t>(32), 0);
+    static TypeFloat *t32 =  make(static_cast<std::int8_t>(-32), 0);
     return t32;
 }
 
 TypeFloat* TypeFloat::B32() {
-    static TypeFloat *b32 =  make(static_cast<std::int8_t>(64), 0);
+    static TypeFloat *b32 =  make(static_cast<std::int8_t>(32), 0);
     return b32;
 }
 
