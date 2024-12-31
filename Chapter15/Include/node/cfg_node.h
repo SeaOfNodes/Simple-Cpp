@@ -14,10 +14,7 @@ class CFGNode : public Node {
 public:
     CFGNode() = default;
     CFGNode(std::initializer_list<Node*> nodes);
-    bool isCFG() override;
-
-    bool isPinned() override;
-
+    explicit CFGNode(Tomi::Vector<Node*> nodes);
 
     CFGNode *cfg(int idx);
 

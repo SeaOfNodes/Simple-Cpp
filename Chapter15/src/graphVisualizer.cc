@@ -217,14 +217,14 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
 void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
   sb << "\tnode [shape=plaintext];\n";
   int level = 1;
-  for (int idx = n->scopes.size() - 1; idx >= 0; idx--) {
-    auto sysms = n->scopes[idx];
+  for (int idx = n->idxs.size() - 1; idx >= 0; idx--) {
+    auto sysms = n->idxs[idx];
     std::string scopeName = makeScopeName(n, level);
     sb << "\tsubgraph cluster_" << scopeName << " {\n";
     sb << scopeName << " [label=<\n";
     sb << "\t\t\t<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n";
     // Add the scope level
-    int scopeLevel = n->scopes.size() - level;
+    int scopeLevel = n->idxs.size() - level;
     sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << scopeLevel << "</TD>\n";
 
     for (const auto &pair : sysms) {
@@ -248,8 +248,8 @@ void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
 void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
   sb << "\tedge [style=dashed color=cornflowerblue];\n";
   int level = 1;
-  for (std::size_t i = n->scopes.size() - 1; i != -1; --i) {
-    auto syms = n->scopes[i];
+  for (std::size_t i = n->idxs.size() - 1; i != -1; --i) {
+    auto syms = n->idxs[i];
     std::string scopeName = makeScopeName(n, level);
     for (const auto &pair : syms) {
       std::string name = pair.key;

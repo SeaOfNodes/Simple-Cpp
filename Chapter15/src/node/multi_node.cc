@@ -2,7 +2,7 @@
 #include "../../Include/node/proj_node.h"
 #include "../../Include/node/cproj_node.h"
 MultiNode::MultiNode(std::initializer_list<Node *> nodes) : CFGNode(nodes) {}
-
+MultiNode::MultiNode(Tomi::Vector<Node*> nodes): CFGNode(nodes) {}
 std::string MultiNode::label() { return "MultiNode"; }
 
 std::ostringstream &MultiNode::print_1(std::ostringstream &builder,

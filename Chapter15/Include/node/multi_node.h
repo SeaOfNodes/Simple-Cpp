@@ -9,6 +9,7 @@ class CProjNode;
 class MultiNode : public CFGNode {
 public:
   MultiNode(std::initializer_list<Node *> = {});
+  MultiNode(Tomi::Vector<Node *>);
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
   ProjNode* proj(int idx);
