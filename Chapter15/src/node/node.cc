@@ -292,7 +292,7 @@ Node *Node::peephole() {
     }
     Node *n = peepholeOpt();
 
-    return n == nullptr ? this : deadCodeElim(n->peephole());
+    return n == nullptr ? this : deadCodeElim(n->peephole()->keep())->unkeep();
 }
 
 /*
@@ -325,14 +325,15 @@ Node *Node::delDef(int idx) {
     unlock();
     Node **old_def = &inputs[idx];
     Node *nptr = *old_def;
-    if (old_def != nullptr && // If the old def exists, remove a def->use edge
+    Node *tmp = inputs.back();
+    inputs.pop_back();
+    inputs[idx] = tmp;
+    if (// If the old def exists, remove a def->use edge
         nptr->delUse(
                 this))     // If we removed the last use, the old def is now dead
         nptr->kill(); // Kill old def
 
-    Node *tmp = inputs.back();
-    inputs.pop_back();
-    inputs[idx] = tmp;
+
     // erase is bad here
     return this;
 }

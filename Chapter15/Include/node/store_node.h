@@ -11,7 +11,7 @@
  public:
      bool init; // Initializing writes are allowed to write null
      StoreNode() = default;
-     StoreNode(std::string name, int alias, Type* glb, Node*ctrl, Node* memSlice, Node* memPtr, Node* value, bool init);
+     StoreNode(std::string name, int alias, Type* glb, Node* mem, Node*ptr, Node* off, Node* value, bool init);
      std::string label() override;
      std::string glabel() override;
 

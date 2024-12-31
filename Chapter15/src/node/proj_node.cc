@@ -4,6 +4,10 @@
 ProjNode::ProjNode(Node *ctrl, int idx, std::string label)
         : Node({ctrl}), idx_(idx), label_(std::move(label)) {}
 
+CFGNode *ProjNode::cfg0() {
+    return in(0)->cfg0();
+}
+
 std::string ProjNode::label() { return label_; }
 
 bool ProjNode::isMultiTail() { return in(0)->isMultiHead(); }

@@ -41,6 +41,7 @@ public:
     bool isConstant() override;
     double value();
 
+    int log_size() override;
     Type* xmeet(Type *other) override;
     Type* dual() override;
     Type* glb() override;

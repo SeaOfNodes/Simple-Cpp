@@ -89,13 +89,17 @@ public:
     static bool SCHEDULED;
 
     static StopNode *STOP;
-    static ConstantNode* ZERO;
-    static XCtrlNode* XCTRL;
+    static ConstantNode* ZERO; // Very common node, cached here
+    static XCtrlNode* XCTRL; // Very common node, cached here
 
+    // Next available memory alias number
+    static int ALIAS;
     Tomi::Vector<ScopeNode *> xScopes;
 
     ScopeNode *continueScope;
     ScopeNode *breakScope;
+
+    static Node* con(long con);
 
     static Tomi::HashMap<std::string, Type *> TYPES;
 
@@ -108,6 +112,8 @@ public:
     StopNode *parse();
 
     Type* type();
+    TypeMemPtr* typeAry(Type* t);
+
     StopNode *parse(bool show);
 
     // zero/sign extend.  "i" is limited to either classic unsigned (min==0) or
@@ -124,7 +130,9 @@ public:
 
     static std::string memName(int alias);
 
-    Node* newStruct(TypeStruct* obj);
+    Node* newStruct(TypeStruct* obj, Node* size);
+    Node* newArray(TypeStruct* ary, Node* len);
+
     Node* memAlias(int alias);
     Node* memAlias(int alias, Node* st);
 

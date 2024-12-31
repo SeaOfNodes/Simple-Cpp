@@ -41,6 +41,7 @@ public:
   static constexpr unsigned int TMEMPTR = 9;
   static constexpr unsigned int TSTRUCT = 10;
   static constexpr unsigned int TFLD = 11;
+  static constexpr unsigned int TARRAY = 12; //Array
 
   unsigned int type_{};
 
@@ -49,6 +50,14 @@ public:
   static Type *CONTROL();
   static Type *XCONTROL();
 
+  virtual Type* nonZero();
+// ----------------------------------------------------------
+
+// Size in bits to hold an instance of this type.
+// Sizes are expected to be between 1 and 64 bits.
+// Size 0 means this either takes no space (such as a known-zero field)
+// or isn't a scalar to be stored in memory.
+  virtual int log_size();
   unsigned int hashCode();
   virtual int hash();
 

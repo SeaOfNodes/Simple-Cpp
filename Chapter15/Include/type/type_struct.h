@@ -2,6 +2,7 @@
 #define TYPE_STRUCT_H
 #include "../type/type.h"
 #include "../type/field.h"
+#include "../type/integer_type.h"
 #include <cassert>
 #include <optional>
 
@@ -20,6 +21,8 @@ public:
     explicit TypeStruct(std::string name, std::optional<Tomi::Vector<Field*>> fields);
     // Forward-ref version
     static TypeStruct* make(std::string name);
+    static TypeStruct* make_Ary(TypeInteger* len, int lenAlias, Type*body, int bodyAlias);
+
     // All fields directly listed
     static TypeStruct* make(std::string name, Tomi::Vector<Field*> fields);
     static TypeStruct* TOP();
@@ -30,6 +33,23 @@ public:
     static TypeStruct* S2F();
     static TypeStruct* S1();
     static TypeStruct* S2();
+
+    static TypeStruct* ARY();
+
+    bool isAry();
+
+    int aryBase();
+
+    int aryScale();
+
+
+    // TOdo: might need to set it to null
+    // Field offsets as packed byte offsets
+    Tomi::Vector<int> offs_;  // Lazily computed and not part of the type semantics
+
+    int offset(int idx);
+
+    Tomi::Vector<int> offsets();
 
     static void gather(Tomi::Vector<Type*>& ts);
 

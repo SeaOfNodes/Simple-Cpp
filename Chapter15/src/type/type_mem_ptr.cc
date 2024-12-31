@@ -13,6 +13,12 @@ TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
     return make(obj, nil_);
 }
 
+Type* TypeMemPtr::nonZero() {
+    return VOIDPTR();
+}
+int TypeMemPtr::log_size() {
+    return 2; // 4 byte pointers
+}
 TypeMemPtr *TypeMemPtr::make(TypeStruct *obj) {
     return TypeMemPtr::make(obj, false);
 }

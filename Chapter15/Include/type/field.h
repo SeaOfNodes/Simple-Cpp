@@ -10,11 +10,13 @@ public:
     // Field name
     std::string fname_;
     // Type of the field
+    // Unique memory alias
+    int alias_;
     Type *type_;
 
-    Field(std::string fname, Type *type);
+    Field(std::string fname, int alias, Type *type);
 
-    static Field *make(std::string fname, Type *type);
+    static Field *make(std::string fname, int alias, Type *type);
 
     static Field *test();
 

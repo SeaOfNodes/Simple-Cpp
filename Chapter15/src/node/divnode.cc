@@ -34,7 +34,10 @@ Type *DivNode::compute() {
     return TypeInteger::BOT();
 }
 
-Node *DivNode::idealize() { return nullptr; }
+Node *DivNode::idealize() {
+    if(in(2)->type_ == TypeInteger::TRUE()) return in(1);
+    return nullptr;
+}
 
 Node *DivNode::copy(Node *lhs, Node *rhs) { return alloc.new_object<DivNode>(lhs, rhs); }
 Node* DivNode::copyF() { return alloc.new_object<DivFNode>(nullptr, nullptr); }

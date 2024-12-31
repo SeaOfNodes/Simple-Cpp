@@ -17,9 +17,20 @@ TypeStruct* TypeStruct::make(std::string name) {
     return a;
 }
 
+TypeStruct* TypeStruct::make_Ary(TypeInteger* len, int lenAlias, Type *body, int bodyAlias) {
+    Tomi::Vector<Field*> fields;
+    fields.push_back(Field::make("#", lenAlias, len));
+    fields.push_back(Field::make("[]", bodyAlias, body));
+    return make(body->str() + "[]", fields);
+
+}
 TypeStruct* TypeStruct::S1F() {
     TypeStruct* s1f = make("S1");
     return s1f;
+}
+TypeStruct* TypeStruct::ARY() {
+    // what does this represent
+    return make_Ary(TypeInteger::BOT(), -1, TypeFloat::BOT(),  -2);
 }
 TypeStruct* TypeStruct::S2F() {
     TypeStruct* s2f = make("S2");
@@ -27,16 +38,16 @@ TypeStruct* TypeStruct::S2F() {
 }
 TypeStruct* TypeStruct::S1() {
     Tomi::Vector<Field*> fields;
-    fields.push_back(Field::make("a", TypeInteger::BOT()));
-    fields.push_back(Field::make("s2", TypeMemPtr::make(S2F(), false)));
+    fields.push_back(Field::make("a", -1, TypeInteger::BOT()));
+    fields.push_back(Field::make("s2", -2, TypeMemPtr::make(S2F(), false)));
     TypeStruct* s1 = TypeStruct::make("S1", fields);
     return s1;
 }
 
 TypeStruct* TypeStruct::S2() {
     Tomi::Vector<Field*> fields;
-    fields.push_back(Field::make("S1", TypeMemPtr::make(S1F(), false)));
-    fields.push_back(Field::make("b", TypeFloat::BOT()));
+    fields.push_back(Field::make("S1", -3, TypeMemPtr::make(S1F(), false)));
+    fields.push_back(Field::make("b", -4, TypeFloat::BOT()));
 
     TypeStruct* s2 = TypeStruct::make("S2", fields);
     return s2;
@@ -61,6 +72,9 @@ TypeStruct *TypeStruct::test() {
 void TypeStruct::gather(Tomi::Vector<Type *> &ts) {
     ts.push_back(test());
     ts.push_back(BOT());
+    ts.push_back(S1());
+    ts.push_back(S2());
+    ts.push_back(ARY());
 }
 
 int TypeStruct::find(std::string fname) {
@@ -91,14 +105,18 @@ Type *TypeStruct::xmeet(Type *t) {
     }
     if(!fields_.has_value()) return this;
     if(!that->fields_.has_value()) return that;
+    if(fields_.value().size() != that->fields_.value().size()) return BOT();
+
     // Now all fields should be the same, so just do field meets
-    if(fields_.value().size() != that->fields_.value().size()) {
-        std::cerr << "st";
-    }
     assert(fields_.value().size() == that->fields_.value().size());
     Tomi::Vector<Field *> newFields(fields_.value().size());
     for (int i = 0; i < fields_.value().size(); i++) {
-        newFields[i] = fields_.value()[i]->xmeet(that->fields_.value()[i]);
+        Field*f0 = fields_.value()[i];
+        Field*f1 = that->fields_.value()[i];
+        if(f0->fname_ != f1->fname_ || f0->alias_ != f1->alias_) return BOT();
+
+        // guaranteed that the fields have the same name and alias.
+        newFields[i] = dynamic_cast<Field*>(f0->meet(f1));
     }
     return make(name_, newFields);
 }
@@ -132,6 +150,54 @@ bool TypeStruct::glb_() {
         }
     }
     return true;
+}
+
+bool TypeStruct::isAry() {
+    return fields_.value().size() == 2 && fields_.value()[1]->fname_ == "[]";
+}
+int TypeStruct::aryBase() {
+    assert(isAry());
+    if(offs_.empty()) offs_ = offsets();
+    return offs_[1];
+}
+int TypeStruct::aryScale() {
+    assert(isAry());
+    return fields_.value()[1]->type_->log_size();
+}
+int TypeStruct::offset(int idx) {
+    if(offs_.empty()) offs_ = offsets();
+    return offs_[idx];
+}
+// Field offsets as packed byte offsets
+Tomi::Vector<int> TypeStruct::offsets() {
+    // Compute a layout for a collection of fields
+    assert(fields_.has_value());
+    // Compute a layout
+    int cnts[4];
+    for(Field*f : fields_.value()) {
+        cnts[f->type_->log_size()]++;  // Log size is 0(byte), 1(i16/u16), 2(i32/f32), 3(i64/dbl)
+    }
+    int off = 0;
+    int idx = 0;
+    Tomi::Vector<int> offs(4);
+    for(int i = 3; i >= 0; i--) {
+        offs[i] = off;
+        off += cnts[i] << i;
+    }
+    // Assign offsets to all fields.
+    // Really a hidden radix sort.
+
+    Tomi::Vector<int> noff(fields_.value().size() + 1);
+    offs = noff;
+
+    for(Field* f : fields_.value()) {
+        int log = f->type_->log_size();
+        offs[idx++] = offs[log];  // Field offset
+        offs[log] += 1 << log;   // Next field offset at same alignment
+        offs[log]--;    // Count down, should be all zero at end
+    }
+    offs[fields_.value().size()] = (off+7)& ~7;
+    return offs;
 }
 
 bool TypeStruct::eq(Type *t) {

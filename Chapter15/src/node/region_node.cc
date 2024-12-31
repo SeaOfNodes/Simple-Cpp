@@ -1,7 +1,10 @@
 #include "../../Include/node/region_node.h"
 #include "../../Include/node/constant_node.h"
-#include <algorithm>
+
+#include "../../Include/node/cproj_node.h"
+
 #include "../../Include/parser.h"
+#include <algorithm>
 
 RegionNode::RegionNode(std::initializer_list<Node *> nodes) : CFGNode(nodes) {}
 std::string RegionNode::label() { return "Region"; }
@@ -76,11 +79,12 @@ Node *RegionNode::idealize() {
     return in(1);
   }
   // IF a CFG diamond with no merging, delete: "if(pred) {} else {};
-  auto *p1 = dynamic_cast<ProjNode*>(in(1));
-  auto *p2 = dynamic_cast<ProjNode*>(in(2));
+  auto *p1 = dynamic_cast<CProjNode*>(in(1));
+  auto *p2 = dynamic_cast<CProjNode*>(in(2));
   if(!hashPhi() && p1 && p2 && p1->in(0) == p2->in(0) && dynamic_cast<IfNode*>(p1->in(0))) {
       return dynamic_cast<IfNode*>(p1->in(0))->ctrl();
   }
+  // TOdo: guarded expression here
   return nullptr;
 }
 

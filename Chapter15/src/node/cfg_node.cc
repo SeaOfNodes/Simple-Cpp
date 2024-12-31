@@ -3,10 +3,7 @@
 CFGNode::CFGNode(std::initializer_list<Node *> nodes) : Node(nodes) {
 }
 
-bool CFGNode::isCFG() { return true; }
-
-bool CFGNode::isPinned() { return true; }
-
+CFGNode::CFGNode(Tomi::Vector<Node*> nodes): Node(nodes) {}
 CFGNode *CFGNode::cfg(int idx) {
     return dynamic_cast<CFGNode *>(in(idx));
 }

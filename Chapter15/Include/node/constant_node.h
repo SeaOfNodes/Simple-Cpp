@@ -13,7 +13,6 @@ public:
     std::ostringstream builder;
   Type *con_;
   bool isMultiTail() override;
-  bool isPinned() override;
 
   std::ostringstream &print_1(std::ostringstream &builder,
                               Tomi::Vector<bool>& visited) override;

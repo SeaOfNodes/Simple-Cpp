@@ -2,18 +2,17 @@
 #include "../../Include/type/type_mem.h"
 #include "../../Include/type/type_mem_ptr.h"
 
-StoreNode::StoreNode(std::string name, int alias, Type*glb,  Node* ctrl, Node *memSlice, Node *memPtr, Node *value, bool init_) : MemOpNode(name, alias,
-                                                                                                                     glb, {ctrl, memSlice,
-                                                                                                         memPtr,
-                                                                                                         value}), init(init_) {}
-
+StoreNode::StoreNode(std::string name, int alias, Type*glb, Node*mem, Node*ptr, Node*off, Node* value,  bool init_) : MemOpNode(name, alias,
+                                                                                                                     glb, mem, ptr,
+                                                                                                         off,
+                                                                                                         value), init(init_) {}
 std::string StoreNode::label() { return "." + name_ + "="; }
 
 std::string StoreNode::glabel() { return "." + name_ + "="; }
 
 bool StoreNode::isMem() { return true; }
 
-Node *StoreNode::val() { return in(3); }
+Node *StoreNode::val() { return in(4); }
 
 std::ostringstream &StoreNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     builder << "." << name_ << " = ";
@@ -21,13 +20,19 @@ std::ostringstream &StoreNode::print_1(std::ostringstream &builder, Tomi::Vector
     return builder;
 }
 
-Type *StoreNode::compute() { return TypeMem::make(alias_); }
+Type *StoreNode::compute() {
+    Type*val_ = val()->type_;
+    auto* mem1 = dynamic_cast<TypeMem*>(mem()->type_);
+    Type*t = mem1->alias_ == alias_ ? val_->meet(mem1->t_) : Type::BOTTOM();
+    return TypeMem::make(alias_, t);
+}
 
 Node *StoreNode::idealize() {
     // Simple store-after-store on same address.  Should pick up the
     // required init-store being stomped by a first user store.
     auto *st = dynamic_cast<StoreNode *>(mem());
-    if (st && ptr() == st->ptr() && // Must check same object
+    if (st && ptr() == st->ptr() &&
+        off() == st->off() && // Must check same object
         dynamic_cast<TypeMemPtr *>(ptr()->type_) &&
         // No bother if weird dead pointers
         // Must have exactly one use of "this" or you get weird

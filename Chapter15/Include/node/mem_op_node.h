@@ -12,9 +12,15 @@ public:
     std::string name_;
     Type* declaredType;
     int alias_{};
-    MemOpNode(std::string name, int alias, Type*glb, std::initializer_list<Node*> nodes);
+    MemOpNode(std::string name, int alias, Type*glb, Node* mem, Node*ptr, Node*off);
+    MemOpNode(std::string name, int alias, Type*glb, Node*mem, Node*ptr, Node*off, Node*val);
+
     Node* mem();
     Node* ptr();
+    Node* off();
+
+    static std::string mlabel(std::string name);
+    std::string mlabel();
 
     bool eq(Node* n) override;
     int hash() override;

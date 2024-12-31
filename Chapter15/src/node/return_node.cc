@@ -5,6 +5,7 @@
 ReturnNode::ReturnNode(Node *ctrl, Node *data, ScopeNode* scope) : CFGNode({ctrl, data}) {
     // We lookup memory slices by the naming convention that they start with $
     // We could also use implicit knowledge that all memory projects are at offset >= 2
+    // Add memory slices to Return, so all memory updates are live-on-exit.
     if(scope != nullptr) {
     Tomi::Vector<std::string> names = scope->reverseNames();
     for(std::string name: names) {

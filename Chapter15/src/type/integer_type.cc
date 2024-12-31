@@ -7,6 +7,20 @@ std::ostream &operator<<(std::ostream &os, TypeInteger &type_integer) {
     return os;
 }
 
+int TypeInteger::log_size() {
+    if(this == I8() || this == U8() || this == BOOL()) return 0; // 1<<0 == 1 bytes
+    if(this == I16() || this == U16()) return 1; // 1<<1 == 2 bytes
+    if(this == I32() || this == U32()) return 2; // 1<<2 == 4 bytes
+    if(this == BOT()) return 3;  // 1 << 3 == 8 byes for long
+}
+
+// Todo: understand this
+TypeInteger *TypeInteger::nonZero() {
+ if(isHigh()) return this;
+ if(min_ == 0) return make(static_cast<long>(1), max_);
+ if(max_ == 0) return make(min_, static_cast<long>(-1));
+ return this;
+}
 TypeInteger::TypeInteger(long min, long max)
         : min_(min), max_(max), Type(TINT) {}
 

@@ -24,26 +24,13 @@ std::ostringstream &ShrNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 }
 
 Type *ShrNode::compute() {
-    if (in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
     auto i1 = dynamic_cast<TypeInteger *>(in(1)->type_);
     auto i2 = dynamic_cast<TypeInteger *>(in(2)->type_);
 
     if (i1 && i2) {
-        /// >>> is just unsigned right shift
         if (i1->isConstant() && i2->isConstant()) {
             return TypeInteger::constant(i1->value() >> i2->value());
         }
-        // cant be negative or greater than 64
-        if (i2->min_ < 0 || i2->max_ >= 64) {
-            return TypeInteger::BOT();
-        }
-        // Zero shifting a negative makes a larger positive
-        // so get the endpoints correct.
-        // Todo: how do we know its right shift?
-        long s1 = i1->min_ >> i2->min_;
-        long s2 = i1->max_ >> i2->max_;
-        bool wrap = i1->min_ < 0 && i1->max_ >= 0;
-        return TypeInteger::make(wrap ? 0 : std::min(s1, s2), std::max(s1, s2));
     }
     return TypeInteger::BOT();
 }

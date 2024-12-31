@@ -38,6 +38,9 @@ public:
     TypeMemPtr* dual();
     TypeMemPtr* glb();
 
+    Type* nonZero() override;
+    int log_size() override;
+
     bool isHigh() override;
     TypeMemPtr* makeInit() override;
 

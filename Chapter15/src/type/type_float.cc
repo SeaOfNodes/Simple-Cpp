@@ -14,6 +14,11 @@ TypeFloat *TypeFloat::BOT() {
     return bot;
 }
 
+int TypeFloat::log_size() {
+    int sz = sz_ == 0 ? (isF32() ? 32 : 64) : std::abs(sz_);
+    // 1 << 2(32 bits), 1 << 3(64 bits)
+    return sz == 32 ?  2 : 3;
+}
 TypeFloat *TypeFloat::ZERO() {
     static TypeFloat *zero =  make(static_cast<std::int8_t>(0), 0);
     return zero;

@@ -16,7 +16,6 @@ std::ostringstream &AndNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 }
 
 Type* AndNode::compute() {
-    if(in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
     auto i0 = dynamic_cast<TypeInteger*>(in(1)->type_);
     auto i1 = dynamic_cast<TypeInteger*>(in(2)->type_);
     if(i0 && i1) {

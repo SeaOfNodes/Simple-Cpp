@@ -6,11 +6,14 @@ StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
   type_ = args_;
 }
 
-Tomi::HashMap<std::string, int>  StartNode::aliasStarts = Tomi::HashMap<std::string, int>();
 bool StartNode::isCFG() { return true; }
 
 bool StartNode::blockHead() {
     return true;
+}
+
+CFGNode* StartNode::cfg0() {
+    return this;
 }
 std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
   builder << label();
@@ -18,25 +21,27 @@ std::ostringstream &StartNode::print_1(std::ostringstream &builder, Tomi::Vector
 }
 
 void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
-    int len = static_cast<int>(args_->types_.size());
-    aliasStarts.put(ts->name_, len);
+    if(ts->fields_.value().empty()) return;
 
-    // resize the tuple's type array to include all fields of the struct
-    int max = len + static_cast<int>(ts->fields_.value().size());
-    args_->types_.resize(max);
+    // Expand args type for more memory projections
+    Tomi::Vector<Type*> args = args_->types_;
+    int max = args.size();
+    for(Field* f: ts->fields_.value()) {
+        max = std::max(max, f->alias_);
+    }
 
-    // The new members of the tuple get a mem type with an alias
-    for(int alias = len; alias < max; alias++) {
-        args_->types_[alias] = TypeMem::make(alias);
+    for(Field*f: ts->fields_.value()) {
+        TypeMem* tm_decl = TypeMem::make(f->alias_, f->type_->glb());
+        args[f->alias_] = tm_decl->dual();
+        std::string name = Parser::memName(f->alias_);
+        Node*n = alloc.new_object<ProjNode>(this, f->alias_, name);
+        n->type_ = args[f->alias_];
+        scope->define(name, args[f->alias_], n);
     }
-    type_ = args_ = TypeTuple::make(args_->types_);
-    // For each of the fields we now add a mem projection.  Note that the
-    // alias matches the slot of the field in the tuple
-    for(int alias = len; alias < max; alias++) {
-        std::string name = Parser::memName(alias);
-        Node* n = (new ProjNode(this, alias, name))->peephole();
-        scope->define(name, args_->types_[alias], n);
+    for(int i = 0; i < args.size(); i++) {
+        if(args[i] == nullptr) args[i] = Type::TOP();
     }
+    type_ = args_ = TypeTuple::make(args);
 }
 void StartNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> &unreach) {
 

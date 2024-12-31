@@ -1,15 +1,27 @@
 #include "../../Include/node/new_node.h"
+#include "../Include/type/type_mem.h"
+#include "../../Include/type/tuple_type.h"
 
-NewNode::NewNode(TypeMemPtr* ptr, Node* ctrl) : Node({ctrl}), ptr_(ptr) {}
-
-std::string NewNode::label() {return "new";}
+NewNode::NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes) : MultiNode(nodes), ptr_(ptr) {}
+NewNode::NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes) : MultiNode(nodes), ptr_(ptr) {}
+std::string NewNode::label() {return "new" + ptr_->obj_->isAry() ? "ary_" + ptr_->obj_->fields_.value()[1]->type_->str() : ptr_->obj_->str();}
 std::string NewNode::glabel() {return "new " + ptr_->obj_->name_;}
+
 
 std::ostringstream &NewNode::print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) {
  builder << "new " << ptr_->obj_->name_;
  return builder;
 }
-Type* NewNode::compute() {return ptr_;}
+Type* NewNode::compute() {
+    Tomi::Vector<Field*> fs = ptr_->obj_->fields_.value();
+    Tomi::Vector<Type*> ts(fs.size()+2);
+    ts[0] = Type::CONTROL();
+    ts[1] = ptr_;
+    for(int i = 0; i < fs.size(); i++) {
+        ts[i+2] =  TypeMem::make(fs[i]->alias_, fs[i]->type_->makeInit())->meet(in(i+2)->type_);
+    }
+    return  TypeTuple::make(ts);
+}
 
 bool NewNode::isPinned() {
     return true;

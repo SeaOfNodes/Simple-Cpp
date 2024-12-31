@@ -10,6 +10,14 @@ int Type::get_hash() { return hash_; }
 bool Type::isHighOrConst() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isConstant() { return false; }
 
+
+int Type::log_size() {
+    throw std::runtime_error("Todo");
+}
+Type* Type::nonZero() {
+    return glb();
+}
+
 bool Type::isHigh() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isSimple() { return type_ < TSIMPLE; }
 std::ostringstream &Type::print_1(std::ostringstream &builder) {

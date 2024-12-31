@@ -26,10 +26,10 @@ if(in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
         if(i1->isConstant() && i2->isConstant()) {
             return TypeInteger::constant(i1->value() >> i2->value());
         }
-        if(i2->min_ < 0 || i2->max_ >= 64) {
-            return TypeInteger::BOT();
+        if(i2->isConstant()) {
+            int log = static_cast<long>(i2->value());
+            return TypeInteger::make(static_cast<long>(-1LL << (63 - log)), static_cast<long>((1LL << (63 - log)) - 1));
         }
-        return TypeInteger::make(i1->min_ >> i2->min_, i1->max_ >> i2->min_);
 
     }
     return TypeInteger::BOT();

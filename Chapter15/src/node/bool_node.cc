@@ -32,7 +32,6 @@ Type *BoolNode::compute() {
     Type*t2 = in(2)->type_;
     if(t1->isHigh() || t2->isHigh()) return TypeInteger::BOOL()->dual();
     // Compare of same
-    if(in(1) == in(2)) return doOp(TypeInteger::ZERO(), TypeInteger::ZERO());
     auto i0 = dynamic_cast<TypeInteger *>(t1);
     auto i1 = dynamic_cast<TypeInteger *>(t2);
     if(i0 && i1) {
@@ -69,10 +68,13 @@ Node *BoolNode::idealize() {
         if (in(2)->type_ == TypeInteger::ZERO() || in(2)->type_ == TypeMemPtr::NULLPTR()) {
             return alloc.new_object<NotNode>(in(1));
         }
-        // Equals bool =- 1 becomes bool
-        if(in(2)->type_ == TypeInteger::TRUE() && in(1)->type_ == TypeInteger::BOOL()) {
-            return in(1);
-        }
+
+
+        // Do we have ((x * (phi cons)) * con) ?
+        // Do we have ((x * (phi cons)) * (phi cons)) ?
+        // Push constant up through the phi: x * (phi con0*con0 con1*con1...)
+        Node*phicon = AddNode::phiCon(this, dynamic_cast<EQ*>(this));
+        if(phicon != nullptr) return phicon;
     }
     return nullptr;
 }

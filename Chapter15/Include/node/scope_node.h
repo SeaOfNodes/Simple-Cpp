@@ -26,13 +26,13 @@ public:
   static std::string CTRL;
   static std::string ARG0;
 
-  Tomi::Vector<Tomi::HashMap<std::string, int>> scopes;
+  Tomi::Vector<Tomi::HashMap<std::string, int>> idxs;
   Tomi::Vector<std::string> keys;
 
     /**
    * Tracks declared types for every name
    */
-    Tomi::Vector<Tomi::HashMap<std::string, Type*>> declaredTypes;
+    Tomi::Vector<Tomi::HashMap<std::string, Type*>> decls;
   ScopeNode();
   // Up-casting: using the results of an If to improve a value.
   // E.g. "if( ptr ) ptr.field;" is legal because ptr is known not-null.
@@ -125,6 +125,16 @@ public:
   // We set the second input to the phi from the back edge (i.e. loop body)
   void endLoop(ScopeNode* back, ScopeNode* exit);
 
+    /**
+   * The ctrl of a ScopeNode is always bound to the currently active
+   * control node in the graph, via a special name '$ctrl' that is not
+   * a valid identifier in the language grammar and hence cannot be
+   * referenced in Simple code.
+   *
+   * @param n The node to be bound to '$ctrl'
+   *
+   * @return Node that was bound
+   */
   Node *ctrl(Node *n);
   void push();
   void pop();

@@ -13,8 +13,9 @@ class TypeMem: public Type {
     //  N means slice#N.
 public:
     int alias_;
-    explicit TypeMem(int alias);
-    static TypeMem* make(int alias);
+    Type* t_ = nullptr;    // Memory contents, some scalar type
+    explicit TypeMem(int alias, Type*t);
+    static TypeMem* make(int alias, Type*t);
     static TypeMem* TOP();
     static TypeMem* BOT();
 

@@ -25,7 +25,8 @@ std::ostringstream &XorNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 }
 
 Type *XorNode::compute() {
-    if (in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
+    // Todo: got rid of this, why?
+    // if (in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
 
     auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
     auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);

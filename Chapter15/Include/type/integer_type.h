@@ -14,6 +14,9 @@ public:
   static TypeInteger* FALSE();
   static TypeInteger* TRUE();
 
+  int log_size() override;
+
+  TypeInteger* nonZero() override;
 /**
  * Describes an integer *range* - everything from min to max; both min and
  * max are inclusive.  If min==max, this is a constant.

@@ -9,7 +9,7 @@ PhiNode::PhiNode(std::string label, Type *type_, std::initializer_list<Node *> i
         : Node(inputs), declaredType(type_), label_(label) {
 }
 
-std::string PhiNode::label() { return "Phi_" + label_; }
+std::string PhiNode::label() { return "Phi_" + MemOpNode::mlabel(label_); }
 
 std::string PhiNode::glabel() { return "&phi;_" + label_; }
 
@@ -123,19 +123,7 @@ Node *PhiNode::idealize() {
         Node *phi_lhs = alloc.new_object<PhiNode>(label_, declaredType, lhss);
         Node *phi_rhs = alloc.new_object<PhiNode>(label_, declaredType, rhss);
 
-        // Phi(region, arg, arg)
-        // Phi(region, 1, 2)
-        // now the first one has the same inputs
-        phi_lhs = phi_lhs->peephole();
-        phi_rhs = phi_rhs->peephole();
-        Node *phi_op = op->copy(phi_lhs, phi_rhs);
-        phi_op->setType(phi_op->compute());
-        // If losing precision, don't do it
-        if (!phi_op->type_->isa(type_)) {
-            phi_op->kill();
-            return nullptr;
-        }
-        return phi_op;
+        return op->copy(phi_lhs, phi_rhs);
     }
     // If merging Phi(N, cast(N)) - we are losing the cast JOIN effects, so just remove.
     if (nIns() == 3) {
@@ -184,10 +172,6 @@ PhiNode::PhiNode(std::string label, Type *type_, Tomi::Vector<Node *> inputs)
 bool PhiNode::same_op() {
     for (int i = 2; i < nIns(); i++) {
         if (typeid(*in(1)) != typeid(*in(i)))
-            return false;
-        if(in(1)->in(1)->type_->glb() != in(i)->in(1)->type_->glb())
-            return false;
-        if(in(1)->in(2)->type_->glb() != in(i)->in(2)->type_->glb())
             return false;
     }
     // Load merging needs anti-dep check.

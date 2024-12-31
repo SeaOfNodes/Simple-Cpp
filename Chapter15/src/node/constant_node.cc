@@ -21,7 +21,6 @@ bool ConstantNode::eq(Node *n) {
   return con_ == con->con_;
 }
 
-bool ConstantNode::isPinned() { return this == Parser::ZERO; }
 int ConstantNode::hash() {
   if(con_ == nullptr) {
       std::cout << "Type is not set";

@@ -9,327 +9,346 @@
 
 TEST(SimpleTest, testJIG
 ) {
-std::string source = R"(return 3.14;)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 3.14;");
-}
-
-TEST(SimpleTest, testRange
-) {
-std::string source = R"(
-int b;
-if( arg ) b=1; else b=0;
-int c = 99;
-if( b < 0 ) c = -1;
-if( b > 2 ) c =  1;
-return c;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 99;");
-}
-
-TEST(SimpleTest, testU8
-) {
-std::string source = R"(
-u8 b = 123;
-b = b + 456;// Truncate
-return b;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 67;");
-}
-
-TEST(SimpleTest, testU8While
-) {
-std::string source = R"(
-u8 b = 123;
-while( b ) b = b + 456;// Truncate
-return b;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-// ID off by 2, it is 11 instead of 9
-EXPECT_EQ(result,
-"return Phi(Loop11,123,((Phi_b+456)&255));");
-}
-
-TEST(SimpleTest, testU1
-) {
-std::string source = R"(
-bool b = 123;
-b = b + 456;// Truncate
-u1 c = b;   // No more truncate needed
-return c;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 1;");
-}
-
-TEST(SimpleTest, testAnd
-) {
-std::string source = R"(
-int b = 123;
-b = b+456 & 31;                 // Precedence
-return b;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 3;");
-}
-
-
-TEST(SimpleTest, testRefLoad
-) {
-std::string source = R"(
-struct Foo { u1 b; }
-Foo f = new Foo;
-f.b = 123;
-return f.b;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 1;");
-}
-
-TEST(SimpleTest, testSigned) {
-std::string source = R"(
-i8 b = 255;                     // Chopped
-return b;                       // Sign extend
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return -1;");
-}
-
-TEST(SimpleTest, testI8 ){
-        std::string source = R"(
-i8 b = arg;
-b = b + 1;// Truncate
-return b;
-)";
-        auto *parser = new Parser(source);
-        StopNode *ret = parser->parse(true)->iterate();
-        std::ostringstream builder;
-        std::string result = ret->print(builder).str();
-        EXPECT_EQ(result,
-        "return (((((arg<<56)>>56)+1)<<56)>>56);");
-}
-
-
-TEST(SimpleTest, testMask ){
-std::string source = R"(
-u16 mask = (1<<16)-1;           // AND mask
-int c = 123456789 & mask;
-return c;                       //
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 52501;");
-}
-
-
-TEST(SimpleTest, testWrapMinus ){
-std::string source = R"(
-int MAX = 9223372036854775807; //0x7FFFFFFFFFFFFFFF;
-int i = (arg&MAX) + -MAX + -1; // Basically (e0) + Long.MIN_VALUE
-int j = -i; // Negating Long.MIN_VALUE wraps, cannot constant fold
-if (arg) j = 1;
-return j;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-// Region id is off, it should be 34
-"return Phi(Region28,1,(-((arg&9223372036854775807)+-9223372036854775808)));");
-}
-
-TEST(SimpleTest, testWrapShr ){
-std::string source = R"(
-return (arg >>> 1)==0;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return (!(arg>>>1));");
-}
-
-  TEST(SimpleTest, testOr ){
-    std::string source = R"(
-return (arg | 123 ^ 456) >>> 1;
-)";
+    std::string source = R"(return 3.14;)";
     auto *parser = new Parser(source);
     StopNode *ret = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = ret->print(builder).str();
     EXPECT_EQ(result,
-"return (((arg|123)^456)>>>1);");
+              "return 3.14;");
 }
 
-TEST(SimpleTest, testMaskFloat ){
-std::string source = R"(
-flt f = arg;
-arg = f & 0;
-return arg;
+TEST(SimpleTest, testLifeTime) {
+    std::string source = R"(
+u8[] b = new u8[5];
+if (arg) {
+    b[0] = b[0] + 1;
+} else {
+    b[1] = b[1] * 2;
+}
+return b[0] + b[1];
 )";
-auto *parser = new Parser(source);
-try {
-StopNode *ret = parser->parse(true)->iterate();
-} catch (std::exception &e) {
-    std::string result = e.what();
-    EXPECT_EQ(result, "Cannot '&' FltBot");
-}
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return Phi(Region69,1,0)");
 }
 
-TEST(SimpleTest, testLoadBug ){
-std::string source = R"(
+
+TEST(SimpleTest, testCyclic) {
+    std::string source = R"(
+struct C {
+    C? l;
+}
+C c = new C;
+c.l = c;
+return c;
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return C;");
+}
+
+
+TEST(SimpleTest, testSafetyCheck) {
+    std::string source = R"(
+u8[] old = new u8[0];
+u8[] output = new u8[1];
+int i = 0;
+while (i < old#) {
+    output[i] = old[i];
+    i = i + 1;
+}
+output[i] = 1;
+return output;
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return u8[];");
+}
+
+TEST(SimpleTest, testBasic1) {
+    std::string source = R"(
+int[] is = new int[2];
+return is[1];
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return 0;");
+}
+
+TEST(SimpleTest, testBasic2) {
+    std::string source = R"(
+int[] is = new int[2];
+int[] is2 = new int[2];
+return is[1];
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return 0;");
+}
+
+TEST(SimpleTest, testBasic3) {
+    std::string source = R"(
+int[] a = new int[2];
+a[0] = 1;
+a[1] = 2;
+return a[0];
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return 1;");
+}
+
+TEST(SimpleTest, testBasic4) {
+    std::string source = R"(
 struct A { int i; }
-struct B { int i; }
-A a = new A;
-A t1 = new A;
-B b = new B;
-B t2 = new B;
-int i;
-if (arg) i = a.i;
-else     i = b.i;
-return i;
+A?[] a = new A?[2];
+return a;
 )";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return Phi(Region31,.i,.i);");
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return *A?[]");
 }
 
-TEST(SimpleTest, testBug2 ){
-std::string source = R"(
-int z = 0;
-while (1) {
-    int j;
-    if (arg&3) {
-        j = arg >> 2;
-    } else {
-        j = (arg >> 3)+z;
-    }
-    return j+1;
+TEST(SimpleTest, testBasic5) {
+    std::string source = R"(
+struct S { int x; flt y; }
+// A new S
+S s = new S; s.x=99; s.y = 3.14;
+
+// Double-d array of Ss.  Fill in one row.
+S?[]?[] iss = new S?[]?[2];
+iss[0] = new S?[7];
+iss[0][2] = s;
+
+// Now pull out the filled-in value, with null checks
+flt rez;
+S?[]? is = iss[arg];
+if( !is ) rez = 1.2;
+else {
+    S? i = is[2];
+    if( !i ) rez = 2.3;
+    else rez = i.y;
 }
+return rez;
 )";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return ((arg>>Phi(Region32,2,3))+1);");
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return Phi(Region118,1.2,Phi(Region115,2.3,.y));");
 }
 
-TEST(SimpleTest, testBug3 ){
-std::string source = R"(
-flt f = arg;
-bool b;
-if (arg&3) b = f == 1.0;
-else       b = f == 2.0;
-if (arg&5) b = arg == 1;
-return b;
+
+TEST(SimpleTest, testBasic6) {
+    std::string source = R"(
+struct S { int x; flt y; }
+// A new S
+S s = new S; s.x=99; s.y = 3.14;
+
+// Double-d array of Ss.  Fill in one row.
+S?[]?[] iss = new S?[]?[2];
+iss[0] = new S?[7];
+iss[0][2] = s;
+
+// Now pull out the filled-in value, with null checks
+flt rez;
+S?[]? is = iss[arg];
+if( !is ) rez = 1.2;
+else {
+    S? i = is[2];
+    if( !i ) rez = 2.3;
+    else rez = i.y;
+}
+return rez;
 )";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-//Todo:  id off by 3(Region is 35)
-//Todo:  id off by 2 Region is 21
-EXPECT_EQ(result,
-"return Phi(Region35,(arg==1),((flt)arg==Phi(Region21,1.0,2.0)));");
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return Phi(Region122,Phi(Region118,.y,1.2),1.2);");
 }
 
-TEST(SimpleTest, testBug4 ){
-std::string source = R"(
-int i;
-if (arg&7) i=3;
-else       i=2;
-return (arg == i) == 1;
+
+TEST(SimpleTest, testTree) {
+    std::string source = R"(
+// Can we define a forward-reference array?
+struct Tree { Tree?[] _kids; }
+Tree root = new Tree;
+root._kids = new Tree?[2];
+root._kids[0] = new Tree;
+return root;
 )";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return (arg==Phi(Region18,3,2));");
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return Tree;");
 }
 
-TEST(SimpleTest, testBug5 ){
-std::string source = R"(
-int d = -1;
-while (1) {
-    int i = (arg & 7) + (9223372036854775807 - 7);
-    if (arg & 1) i = ((arg&3) + (9223372036854775807 - 3)) & d;
-    return i + -1;
+
+TEST(SimpleTest, testNestedStructAddMemProj) {
+    std::string source = R"(
+struct S {
+    int a;
+    int[] b;
 }
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return (Phi(Region43,((arg&3)+9223372036854775804),((arg&7)+9223372036854775800))+-1);");
-}
-
-TEST(SimpleTest, testTypes ){
-std::string source = R"(
-i8  xi8  = 123456789;  if( xi8  !=        21 ) return -8;
-i16 xi16 = 123456789;  if( xi16 !=    -13035 ) return -16;
-i32 xi32 = 123456789;  if( xi32 != 123456789 ) return -32;
-i64 xi64 = 123456789;  if( xi64 != 123456789 ) return -64;
-int xint = 123456789;  if( xint != 123456789 ) return -64;
-
-u1  ui1  = 123456789;  if( ui1  !=         1 ) return 1;
-u8  ui8  = 123456789;  if( ui8  !=        21 ) return 8;
-u16 ui16 = 123456789;  if( ui16 !=     52501 ) return 16;
-u32 ui32 = 123456789;  if( ui32 != 123456789 ) return 32;
-
-flt fflt = 3.141592653589793;  if( fflt != 3.141592653589793 ) return 3;
-f64 ff64 = 3.141592653589793;  if( ff64 != 3.141592653589793 ) return 3;
-f32 ff32 = 3.141592653589793;  if( ff32 != 3.1415927410125732) return 5;
-
 return 0;
 )";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 0;");
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return 0;");
+}
+
+
+TEST(SimpleTest, testRollingSum) {
+    std::string source = R"(
+int[] ary = new int[arg];
+// Fill [0,1,2,3,4,...]
+int i=0;
+while( i < ary# ) {
+    ary[i] = i;
+    i = i+1;
+}
+// Fill [0,1,3,6,10,...]
+i=0;
+while( i < ary# - 1 ) {
+    ary[i+1] = ary[i+1] + ary[i];
+    i = i+1;
+}
+return ary[1] * 1000 + ary[3]; // 1 * 1000 + 6
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return (.[]+(.[]*1000));");
+}
+
+
+TEST(SimpleTest, sieveOEratosthenes) {
+    std::string source = R"(
+int[] ary = new int[arg];
+int[] primes = new int[arg];
+int nprimes = 0;
+// Find primes
+int j=2;
+while( j*j < arg ) {
+    while( ary[j]==1 ) j = j + 1;
+    // j is now a prime
+    primes[nprimes] = j;  nprimes = nprimes + 1;
+    // Mark out the rest non-primes
+    int i = j + j;
+    while( i < ary# ) {
+        ary[i] = 1;
+        i = i + j;
+    }
+    j = j + 1;
+}
+// Now just collect the remaining primes
+while( j < arg ) {
+    if( ary[j] == 0 ) {
+        primes[nprimes] = j;  nprimes = nprimes + 1;
+    }
+    j = j + 1;
+}
+// Shrink the result array to size
+int[] rez = new int[nprimes];
+j = 0;
+while( j < nprimes ) {
+    rez[j] = primes[j];
+    j = j + 1;
+}
+
+return rez;
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return int[];");
+}
+
+
+TEST(SimpleTest, testNewNodeInit) {
+    std::string source = R"(
+struct S {int i; flt f;}
+S s1 = new S;
+S s2 = new S;
+s2.i = 3;
+s2.f = 2.0;
+if (arg) s1 = new S;
+return s1.i + s1.f;
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return ((flt).i+.f);;");
+}
+
+
+TEST(SimpleTest, testBad0) {
+    std::string source = R"(
+return new flt;
+)";
+    auto *parser = new Parser(source);
+    try {
+        StopNode *stop = parser->parse(true)->iterate();
+    } catch (std::runtime_error &e) {
+        EXPECT_EQ(e.what(), "Cannot allocate a new flt");
+    }
+}
+
+TEST(SimpleTest, testBad1) {
+    std::string source = R"(
+int is = new int[2];
+)";
+    auto *parser = new Parser(source);
+    try {
+        StopNode *stop = parser->parse(true)->iterate();
+    } catch (std::runtime_error &e) {
+        EXPECT_EQ(e.what(), "Type *int[] is not of declared type int");
+    }
+}
+
+TEST(SimpleTest, testBad2) {
+    std::string source = R"(
+int[] is = new int[3.14];
+return is[1];
+)";
+    auto *parser = new Parser(source);
+    try {
+        StopNode *stop = parser->parse(true)->iterate();
+    } catch (std::runtime_error &e) {
+        EXPECT_EQ(e.what(), "annot allocate an array with length 3.14");
+    }
+}
+
+TEST(SimpleTest, testBad3) {
+    std::string source = R"(
+int[] is = new int[arg];
+return is[1];
+)";
+    auto *parser = new Parser(source);
+    StopNode *stop = parser->parse(true)->iterate();
+    std::ostringstream builder;
+    std::string result = stop->print(builder).str();
+    EXPECT_EQ(result, "return 0;");
 }

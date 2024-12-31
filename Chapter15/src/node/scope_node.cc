@@ -13,14 +13,14 @@ Type *ScopeNode::compute() { return Type::BOTTOM(); }
 
 Node *ScopeNode::idealize() { return nullptr; }
 
-void ScopeNode::push() { scopes.emplace_back(); declaredTypes.emplace_back(); }
+void ScopeNode::push() { idxs.emplace_back(); decls.emplace_back(); }
 
 void ScopeNode::pop() {
     // first pop elements in hashmap
-    popN(scopes.back().size());
+    popN(idxs.back().size());
     // then pop the empty hashmap
-    scopes.pop_back();
-    declaredTypes.pop_back();
+    idxs.pop_back();
+    decls.pop_back();
 }
 
 Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
@@ -74,13 +74,13 @@ Node *ScopeNode::replace(Node *old, Node *cast) {
 
 // add it here
 Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
-    if (!scopes.empty()) {
-        auto &sysm = scopes.back();
+    if (!idxs.empty()) {
+        auto &sysm = idxs.back();
 
         if (sysm.get(name) != nullptr)
             return nullptr; // double define
         // zero here
-        declaredTypes.back().put(name, declaredType);
+        decls.back().put(name, declaredType);
 
         sysm.put(name, static_cast<int>(nIns()));
     }
@@ -88,11 +88,11 @@ Node *ScopeNode::define(std::string name, Type *declaredType, Node *n) {
 }
 
 Node *ScopeNode::lookup(std::string name) {
-    return update(std::move(name), nullptr, static_cast<int>(scopes.size() - 1));
+    return update(std::move(name), nullptr, static_cast<int>(decls.size() - 1));
 }
 
 Node *ScopeNode::update(std::string name, Node *n) {
-    return update(std::move(name), n, static_cast<int>(scopes.size() - 1));
+    return update(std::move(name), n, static_cast<int>(idxs.size() - 1));
 }
 
 Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
@@ -100,7 +100,7 @@ Node *ScopeNode::update(std::string name, Node *n, int nestingLevel) {
     if (nestingLevel < 0) // Missed in all scopes, not found
         return nullptr;
 
-    auto syms = scopes[nestingLevel]; // Get the symbol table for nesting level
+    auto syms = idxs[nestingLevel]; // Get the symbol table for nesting level
     auto idx = syms.get(name);
     // Not found in this scope, recursively look in parent scope
     if (idx == nullptr)
@@ -137,7 +137,7 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
                                        Tomi::Vector<bool> &visited) {
     builder << label();
     builder << "[";
-    keys.reserve(scopes.size());
+    keys.reserve(idxs.size());
     Tomi::Vector<std::string> names = reverseNames();
     for (int j = 0; j < nIns(); j++) {
         builder << names[j] << ":";
@@ -216,8 +216,8 @@ void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
 ScopeNode *ScopeNode::dup() { return dup(false); }
 
 Type *ScopeNode::lookUpDeclaredType(std::string name) {
-    for (size_t i = declaredTypes.size(); i > 0; i--) {
-        Type **t = declaredTypes[i - 1].get(name);
+    for (size_t i = decls.size(); i > 0; i--) {
+        Type **t = decls[i - 1].get(name);
         if (t != nullptr) return *t;
     }
     return nullptr;
@@ -229,11 +229,11 @@ ScopeNode *ScopeNode::dup(bool loop) {
     // 1) duplicate the name bindings of the ScopeNode across all stack levels
     // 2) Make the new ScopeNode a user of all the nodes bound
     // 3) Ensure that the order of defs is the same to allow easy merging
-    for (const auto &syms: scopes) {
-        dup->scopes.push_back(syms);
+    for (const auto &syms: idxs) {
+        dup->idxs.push_back(syms);
     }
-    for (const auto &declaredType: declaredTypes) {
-        dup->declaredTypes.push_back(declaredType);
+    for (const auto &declaredType: decls) {
+        dup->decls.push_back(declaredType);
     }
     // Control comes first
     dup->addDef(ctrl());
@@ -248,7 +248,7 @@ ScopeNode *ScopeNode::dup(bool loop) {
 
 Tomi::Vector<std::string> ScopeNode::reverseNames() {
     Tomi::Vector<std::string> names(nIns());
-    for (auto &syms: scopes) {
+    for (auto &syms: idxs) {
         for (auto pair: syms) {
             names[pair.val] = pair.key;
         }

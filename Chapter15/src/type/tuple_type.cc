@@ -21,7 +21,18 @@ std::string TypeTuple::ToString() {
 }
 std::string TypeTuple::str() {
     std::ostringstream builder;
-    return print_1(builder).str();
+    builder << "[  ";
+    for (Type *type : types_) {
+        builder << type->str() << ", ";
+    }
+    std::string result = builder.str();
+    // Remove the last ", " if the result is not empty and contains extra delimiters
+    if (result.size() > 3) { // Minimum size of "[  "
+        result.erase(result.size() - 2); // Remove the last ", "
+    }
+
+    result += "]";
+    return result;
 }
 
 std::ostringstream& TypeTuple::typeName(std::ostringstream &builder) {
@@ -52,6 +63,7 @@ Type *TypeTuple::xmeet(Type *other) {
   TypeTuple* smt = make(ts);
   return make(ts);
 }
+
 
 std::ostringstream &TypeTuple::print_1(std::ostringstream &builder) {
   builder << "[";

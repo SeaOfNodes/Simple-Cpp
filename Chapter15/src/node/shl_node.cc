@@ -1,5 +1,8 @@
 #include "../../Include/node/shl_node.h"
 #include "../../Include/type/integer_type.h"
+#include "../../Include/node/add_node.h"
+#include "../../Include/parser.h"
+#include <limits>
 
 ShlNode::ShlNode(Node *lhs, Node *rhs) : Node{nullptr, lhs, rhs}{}
 std::string ShlNode::label() { return "Shl"; }
@@ -35,9 +38,22 @@ Node* ShlNode::idealize() {
     Type*t2 = rhs->type_;
 
     // Shl of 0
-    auto*i = dynamic_cast<TypeInteger*>(t2);
-    if(t2->isConstant() && i && (i->value() & 63) == 0) return lhs;
+    auto*shl = dynamic_cast<TypeInteger*>(t2);
+    if(shl && shl->isConstant()) {
+        // Shl of 0.
+        // 1 << 0 => 1
+        if((shl->value()&63) == 0) return lhs;
 
+        // (x + c) << i  =>  (x << i) + (c << i)
+        auto* add = dynamic_cast<AddNode*>(lhs);
+        auto*c = dynamic_cast<TypeInteger*>(add->in(2));
+        if(add && c && c->isConstant()) {
+            long sum = c->value() << shl->value();
+            if(std::numeric_limits<long>::min() <= sum && sum <= std::numeric_limits<long>::max()) {
+                return alloc.new_object<AddNode>(alloc.new_object<ShlNode>(add->in(1), rhs)->peephole(), Parser::con(sum));
+            }
+        }
+}
     // TODO: x << 3 << (y ? 1 : 2) ==> x << (y ? 4 : 5)
     return nullptr;
 }
