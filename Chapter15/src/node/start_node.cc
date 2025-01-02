@@ -25,18 +25,18 @@ void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
 
     // Expand args type for more memory projections
     Tomi::Vector<Type*> args = args_->types_;
-    int max = args.size();
+    int max = static_cast<int>(args.size());
     for(Field* f: ts->fields_.value()) {
         max = std::max(max, f->alias_);
     }
-
+   args.resize(max + 1);
     for(Field*f: ts->fields_.value()) {
         TypeMem* tm_decl = TypeMem::make(f->alias_, f->type_->glb());
         args[f->alias_] = tm_decl->dual();
         std::string name = Parser::memName(f->alias_);
         Node*n = alloc.new_object<ProjNode>(this, f->alias_, name);
         n->type_ = args[f->alias_];
-        scope->define(name, args[f->alias_], n);
+        scope->define(name, tm_decl, n);
     }
     for(int i = 0; i < args.size(); i++) {
         if(args[i] == nullptr) args[i] = Type::TOP();

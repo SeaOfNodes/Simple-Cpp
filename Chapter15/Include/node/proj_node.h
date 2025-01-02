@@ -16,7 +16,7 @@ public:
   std::ostringstream& print_1(std::ostringstream& builder, Tomi::Vector<bool>& visited) override;
   bool isCFG() override;
 
-  CFGNode* cfg0();
+  CFGNode* cfg0() override;
   MultiNode* ctrl();
 
   bool isPinned();

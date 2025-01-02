@@ -32,7 +32,7 @@ return b[0] + b[1];
     StopNode *stop = parser->parse(true)->iterate();
     std::ostringstream builder;
     std::string result = stop->print(builder).str();
-    EXPECT_EQ(result, "return Phi(Region69,1,0)");
+    EXPECT_EQ(result, "return Phi(Region69,1,0);");
 }
 
 

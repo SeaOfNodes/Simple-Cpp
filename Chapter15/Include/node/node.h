@@ -87,7 +87,7 @@ public:
 
     virtual std::string err();
 
-    CFGNode *cfg0();
+    virtual CFGNode *cfg0();
 
 
     static int UID();

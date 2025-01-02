@@ -16,7 +16,8 @@ Node *StoreNode::val() { return in(4); }
 
 std::ostringstream &StoreNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     builder << "." << name_ << " = ";
-    builder << val()->print_1(builder, visited).str() << ";";
+    val()->print_1(builder, visited);
+    builder << ";";
     return builder;
 }
 

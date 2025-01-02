@@ -157,7 +157,10 @@ bool TypeStruct::isAry() {
 }
 int TypeStruct::aryBase() {
     assert(isAry());
-    if(offs_.empty()) offs_ = offsets();
+    // cache offsets here
+    if(offs_.empty()) {
+        offs_ = offsets();
+    }
     return offs_[1];
 }
 int TypeStruct::aryScale() {
@@ -173,7 +176,7 @@ Tomi::Vector<int> TypeStruct::offsets() {
     // Compute a layout for a collection of fields
     assert(fields_.has_value());
     // Compute a layout
-    int cnts[4];
+    int cnts[4] = {0};
     for(Field*f : fields_.value()) {
         cnts[f->type_->log_size()]++;  // Log size is 0(byte), 1(i16/u16), 2(i32/f32), 3(i64/dbl)
     }
@@ -187,17 +190,16 @@ Tomi::Vector<int> TypeStruct::offsets() {
     // Assign offsets to all fields.
     // Really a hidden radix sort.
 
-    Tomi::Vector<int> noff(fields_.value().size() + 1);
-    offs = noff;
-
+    offs_ = Tomi::Vector<int>(fields_.value().size() + 1);
     for(Field* f : fields_.value()) {
         int log = f->type_->log_size();
-        offs[idx++] = offs[log];  // Field offset
+        offs_[idx++] = offs[log];  // Field offset
         offs[log] += 1 << log;   // Next field offset at same alignment
-        offs[log]--;    // Count down, should be all zero at end
+        cnts[log]--;    // Count down, should be all zero at end
     }
-    offs[fields_.value().size()] = (off+7)& ~7;
-    return offs;
+    offs_[fields_.value().size()] = (off+7)& ~7;
+    offs_ = offs;
+    return offs_;
 }
 
 bool TypeStruct::eq(Type *t) {

@@ -30,7 +30,9 @@ Type *LoadNode::compute() {
 Node* LoadNode::idealize() {
     // Simple Load-after-Store on same address.
     Node* ptr1 = ptr();
-
+    if(nid == 79) {
+        std::cerr << "T";
+    }
     auto st = dynamic_cast<StoreNode*>(mem());
     auto stm = dynamic_cast<PhiNode*>(mem());
 
@@ -39,9 +41,8 @@ Node* LoadNode::idealize() {
     }
 
     // Simple Load-after-New on same address.
-    auto*p = dynamic_cast<ProjNode*>(ptr1);
-    auto*nnn = dynamic_cast<NewNode*>(p->in(0));
-    if(p && nnn && ptr1 == nnn->proj(1)) {
+    auto*p = dynamic_cast<ProjNode*>(mem());
+    if(p && dynamic_cast<NewNode*>(p->in(0)) && ptr1 == dynamic_cast<NewNode*>(p->in(0))->proj(1)) {
         return alloc.new_object<ConstantNode>(declaredType->makeInit(), Parser::START);
     }
 

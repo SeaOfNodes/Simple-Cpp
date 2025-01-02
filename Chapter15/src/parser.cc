@@ -351,7 +351,11 @@ TypeMemPtr* Parser::typeAry(Type* t) {
         return dynamic_cast<TypeMemPtr*>(nptr);
     }
     // Need make an array type.
-    TypeStruct* ts = TypeStruct::make_Ary(TypeInteger::BOT(), ALIAS++, t, ALIAS++);
+    // Separate increments
+    int firstAlias = ALIAS++;
+    int secondAlias = ALIAS++;
+
+    TypeStruct* ts = TypeStruct::make_Ary(TypeInteger::BOT(), firstAlias, t, secondAlias);
     TypeMemPtr* tary = TypeMemPtr::make(ts);
     TYPES.put(tname, tary);
     START->addMemProj(ts, scope_node); // Insert memory alias edges
@@ -367,7 +371,7 @@ Type *Parser::type() {
     // Nest arrays and '?' as needed
 
     Type*a;
-    Type*nptr = *t0;
+    Type*nptr = t0 ? *t0 : nullptr;
 
     while(true) {
         if(match("?")) {
@@ -388,7 +392,7 @@ Type *Parser::type() {
     }
 
     // Check no forward ref
-    if (nptr == nullptr) {
+    if (nptr != nullptr) {
         return t1;
     }
     // Check valid forward ref, after parsing all the type extra bits.
@@ -430,13 +434,12 @@ Node *Parser::parseExpressionStatement() {
         expr = (alloc.new_object<ConstantNode>(t->makeInit(), Parser::START))->peephole();
     } else if (match("=")) {
         // Assign "= expr;"
-        if(name == "i") {
-            std::cerr << "Here";
-        }
         expr = require(parseExpression(), ";");
     } else {
         lexer->position = old;
-        return require(parseExpression(), ";");
+        Node* pt = parseExpression();
+        return require(pt, ";");
+//        return require(parseExpression(), ";");
     }
 
 
@@ -461,9 +464,6 @@ Node *Parser::parseExpressionStatement() {
     auto* tmp = dynamic_cast<TypeMemPtr*>(e);
     if(tmp && !tmp->obj_->fields_) {
         e = *TYPES.get(tmp->obj_->name_);
-    }
-    if(!e->isa(t)) {
-        std::cerr << "Here";
     }
     if (!e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
     return scope_node->update(name, expr);
@@ -500,12 +500,8 @@ Node* Parser::parseBitWise() {
         } else if(match("^")) {
             lhs = (alloc.new_object<XorNode>(lhs, nullptr));
         } else break;
-        if(dynamic_cast<XorNode*>(lhs)) {
-            std::cerr << "Here";
-        }
         lhs->setDef(2, parseComparison());
         lhs = lhs->peephole();
-        std::cerr << "Here";
     }
     return lhs;
 }
@@ -526,7 +522,7 @@ Node* Parser::parseShift() {
     return lhs;
 }
 Type *Lexer::parseNumber() {
-    int old = position;
+    int old = static_cast<int>(position);
     int len = isLongOrDouble();
     if (len > 0) {
         if (len > 1 && input[old] == '0') {
@@ -596,11 +592,7 @@ Node *Parser::parseAddition() {
         } else
             break;
         lhs->setDef(2, parseMultiplication());
-        if(dynamic_cast<AddNode*>(lhs->in(1))) {
-            std::cerr << "Here";
-        }
         lhs = lhs->widen()->peephole(); // new id because new replacement WRONG!!
-        std::cerr << "Here";
     }
     return lhs;
 }
@@ -639,7 +631,7 @@ Node *Parser::memAlias(int alias, Node *st) {
 Node *Parser::newStruct(TypeStruct *obj, Node* size) {
     Tomi::Vector<Field*> fs = obj->fields_.value();
     Tomi::Vector<Node*> ns(2 + fs.size());
-    ns[0] = size;
+    ns[0] = ctrl();
     ns[1] = size;
     for(int i = 0; i < fs.size(); i++) {
         ns[i + 2] = memAlias(fs[i]->alias_);
@@ -711,6 +703,7 @@ Node *Parser::parsePostFix(Node *expr) {
         // Array index math
         Node*idx = require(parseExpression(), "]");
         Node*shl = alloc.new_object<ShlNode>(idx, con(base->aryScale()))->peephole();
+        int basel = base->aryBase();
         off = alloc.new_object<AddNode>(con(base->aryBase()), shl)->peephole();
 
     } else {
@@ -728,7 +721,7 @@ Node *Parser::parsePostFix(Node *expr) {
             // Arrays include control, as a proxy for a safety range check.
             // Structs don't need this; they only need a NPE check which is
             // done via the type system.
-            if(base->isAry()) st->setDef(9, ctrl());
+            if(base->isAry()) st->setDef(0, ctrl());
             memAlias(f->alias_, st->peephole());
             return val->unkeep();
         }
@@ -789,14 +782,9 @@ Node *Parser::parsePrimary() {
 //        return newStruct(obj);
     }
     std::string name = lexer->matchId();
-    if (name == "")
-        errorSyntax("an identifier or expression");
     Node *n = scope_node->lookup(name);
-    if(name == "i") {
-        std::cerr << "Here";
-    }
+
     std::ostringstream b;
-    std::string arg_type = n->type_->print_1(b).str();
     if (n != nullptr)
         return n;
     throw std::runtime_error("Undefined name: '" + name + "'");

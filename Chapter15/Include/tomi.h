@@ -697,6 +697,9 @@ namespace Tomi {
 
         V *get(const K &key) {
             unsigned long hashValue = hashFunc(key);
+//            if(hashValue == 590625793704138214) {
+//                std::cerr << "Here";
+//            }
 
             unsigned long bucketIndex = hashValue % TableSize;
             auto &entry = table[bucketIndex];

@@ -168,7 +168,7 @@ TypeInteger *TypeInteger::make(bool is_con, long con) {
 }
 
 TypeInteger *TypeInteger::make(long lo, long hi) {
-    TypeInteger*obj = dynamic_cast<TypeInteger*>((alloc.new_object<TypeInteger>(lo, hi))->intern());
+    auto*obj = dynamic_cast<TypeInteger*>((alloc.new_object<TypeInteger>(lo, hi))->intern());
     return obj;
 }
 

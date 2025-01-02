@@ -12,7 +12,7 @@
  *  New is expected to be followed by projections for every alias.
  */
 
-class NewNode : public MultiNode {
+class NewNode : public Node {
 public:
     NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes);
     NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes);
@@ -25,5 +25,6 @@ public:
     Node *idealize() override;
     bool eq(Node* n) override;
     int hash() override;
+    ProjNode* proj(int idx);
 };
 #endif

@@ -13,7 +13,7 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    for (Node *n: inputNodes) {
+     for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
             n->outputs.push_back(this);
