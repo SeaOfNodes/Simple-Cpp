@@ -46,11 +46,14 @@ Node* ShlNode::idealize() {
 
         // (x + c) << i  =>  (x << i) + (c << i)
         auto* add = dynamic_cast<AddNode*>(lhs);
-        auto*c = dynamic_cast<TypeInteger*>(add->in(2));
-        if(add && c && c->isConstant()) {
-            long sum = c->value() << shl->value();
-            if(std::numeric_limits<long>::min() <= sum && sum <= std::numeric_limits<long>::max()) {
-                return alloc.new_object<AddNode>(alloc.new_object<ShlNode>(add->in(1), rhs)->peephole(), Parser::con(sum));
+        if(add) {
+            auto*c = dynamic_cast<TypeInteger*>(add->in(2));
+            if(c && c->isConstant()) {
+                long sum = c->value() << shl->value();
+                if (std::numeric_limits<long>::min() <= sum && sum <= std::numeric_limits<long>::max()) {
+                    return alloc.new_object<AddNode>(alloc.new_object<ShlNode>(add->in(1), rhs)->peephole(),
+                                                     Parser::con(sum));
+                }
             }
         }
 }

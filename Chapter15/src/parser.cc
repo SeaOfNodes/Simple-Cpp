@@ -157,8 +157,10 @@ Node *Parser::parseStruct() {
     if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
     std::string typeName = requireId();
     Type** t = TYPES.get(typeName);
-    auto* tmp = dynamic_cast<TypeMemPtr*>(*t);
-    if(t != nullptr && !(tmp && !tmp->obj_->fields_.has_value())) throw std::runtime_error("struct " + typeName + " cannot be redefined");
+    if(t != nullptr) {
+        auto* tmp = dynamic_cast<TypeMemPtr*>(*t);
+        if(!(tmp && !tmp->obj_->fields_.has_value())) throw std::runtime_error("struct " + typeName + " cannot be redefined");
+    }
 
     // Parse a collection of fields
     Tomi::Vector<Field *> fields;
@@ -425,6 +427,9 @@ Node *Parser::parseBlock() {
 Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
+    if( t == nullptr) {
+        std::cerr << "This";
+    }
     std::string name = requireId();
     Node *expr;
 
@@ -641,6 +646,9 @@ Node *Parser::newStruct(TypeStruct *obj, Node* size) {
         Node* pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs[i]->alias_))->peephole();
         memAlias(fs[i]->alias_, pr)->peephole();
     }
+    if(obj->name_ == "_int[]") {
+        std::cerr << "Here";
+    }
     Node* r = (alloc.new_object<ProjNode>(nnn, 1, obj->name_))->peephole();
     return r;
 }
@@ -671,7 +679,6 @@ Node* Parser::ZSMask(Node *val, Type *t) {
 }
 
 Node *Parser::parsePostFix(Node *expr) {
-    bool match_s = match(".");
     std::string name;
     if(match(".")) name = requireId();
     else if(match("#")) name = "#";
@@ -821,6 +828,7 @@ std::string Parser::requireId() {
 }
 
 void Parser::errorSyntax(std::string syntax) {
+    std::cerr << "Here";
     error("Syntax error, expected " + syntax + ": " + lexer->getAnyNextToken());
 }
 

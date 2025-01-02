@@ -2,7 +2,8 @@
 #include "../../Include/type/type_mem.h"
 
 ProjNode::ProjNode(Node *ctrl, int idx, std::string label)
-        : Node({ctrl}), idx_(idx), label_(std::move(label)) {}
+        : Node({ctrl}), idx_(idx), label_(std::move(label)) {
+}
 
 CFGNode *ProjNode::cfg0() {
     return in(0)->cfg0();

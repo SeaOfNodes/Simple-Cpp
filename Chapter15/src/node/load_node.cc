@@ -30,7 +30,7 @@ Type *LoadNode::compute() {
 Node* LoadNode::idealize() {
     // Simple Load-after-Store on same address.
     Node* ptr1 = ptr();
-    if(nid == 79) {
+    if(nid == 48) {
         std::cerr << "T";
     }
     auto st = dynamic_cast<StoreNode*>(mem());
@@ -60,6 +60,7 @@ Node* LoadNode::idealize() {
                break;
            }
            mem1 = st->mem();
+           continue;
        }
     if(auto*phi = dynamic_cast<PhiNode*>(mem1)) {
         break;
@@ -73,11 +74,12 @@ Node* LoadNode::idealize() {
                 break;
             }
             mem1 = nnn1->in(alias_);
-            break;
+            continue;
         } else {
             throw std::runtime_error("TODO!");
         }
     }
+    int id = nid;
     throw std::runtime_error("TODO!");
     }
     if(stm && stm->region()->type_ == Type::CONTROL() && stm->nIns() == 3 && dynamic_cast<ConstantNode*>(off())) {

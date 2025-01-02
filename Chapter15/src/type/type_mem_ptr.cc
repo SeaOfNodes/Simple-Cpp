@@ -97,5 +97,5 @@ std::ostringstream &TypeMemPtr::print_1(std::ostringstream &builder) {
 std::string TypeMemPtr::str() {
     if(this == NULLPTR()) return "NULLPTR";
     if(this == VOIDPTR()) return "*void";
-    return "*" + obj_->str() + (nil_ ? "!" : "");
+    return "*" + obj_->str() + (nil_ ? "?" : "");
 }

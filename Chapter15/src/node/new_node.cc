@@ -5,7 +5,7 @@
 
 NewNode::NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes) : Node(nodes), ptr_(ptr) {}
 NewNode::NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes) : Node(nodes), ptr_(ptr) {}
-std::string NewNode::label() {return "new" + ptr_->obj_->isAry() ? "ary_" + ptr_->obj_->fields_.value()[1]->type_->str() : ptr_->obj_->str();}
+std::string NewNode::label() {return "new" + (ptr_->obj_->isAry() ? "ary_" + ptr_->obj_->fields_.value()[1]->type_->str() : ptr_->obj_->str());}
 std::string NewNode::glabel() {return "new " + ptr_->obj_->name_;}
 
 ProjNode *NewNode::proj(int idx) {
