@@ -41,7 +41,11 @@ Type *PhiNode::compute() {
     auto *r = dynamic_cast<RegionNode *>(region());
     if (!r) {
         if (region()->type_ == Type::XCONTROL()) {
-            return Type::TOP();
+            if(dynamic_cast<TypeMem*>(type_)) {
+                return TypeMem::TOP();
+            } else {
+                return Type::TOP();
+            }
         }
         return type_;
     }

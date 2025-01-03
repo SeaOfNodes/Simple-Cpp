@@ -16,6 +16,9 @@
 #include "../Include/node/sar_node.h"
 #include "../Include/node/roundf32_node.h"
 
+#include "../Include/node/scope_minnode.h"
+#include "../Include/node/struct_node.h"
+
 #include <cmath> // For std::abs
 #include <bit>
 
@@ -25,9 +28,11 @@ StartNode *Parser::START = nullptr;
 ConstantNode *Parser::ZERO = nullptr;
 XCtrlNode *Parser::XCTRL = nullptr;
 
+Tomi::Vector<Node*> Parser::ALIMP = {};
 int Parser::ALIAS = 2;
 
 Tomi::HashMap<std::string, Type *> Parser::TYPES = {};
+Tomi::HashMap<std::string, StructNode*> Parser::INITS = {};
 
 Parser::Parser(std::string source, TypeInteger *arg) {
     Node::reset();
@@ -58,7 +63,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
 
     START = alloc.new_object<StartNode>(std::initializer_list < Type * > {Type::CONTROL(), arg});
     STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
-    ZERO = dynamic_cast<ConstantNode*>(con(0)->keep());
+    ZERO = dynamic_cast<ConstantNode *>(con(static_cast<long>(0))->keep());
     XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
     START->peephole();
 }
@@ -67,7 +72,7 @@ bool Parser::SCHEDULED = false;
 
 Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT()) {}
 
-Node* Parser::con(long con) {
+Node *Parser::con(long con) {
     return (alloc.new_object<ConstantNode>(TypeInteger::constant(con), Parser::START))->peephole();
 }
 
@@ -83,10 +88,17 @@ StopNode *Parser::parse() { return parse(true); }
 StopNode *Parser::parse(bool show) {
     xScopes.push_back(scope_node);
     scope_node->push();
-    scope_node->define(ScopeNode::CTRL, Type::CONTROL(),
+    ScopeMinNode *mem = alloc.new_object<ScopeMinNode>();
+    mem->addDef(nullptr);
+
+    scope_node->define(ScopeNode::CTRL, Type::CONTROL(),  false,
                        (alloc.new_object<CProjNode>(START, 0, ScopeNode::CTRL))->peephole());
-    scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(),
-                       (alloc.new_object<ProjNode>(START, 1, ScopeNode::ARG0))->peephole());
+
+    mem->addDef(alloc.new_object<ProjNode>(START, 1, ScopeNode::MEM0)->peephole());
+    scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, mem->peephole());
+
+    scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(), false,
+            (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
     parseBlock();
     if (ctrl()->type_ == Type::CONTROL()) {
         STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), (alloc.new_object<ConstantNode>(TypeInteger::constant(0),
@@ -99,6 +111,10 @@ StopNode *Parser::parse(bool show) {
 
     xScopes.pop_back();
 
+    for (auto a:  Parser::INITS) {
+        a.val->unkeep()->kill();
+    }
+    INITS.clear();
     if (!lexer->isEof())
         throw std::runtime_error("Syntax error, unexpected " +
                                  lexer->getAnyNextToken());
@@ -129,7 +145,7 @@ ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
 //  ctrl((alloc.new_object<ConstantNode>(Type::XCONTROL(), Parser::START))
 //           ->peephole()); // Kill current scope
     // Prune nested lexical scopes that have depth > than the loop head.
-    while (cur->idxs.size() > breakScope->idxs.size()) {
+    while (cur->lexSize.size() > breakScope->lexSize.size()) {
         cur->pop();
     }
     // If this is a continue then first time the target is null
@@ -140,7 +156,7 @@ ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
         return cur;
     }
     // toScope is either the break scope, or a scope that was created here
-    assert(toScope->idxs.size() <= breakScope->idxs.size());
+    assert(toScope->lexSize.size() <= breakScope->lexSize.size());
     std::ostringstream builder;
     toScope->ctrl(toScope->mergeScopes(cur));
     return toScope;
@@ -156,38 +172,39 @@ Node *Parser::parseContinue() {
 Node *Parser::parseStruct() {
     if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
     std::string typeName = requireId();
-    Type** t = TYPES.get(typeName);
-    if(t != nullptr) {
-        auto* tmp = dynamic_cast<TypeMemPtr*>(*t);
-        if(!(tmp && !tmp->obj_->fields_.has_value())) throw std::runtime_error("struct " + typeName + " cannot be redefined");
+    Type **t = TYPES.get(typeName);
+    if (t != nullptr) {
+        auto *tmp = dynamic_cast<TypeMemPtr *>(*t);
+        if (!(tmp && !tmp->obj_->fields_.has_value()))
+            throw std::runtime_error("struct " + typeName + " cannot be redefined");
     }
 
     // Parse a collection of fields
     Tomi::Vector<Field *> fields;
     require("{");
     while (!peek('}') && !lexer->isEof()) {
-        Field *field = parseField();
-        auto *it = std::find(fields.begin(), fields.end(), field);
-        if (it != fields.end())
-            throw std::runtime_error("Field '" + field->fname_ + "' already defined in struct '" + typeName + "'");
-        fields.push_back(field);
+        parseStatement();
     }
+    // Grab the declarations and build fields and a Struct
+    int lexlen = scope_node->lexSize.size();
+    int varlen = scope_node->vars.size();
+    StructNode* s = new StructNode;
+    Tomi::Vector<Field*> fs(varlen - lexlen);
+    for(int i = lexlen; i < varlen; i++) {
+        s->addDef(scope_node->in(i));
+        ScopeMinNode::Var* v=  scope_node->vars[i];
+        fs[i-lexlen] = Field::make(v->name_, v->type_, ALIAS++, v->final_);
+    }
+    TypeStruct* ts = s->ts_ = TypeStruct::make(typeName, fs);
+    TYPES.put(typeName, TypeMemPtr::make(ts));
+    INITS.put(typeName, dynamic_cast<StructNode*>(s->peephole()->keep()));
+    // Done with struct/block scope
     require("}");
-    // Build and install the TypeStruct
-    TypeStruct *type = TypeStruct::make(typeName, fields);
-    TYPES.put(typeName, TypeMemPtr::make(type));
-    START->addMemProj(type, scope_node);
-    return parseStatement();
+    require(";");
+    scope_node->pop();
+    return nullptr;
 }
 
-Field *Parser::parseField() {
-    Type *t = type();
-    if (t == nullptr) {
-        throw std::runtime_error("A field type is expected, only type 'int' is supported at present");
-    }
-    return require(Field::make(requireId(), ALIAS++, t), ";");
-
-}
 
 Node *Parser::parseStatement() {
     if (matchx("return"))
@@ -212,6 +229,75 @@ Node *Parser::parseStatement() {
         // declarations of vars with struct type are handled in parseExpressionStatement due
         // to ambiguity
         return parseExpressionStatement();
+}
+
+Node *Parser::parseAsgn(Type *t, bool xfinal) {
+    // Having a type is a declaration, missing one is updating a prior name
+    bool isDecl = t != nullptr;
+    int old = lexer->position;
+    std::string name = requireId();
+
+    Node *expr;
+    if (peek(';') || peek(',')) {
+        // Bare "name" is not allowed
+        if (t == nullptr) throw std::runtime_error("expression");
+        // Does this declaration need an initializer and not getting one?
+        auto *tmp = dynamic_cast<TypeMemPtr *>(t);
+        Type *init = xfinal || tmp && !tmp->nil_ ? Type::TOP() :
+                                             // Else takes the default
+                                             t->makeInit();
+
+        expr = con(init);
+
+    } else if (!match("=")) {  // Something else
+        lexer->position = old;
+        return nullptr;
+    } else {
+        expr = parseExpression();
+    }
+    // Defining a new variable vs updating an old one
+    if (!isDecl) { // Assigning over an existing name
+        // Lookup
+        ScopeMinNode::Var* def = scope_node->lookup(name);
+        if (def == nullptr) throw std::runtime_error("Undefined name '" + name + "'");
+        // TOP fields are for late-initialized fields; these have never
+        // been written to, and this must be the final write.  Other writes
+        // need to check the final bit.
+        if (scope_node->in(def->idx_)->type_ != Type::TOP() && def->final_) {
+            error("Cannot reassign final '" + name + "'");
+
+        }
+        t = def->type_; // Declared field type
+    }
+
+    // Auto-widen int to float
+    // Auto-widen int to float
+    if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
+        expr = (alloc.new_object<ToFloatNode>(expr))->peephole();
+    }
+
+    // Auto-narrow wide ints to narrow ints
+    expr = ZSMask(expr, t);
+    // Auto-deepen forward ref types
+    Type *e = expr->type_;
+    auto *tmp = dynamic_cast<TypeMemPtr *>(e);
+    if (tmp && !tmp->obj_->fields_) {
+        e = *TYPES.get(tmp->obj_->name_);
+    }
+    if (!e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
+
+    if (isDecl) {
+        if (!scope_node->define(name, t, xfinal, expr)) throw std::runtime_error("Redefining name '" + name + "'");
+
+    } else {
+        scope_node->update(name, expr);
+    }
+    return expr;
+}
+
+Node *Parser::parseFinal(Type *t) {
+    bool xfinal = t != nullptr && match("!");
+    return parseAsgn(t, xfinal);
 }
 
 Node *Parser::parseWhile() {
@@ -289,6 +375,8 @@ Node *Parser::parseWhile() {
 
     // At exit the false control is the current control, and
     // the scope is the exit scope after the exit test.
+    xScopes.pop_back();
+    xScopes.push_back(exit);
     return (scope_node = exit);
 }
 
@@ -343,50 +431,51 @@ Node *Parser::showGraph() {
     return nullptr;
 }
 
-TypeMemPtr* Parser::typeAry(Type* t) {
-    auto*tmp = dynamic_cast<TypeMemPtr*>(t);
-    if(tmp && !tmp->nil_) throw std::runtime_error("Arrays of reference types must always be nullable");
-    std::string tname = t->str() + "[]";
-    Type** ta=  TYPES.get(tname);
-    if(ta != nullptr) {
-        Type*nptr = *ta;
-        return dynamic_cast<TypeMemPtr*>(nptr);
+TypeMemPtr *Parser::typeAry(Type *t) {
+    auto *tmp = dynamic_cast<TypeMemPtr *>(t);
+    if (tmp && !tmp->nil_) throw std::runtime_error("Arrays of reference types must always be nullable");
+    std::string tname = "[" + t->str() + "]";
+    Type **ta = TYPES.get(tname);
+    if (ta != nullptr) {
+        Type *nptr = *ta;
+        return dynamic_cast<TypeMemPtr *>(nptr);
     }
     // Need make an array type.
     // Separate increments
     int firstAlias = ALIAS++;
     int secondAlias = ALIAS++;
 
-    TypeStruct* ts = TypeStruct::make_Ary(TypeInteger::BOT(), firstAlias, t, secondAlias);
-    TypeMemPtr* tary = TypeMemPtr::make(ts);
+    TypeStruct *ts = TypeStruct::make_Ary(TypeInteger::BOT(), firstAlias, t, secondAlias);
+    TypeMemPtr *tary = TypeMemPtr::make(ts);
     TYPES.put(tname, tary);
     START->addMemProj(ts, scope_node); // Insert memory alias edges
     return tary;
 }
+
 Type *Parser::type() {
     size_t old_1 = lexer->position;
     std::string tname = lexer->matchId();
     if (tname.empty()) return nullptr;
     // Convert the type name to a type.
     Type **t0 = TYPES.get(tname);
-    Type*t1 = t0 == nullptr? TypeMemPtr::make(TypeStruct::make(tname)) : *t0;
+    Type *t1 = t0 == nullptr ? TypeMemPtr::make(TypeStruct::make(tname)) : *t0;
     // Nest arrays and '?' as needed
 
-    Type*a;
-    Type*nptr = t0 ? *t0 : nullptr;
+    Type *a;
+    Type *nptr = t0 ? *t0 : nullptr;
 
-    while(true) {
-        if(match("?")) {
-            auto*tmp = dynamic_cast<TypeMemPtr*>(t1);
-            if(!tmp) {
-                throw std::runtime_error("Type" + nptr->str() + "cannot be null" );
+    while (true) {
+        if (match("?")) {
+            auto *tmp = dynamic_cast<TypeMemPtr *>(t1);
+            if (!tmp) {
+                throw std::runtime_error("Type" + nptr->str() + "cannot be null");
 
             }
-            if(tmp->nil_) throw std::runtime_error("Type " + t1->str() + "already allows null");
+            if (tmp->nil_) throw std::runtime_error("Type " + t1->str() + "already allows null");
             t1 = TypeMemPtr::make(tmp->obj_, true);
             continue;
         }
-        if(match("[]")) {
+        if (match("[]")) {
             t1 = typeAry(t1);
             continue;
         }
@@ -427,51 +516,18 @@ Node *Parser::parseBlock() {
 Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
-    if( t == nullptr) {
-        std::cerr << "This";
+    Node *n;
+    if (t == nullptr) {
+        // now parse final [, final]*
+        n = parseFinal(t);
+        while (match(",")) {
+            n = parseFinal(t);
+        }
+    } else if ((n = parseAsgn(nullptr, false)) == nullptr) {
+        // Something else
+        n = parseExpression();
     }
-    std::string name = requireId();
-    Node *expr;
-
-    if (match(";")) {
-        // No type and no expr is an error
-        if (t == nullptr) error("Expected a type or expression");
-        expr = (alloc.new_object<ConstantNode>(t->makeInit(), Parser::START))->peephole();
-    } else if (match("=")) {
-        // Assign "= expr;"
-        expr = require(parseExpression(), ";");
-    } else {
-        lexer->position = old;
-        Node* pt = parseExpression();
-        return require(pt, ";");
-//        return require(parseExpression(), ";");
-    }
-
-
-    // Defining a new variable vs updating an old one
-    if (t != nullptr) {
-        if (scope_node->define(name, t, expr) == nullptr) error("Redefining name `" + name + "`");
-    } else {
-        Node *n = scope_node->lookup(name);
-        if (n == nullptr) error("Undefined name: '" + name + "'");
-        t = scope_node->lookUpDeclaredType(name);
-    }
-
-    // Auto-widen int to float
-    if (dynamic_cast<TypeInteger *>(expr->type_) && dynamic_cast<TypeFloat *>(t)) {
-        expr = (alloc.new_object<ToFloatNode>(expr))->peephole();
-    }
-
-    // Auto-narrow wide ints to narrow ints
-    expr = ZSMask(expr, t);
-    // Auto-deepen forward ref types
-    Type* e = expr->type_;
-    auto* tmp = dynamic_cast<TypeMemPtr*>(e);
-    if(tmp && !tmp->obj_->fields_) {
-        e = *TYPES.get(tmp->obj_->name_);
-    }
-    if (!e->isa(t)) error("Type " + e->str() + " is not of declared type " + t->str());
-    return scope_node->update(name, expr);
+    return require(n, ";");
 
 }
 
@@ -490,19 +546,22 @@ Node *Parser::ctrl(Node *n) {
 }
 
 Node *Parser::parseLiteral() {
-    Type*t = lexer->parseNumber();
-    return (alloc.new_object<ConstantNode>(t, START))->peephole();
+    Type *t = lexer->parseNumber();
+    return con(t);
 }
 
-Node* Parser::parseBitWise() {
-    Node*lhs = parseComparison();
-    while(true) {
-        if(false);
-        else if(match("&")) {
+ConstantNode* Parser::con(Type*t) {
+    return dynamic_cast<ConstantNode*>(alloc.new_object<ConstantNode>(t, Parser::START)->peephole());
+}
+Node *Parser::parseBitWise() {
+    Node *lhs = parseComparison();
+    while (true) {
+        if (false);
+        else if (match("&")) {
             lhs = (alloc.new_object<AndNode>(lhs, nullptr));
-        } else if(match("|")) {
+        } else if (match("|")) {
             lhs = (alloc.new_object<OrNode>(lhs, nullptr));
-        } else if(match("^")) {
+        } else if (match("^")) {
             lhs = (alloc.new_object<XorNode>(lhs, nullptr));
         } else break;
         lhs->setDef(2, parseComparison());
@@ -510,15 +569,16 @@ Node* Parser::parseBitWise() {
     }
     return lhs;
 }
-Node* Parser::parseShift() {
-    Node*lhs = parseAddition();
-    while(true) {
-        if(false);
-        else if(match("<<")) {
+
+Node *Parser::parseShift() {
+    Node *lhs = parseAddition();
+    while (true) {
+        if (false);
+        else if (match("<<")) {
             lhs = (alloc.new_object<ShlNode>(lhs, nullptr));
-        } else if(match(">>>")) {
+        } else if (match(">>>")) {
             lhs = (alloc.new_object<ShrNode>(lhs, nullptr));
-        } else if(match(">>")) {
+        } else if (match(">>")) {
             lhs = (alloc.new_object<SarNode>(lhs, nullptr));
         } else break;
         lhs->setDef(2, parseAddition());
@@ -526,6 +586,7 @@ Node* Parser::parseShift() {
     }
     return lhs;
 }
+
 Type *Lexer::parseNumber() {
     int old = static_cast<int>(position);
     int len = isLongOrDouble();
@@ -626,90 +687,111 @@ Node *Parser::parseUnary() {
 }
 
 Node *Parser::memAlias(int alias) {
-    return scope_node->lookup(memName(alias));
+    return scope_node->mem(alias);
 }
 
-Node *Parser::memAlias(int alias, Node *st) {
-    return scope_node->update(memName(alias), st);
+void Parser::memAlias(int alias, Node *st) {
+    scope_node->mem(alias, st);
 }
 
-Node *Parser::newStruct(TypeStruct *obj, Node* size) {
-    Tomi::Vector<Field*> fs = obj->fields_.value();
-    Tomi::Vector<Node*> ns(2 + fs.size());
+Node *Parser::newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node*> init) {
+    Tomi::Vector<Field *> fs = obj->fields_.value();
+    if(fs.empty()) {
+        error("Unknown struct type'" + obj->name_ + "'");
+    }
+    int len = fs.size();
+    Tomi::Vector<Node *> ns(2 + fs.size());
+
     ns[0] = ctrl();
     ns[1] = size;
-    for(int i = 0; i < fs.size(); i++) {
+    for (int i = 0; i < len; i++) {
         ns[i + 2] = memAlias(fs[i]->alias_);
     }
-    Node*nnn = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ns))->peephole();
-    for(int i = 0; i < fs.size(); i++) {
-        Node* pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs[i]->alias_))->peephole();
-        memAlias(fs[i]->alias_, pr)->peephole();
+    // Initial values for every field
+    for(int i = 0; i < len; i++) {
+        ns[2 + len + i] = init[i + idx];
     }
-    if(obj->name_ == "_int[]") {
-        std::cerr << "Here";
+    Node *nnn = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ns))->peephole();
+    for (int i = 0; i < len; i++) {
+        Node *pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs[i]->alias_))->peephole();
+        memAlias(fs[i]->alias_, pr);
     }
-    Node* r = (alloc.new_object<ProjNode>(nnn, 1, obj->name_))->peephole();
+    Node *r = (alloc.new_object<ProjNode>(nnn, 1, obj->name_))->peephole();
     return r;
 }
 
-Node* Parser::ZSMask(Node *val, Type *t) {
-    auto*tval = dynamic_cast<TypeInteger*>(val->type_);
-    auto*t0 = dynamic_cast<TypeInteger*>(t);
-    auto*tval1 =dynamic_cast<TypeFloat*>(val->type_);
-    auto*t1 = dynamic_cast<TypeFloat*>(t);
-    if(!(tval && t0 && !tval->isa(t0))) {
-        if(!(tval1 && t1 && !tval1->isa(t1))) {
+Node *Parser::ZSMask(Node *val, Type *t) {
+    auto *tval = dynamic_cast<TypeInteger *>(val->type_);
+    auto *t0 = dynamic_cast<TypeInteger *>(t);
+    auto *tval1 = dynamic_cast<TypeFloat *>(val->type_);
+    auto *t1 = dynamic_cast<TypeFloat *>(t);
+    if (!(tval && t0 && !tval->isa(t0))) {
+        if (!(tval1 && t1 && !tval1->isa(t1))) {
             return val;
         }
         // Float rounding
         return (alloc.new_object<RoundF32Node>(val))->peephole();
-}
-    if(t0 && t0->min_ == 0)  // Unsigned
+    }
+    if (t0 && t0->min_ == 0)  // Unsigned
     {
         return alloc.new_object<AndNode>(val, con(t0->max_))->peephole();
 
     }
     // Signed extension
     int shift = std::countl_zero(static_cast<std::uint64_t>(t0->max_)) - 1;
-    Node*shf = con(shift);
+    Node *shf = con(shift);
 
-    if(shf->type_ == TypeInteger::ZERO()) return val;
-    return (alloc.new_object<SarNode>(alloc.new_object<ShlNode>(val, shf->keep())->peephole(), shf->unkeep())->peephole());
+    if (shf->type_ == TypeInteger::ZERO()) return val;
+    return (alloc.new_object<SarNode>(alloc.new_object<ShlNode>(val, shf->keep())->peephole(),
+                                      shf->unkeep())->peephole());
 }
 
+bool Parser::matchOpx(char c0, char c1) {
+    return lexer->matchOpx(c0, c1);
+
+}
 Node *Parser::parsePostFix(Node *expr) {
     std::string name;
-    if(match(".")) name = requireId();
-    else if(match("#")) name = "#";
-    else if(match("[")) name = "[]";
+    if (match(".")) name = requireId();
+    else if (match("#")) name = "#";
+    else if (match("[")) name = "[]";
     else return expr;
 
     // Sanity check expr for being a reference
-    auto*ptr = dynamic_cast<TypeMemPtr*>(expr->type_);
-    if(!ptr) {
+    auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
+    if (!ptr) {
         error("Expected a reference type, got " + expr->type_->str() + " instead");
     }
 
-    if (ptr == TypeMemPtr::TOP()) throw std::runtime_error("Accessing field '" + name + "'from nullptr");
-    if(ptr->obj_ == nullptr) throw std::runtime_error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
-    auto* tmp = dynamic_cast<TypeMemPtr*>(*TYPES.get(ptr->obj_->name_));
-    if(tmp == nullptr) {
-         error("Accessing unknown struct type '" + ptr->obj_->name_ + "' from '" + ptr->str() + "'");
+    // Happens when parsing known dead code, which often has other typing
+    // issues.  Since the code is dead, possibly due to inlining, lets not
+    // spoil the user experience with error messages.
+
+    if(ctrl()->type_ == Type::XCONTROL()) {
+        return matchOpx('=', '=') ? parseExpression() : parsePostFix(con(Type::TOP()));
+
     }
-    TypeStruct* base = tmp->obj_;
+//
+//    if (ptr == TypeMemPtr::TOP()) throw std::runtime_error("Accessing field '" + name + "'from nullptr");
+//    if (ptr->obj_ == nullptr)
+//        throw std::runtime_error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
+    auto *tmp = dynamic_cast<TypeMemPtr *>(*TYPES.get(ptr->obj_->name_));
+    if (tmp == nullptr) {
+        error("Accessing unknown struct type '" + ptr->obj_->name_ + "' from '" + ptr->str() + "'");
+    }
+    TypeStruct *base = tmp->obj_;
     int fidx = base->find(name);
-    if(fidx == -1) {
+    if (fidx == -1) {
         error("Accessing unknown field '" + name + "' from '" + ptr->str() + "'");
     }
-    expr->keep();
+
     // Get field type and layout offset from base type and field index fidx
-    Field*f = base->fields_.value()[fidx];
-    Node*off;
-    if(name == "[]") {    // If field is an array body
+    Field *f = base->fields_.value()[fidx];
+    Node *off;
+    if (name == "[]") {    // If field is an array body
         // Array index math
-        Node*idx = require(parseExpression(), "]");
-        Node*shl = alloc.new_object<ShlNode>(idx, con(base->aryScale()))->peephole();
+        Node *idx = require(parseExpression(), "]");
+        Node *shl = alloc.new_object<ShlNode>(idx, con(base->aryScale()))->peephole();
         int basel = base->aryBase();
         off = alloc.new_object<AddNode>(con(base->aryBase()), shl)->peephole();
 
@@ -717,39 +799,44 @@ Node *Parser::parsePostFix(Node *expr) {
         // Hardwired field offset
         off = con(base->offset(fidx));
     }
-    if(match("=")) {
-        if(peek('=')) lexer->position--;
+    if (match("=")) {
+        if (peek('=')) lexer->position--;
         else {
             off->keep();
-            Node* val = parseExpression();
+            Node *val = parseExpression();
             val = ZSMask(val, f->type_)->keep();
-            Node*st = alloc.new_object<StoreNode>(name, f->alias_, f->type_, memAlias(f->alias_), expr->unkeep(), off->unkeep(), val, false);
+            Node *st = alloc.new_object<StoreNode>(name, f->alias_, f->type_, memAlias(f->alias_), expr->unkeep(),
+                                                   off->unkeep(), val, false);
 
             // Arrays include control, as a proxy for a safety range check.
             // Structs don't need this; they only need a NPE check which is
             // done via the type system.
-            if(base->isAry()) st->setDef(0, ctrl());
+            if (base->isAry()) st->setDef(0, ctrl());
             memAlias(f->alias_, st->peephole());
             return val->unkeep();
         }
     }
-    Node*load = (alloc.new_object<LoadNode>(name, f->alias_, f->type_->glb(), memAlias(f->alias_), expr->unkeep(), off));
+    Node *load = (alloc.new_object<LoadNode>(name, f->alias_, f->type_->glb(), memAlias(f->alias_), expr->unkeep(),
+                                             off));
     // Arrays include control, as a proxy for a safety range check
     // Structs don't need this; they only need a NPE check which is
     // done via the type system.
-    if(base->isAry()) load->setDef(0, ctrl());
+    if (base->isAry()) load->setDef(0, ctrl());
     return parsePostFix(load->peephole());
 }
 
-Node* Parser::newArray(TypeStruct *ary, Node *len) {
-    int base= ary->aryBase();
+Node *Parser::newArray(TypeStruct *ary, Node *len) {
+    int base = ary->aryBase();
     int scale = ary->aryScale();
-    Node* size = alloc.new_object<AddNode>(con(base), alloc.new_object<ShlNode>(len, con(scale))->peephole())->peephole();
-    Node*ptr = newStruct(ary, size);
-    int alias = ary->fields_.value()[0]->alias_;
-    memAlias(alias, alloc.new_object<StoreNode>("#", alias, TypeInteger::BOT(), memAlias(alias), ptr, con(ary->offset(0)), len->unkeep(), true)->peephole());
-    return ptr;
+    Node *size = alloc.new_object<AddNode>(con(base),
+                                           alloc.new_object<ShlNode>(len, con(scale))->peephole())->peephole();
+
+    ALIMP.clear();
+    ALIMP.push_back(len);
+    ALIMP.push_back(con(ary->fields_.value()[1]->type_->makeInit()));
+    return newStruct(ary, size, 0, ALIMP);
 }
+
 Node *Parser::parsePrimary() {
     lexer->skipWhiteSpace();
     if (lexer->isNumber(lexer->peek()))
@@ -761,40 +848,95 @@ Node *Parser::parsePrimary() {
     if (matchx("false"))
         return ZERO;
     if (matchx("null")) return (alloc.new_object<ConstantNode>(TypeMemPtr::NULLPTR(), Parser::START))->peephole();
-    if (matchx("new")) {
-        Type*t = type();
-        if(t == nullptr) error("Expected a type after 'new'");
-        if(match("[")) {
-            Node*len = parseExpression()->keep();
-            if(dynamic_cast<TypeInteger*>(len->type_) == nullptr) error("Array length must be an integer");
-            require("]");
-            TypeMemPtr* tmp = typeAry(t);
-            return newArray(tmp->obj_, len);
-        }
-        if(auto*tmp = dynamic_cast<TypeMemPtr*>(t)) {
-            TypeStruct*obj = tmp->obj_;
-            if(!obj->fields_.has_value()) {
-                error("Unknown struct type '" + obj->name_ + "'");
-            }
-            if(obj->isAry()) {
-                throw std::runtime_error("TODO");
-            }
-            return newStruct(obj, con(obj->offset(obj->fields_.value().size())));
-
-        }
-//        std::string structName = requireId();
-//        Type **t = TYPES.get(structName);
-//        auto* obj = dynamic_cast<TypeStruct *>(*t);
-//        if (!(obj) || !obj->fields_) error("Unknown struct type: " + structName);
-//        return newStruct(obj);
-    }
+    if (matchx("new")) return alloc_();
+//        Type *t = type();
+//        if (t == nullptr) error("Expected a type after 'new'");
+//        if (match("[")) {
+//            Node *len = parseExpression()->keep();
+//            if (dynamic_cast<TypeInteger *>(len->type_) == nullptr) error("Array length must be an integer");
+//            require("]");
+//            TypeMemPtr *tmp = typeAry(t);
+//            return newArray(tmp->obj_, len);
+//        }
+//        if (auto *tmp = dynamic_cast<TypeMemPtr *>(t)) {
+//            TypeStruct *obj = tmp->obj_;
+//            if (!obj->fields_.has_value()) {
+//                error("Unknown struct type '" + obj->name_ + "'");
+//            }
+//            if (obj->isAry()) {
+//                throw std::runtime_error("TODO");
+//            }
+//            return newStruct(obj, con(obj->offset(obj->fields_.value().size())));
+//
+//        }
+////        std::string structName = requireId();
+////        Type **t = TYPES.get(structName);
+////        auto* obj = dynamic_cast<TypeStruct *>(*t);
+////        if (!(obj) || !obj->fields_) error("Unknown struct type: " + structName);
+////        return newStruct(obj);
+//    }
     std::string name = lexer->matchId();
-    Node *n = scope_node->lookup(name);
+    if (name.empty()) throw std::runtime_error("an identifiero r expression");
+    ScopeMinNode::Var* n = scope_node->lookup(name);
+    if (n != nullptr) return scope_node->in(n);
 
-    std::ostringstream b;
-    if (n != nullptr)
-        return n;
+//    Node *n = scope_node->lookup(name);
+//
+//    std::ostringstream b;
+//    if (n != nullptr)
+//        return n;
     throw std::runtime_error("Undefined name: '" + name + "'");
+}
+
+Node *Parser::alloc_() {
+    Type *t = type();
+    if (t == nullptr) error("Expected a type");
+    // Parse ary[ length_expr ]
+    if (match("[")) {
+        Node *len = parseExpression()->keep();
+        if (!dynamic_cast<TypeInteger *>(len->type_)) {
+            error("Cannot allocate an array with length" + len->type_->str());
+
+        }
+        require("]");
+        TypeMemPtr *tmp = typeAry(t);
+        return newArray(tmp->obj_, len);
+    }
+    auto*tmp = dynamic_cast<TypeMemPtr*>(t);
+    if (!tmp) throw std::runtime_error("Cannot allocate a " + t->str());
+    // Parse new struct { default_initialization }
+    StructNode **s = INITS.get(tmp->obj_->name_);
+    if (s == nullptr) throw std::runtime_error("Unknown struct type: " + tmp->obj_->name_ + "'");
+    StructNode* nptr = *s;
+    Tomi::Vector<Field *> fs = nptr->ts_->fields_.value();
+    // if the object is fully initialized, we can skip a block here.
+    // Check for constructor block:
+    bool hasConstdructor = match("{");
+    Tomi::Vector<Node *> init = nptr->inputs;
+    int idx = 0;
+    if (hasConstdructor) {
+        idx = scope_node->nIns();
+        // Push a scope, and pre-assign all struct fields.
+        scope_node->push();
+        for (int i = 0; i < fs.size(); i++) {
+            scope_node->define(fs[i]->fname_, fs[i]->type_, fs[i]->final_, nptr->in(i));
+        }
+        // Parse the constructor body
+        parseBlock();
+        require("}");
+        init = scope_node->inputs;
+    }
+    // Check that all fields are initialized
+    for (int i = idx; i < init.size(); i++) {
+        if (init[i]->type_ == Type::TOP()) {
+
+        }
+    }
+    Node *ptr = newStruct(tmp->obj_, con(tmp->obj_->offset(fs.size())), idx, init);
+    if (hasConstdructor) {
+        scope_node->pop();
+    }
+    return ptr;
 }
 
 bool Parser::peekIsId() {
@@ -931,14 +1073,20 @@ bool Lexer::isWhiteSpace() { return peek() <= ' ' && peek() != '\0'; }
 int Lexer::isLongOrDouble() {
     int old = position;
     char c;
-    while (isdigit(c = nextChar())) { }
+    while (isdigit(c = nextChar())) {}
     if (!(c == 'e' || c == '.')) {
         return --position - old;
     }
-    while (isdigit(c = nextChar()) || c == 'e' || c == '.') { }
+    while (isdigit(c = nextChar()) || c == 'e' || c == '.') {}
     return -(--position - old);
 }
 
+bool Lexer::matchOpx(char c0, char c1) {
+    skipWhiteSpace();
+    if(position + 1 >= input.size() || input[position] != c0 || input[position +1] == c1) return false;
+    position++;
+    return true;
+}
 void Lexer::skipWhiteSpace() {
     while (true) {
         if (isWhiteSpace()) position++;

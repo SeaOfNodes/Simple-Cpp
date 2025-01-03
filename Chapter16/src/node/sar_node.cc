@@ -18,11 +18,17 @@ std::ostringstream &SarNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 }
 
 Type*SarNode::compute() {
-if(in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
+    Type*t1 = in(1)->type_;
+    Type*t2 = in(2)->type_;
 
-    auto i1 = dynamic_cast<TypeInteger *>(in(1)->type_);
-    auto i2 = dynamic_cast<TypeInteger *>(in(2)->type_);
+if(t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
+
+    auto i1 = dynamic_cast<TypeInteger *>(t1);
+    auto i2 = dynamic_cast<TypeInteger *>(t2);
     if(i1 && i2) {
+        if(i1 == TypeInteger::ZERO()) {
+            return TypeInteger::ZERO();
+        }
         if(i1->isConstant() && i2->isConstant()) {
             return TypeInteger::constant(i1->value() >> i2->value());
         }

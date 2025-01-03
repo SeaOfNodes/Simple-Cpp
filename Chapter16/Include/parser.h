@@ -19,6 +19,8 @@
 #include "../Include/type/integer_type.h"
 #include "../Include/node/xctrl_node.h"
 
+#include "../Include/node/struct_node.h"
+
 #include "../Include/type/type_struct.h"
 
 #include <iostream>
@@ -39,6 +41,8 @@ public:
     bool match(std::string syntax);
 
     bool isNumber();
+
+    bool matchOpx(char c0, char c1);
 
     bool isNumber(char ch);
 
@@ -88,6 +92,8 @@ public:
     static StartNode *START;
     static bool SCHEDULED;
 
+    static Tomi::Vector<Node*> ALIMP;
+
     static StopNode *STOP;
     static ConstantNode* ZERO; // Very common node, cached here
     static XCtrlNode* XCTRL; // Very common node, cached here
@@ -99,9 +105,18 @@ public:
     ScopeNode *continueScope;
     ScopeNode *breakScope;
 
+    Node* parseAsgn(Type* t, bool xfinal);
+    Node* parseFinal(Type *t);
+    Node* alloc_();
+
     static Node* con(long con);
+    static ConstantNode* con(Type*t);
+
+    bool matchOpx(char c0, char c1);
 
     static Tomi::HashMap<std::string, Type *> TYPES;
+    // Mapping from a type name to the constructor for a Type.
+    static Tomi::HashMap<std::string, StructNode*> INITS;
 
     explicit Parser(std::string source, TypeInteger *arg);
 
@@ -130,11 +145,11 @@ public:
 
     static std::string memName(int alias);
 
-    Node* newStruct(TypeStruct* obj, Node* size);
+    Node* newStruct(TypeStruct* obj, Node* size, int idx, Tomi::Vector<Node*> init);
     Node* newArray(TypeStruct* ary, Node* len);
 
     Node* memAlias(int alias);
-    Node* memAlias(int alias, Node* st);
+    void memAlias(int alias, Node* st);
 
 private:
     /**
@@ -208,6 +223,8 @@ private:
 
     // Require and return an identifier
     std::string requireId();
+
+    bool mathcOpx(char c0, char c1);
 
     Node *parseExpressionStatement();
 

@@ -17,9 +17,13 @@ public:
     NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes);
     NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes);
     TypeMemPtr* ptr_;
+    int len_;
+
     std::string label() override;
-    bool isPinned() override;
     std::string glabel() override;
+
+    int find_alias(int alias);
+    bool isPinned() override;
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
     Type *compute() override;
     Node *idealize() override;

@@ -37,7 +37,7 @@ Type *IfNode::compute() {
   if (auto *ti = dynamic_cast<TypeInteger *>(pred()->type_); ti) {
     if (ti->isConstant()) {
       // Your code here
-      if (ti == TypeInteger::ZERO())
+      if (t == t->makeInit())
         return TypeTuple::IF_FALSE();
       else
         return TypeTuple::IF_TRUE();

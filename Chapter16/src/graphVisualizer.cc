@@ -215,62 +215,62 @@ void GraphVisualizer::nodeEdges(std::ostringstream &sb,
 }
 
 void GraphVisualizer::scopes(std::ostringstream &sb, ScopeNode *n) {
-  sb << "\tnode [shape=plaintext];\n";
-  int level = 1;
-  for (int idx = n->idxs.size() - 1; idx >= 0; idx--) {
-    auto sysms = n->idxs[idx];
-    std::string scopeName = makeScopeName(n, level);
-    sb << "\tsubgraph cluster_" << scopeName << " {\n";
-    sb << scopeName << " [label=<\n";
-    sb << "\t\t\t<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n";
-    // Add the scope level
-    int scopeLevel = n->idxs.size() - level;
-    sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << scopeLevel << "</TD>\n";
-
-    for (const auto &pair : sysms) {
-      const std::string &name = pair.key;
-      sb << "<TD PORT=\"" << makePortName(scopeName, name) << "\">" << name
-         << "</TD>";
-    }
-
-    sb << "</TR>\n";
-    sb << "\t\t\t</TABLE>>];\n";
-    level++;
-  }
-  // Scope clusters nest, so the graphics shows the nested scopes, so
-  // they are not closed as they are printed; so they just keep nesting.
-  // We close them all at once here.
-  for (int i = 0; i < level - 1; ++i) {
-    sb << "\t}\n"; // End all Scope clusters
-  }
+//  sb << "\tnode [shape=plaintext];\n";
+//  int level = 1;
+//  for (int idx = n->idxs.size() - 1; idx >= 0; idx--) {
+//    auto sysms = n->idxs[idx];
+//    std::string scopeName = makeScopeName(n, level);
+//    sb << "\tsubgraph cluster_" << scopeName << " {\n";
+//    sb << scopeName << " [label=<\n";
+//    sb << "\t\t\t<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n";
+//    // Add the scope level
+//    int scopeLevel = n->idxs.size() - level;
+//    sb << "\t\t\t<TR><TD BGCOLOR=\"cyan\">" << scopeLevel << "</TD>\n";
+//
+//    for (const auto &pair : sysms) {
+//      const std::string &name = pair.key;
+//      sb << "<TD PORT=\"" << makePortName(scopeName, name) << "\">" << name
+//         << "</TD>";
+//    }
+//
+//    sb << "</TR>\n";
+//    sb << "\t\t\t</TABLE>>];\n";
+//    level++;
+//  }
+//  // Scope clusters nest, so the graphics shows the nested scopes, so
+//  // they are not closed as they are printed; so they just keep nesting.
+//  // We close them all at once here.
+//  for (int i = 0; i < level - 1; ++i) {
+//    sb << "\t}\n"; // End all Scope clusters
+//  }
 }
 
 void GraphVisualizer::scopeEdges(std::ostringstream &sb, ScopeNode *n) {
-  sb << "\tedge [style=dashed color=cornflowerblue];\n";
-  int level = 1;
-  for (std::size_t i = n->idxs.size() - 1; i != -1; --i) {
-    auto syms = n->idxs[i];
-    std::string scopeName = makeScopeName(n, level);
-    for (const auto &pair : syms) {
-      std::string name = pair.key;
-      int idx = *syms[name];
-      Node *def = n->in(idx);
-      while (auto *lazy = dynamic_cast<ScopeNode *>(def))
-        def = lazy->in(idx);
-      if (def == nullptr)
-        continue;
-      sb << "\t" << scopeName << ":" << '"' << makePortName(scopeName, name)
-         << '"' << " -> ";
-      if (auto *proj = dynamic_cast<ProjNode *>(def); proj) {
-        std::string mname = proj->ctrl()->uniqueName();
-        sb << mname << ":p" << proj->idx_;
-      } else {
-        sb << def->uniqueName();
-      }
-      sb << ";\n";
-    }
-    level++;
-  }
+//  sb << "\tedge [style=dashed color=cornflowerblue];\n";
+//  int level = 1;
+//  for (std::size_t i = n->idxs.size() - 1; i != -1; --i) {
+//    auto syms = n->idxs[i];
+//    std::string scopeName = makeScopeName(n, level);
+//    for (const auto &pair : syms) {
+//      std::string name = pair.key;
+//      int idx = *syms[name];
+//      Node *def = n->in(idx);
+//      while (auto *lazy = dynamic_cast<ScopeNode *>(def))
+//        def = lazy->in(idx);
+//      if (def == nullptr)
+//        continue;
+//      sb << "\t" << scopeName << ":" << '"' << makePortName(scopeName, name)
+//         << '"' << " -> ";
+//      if (auto *proj = dynamic_cast<ProjNode *>(def); proj) {
+//        std::string mname = proj->ctrl()->uniqueName();
+//        sb << mname << ":p" << proj->idx_;
+//      } else {
+//        sb << def->uniqueName();
+//      }
+//      sb << ";\n";
+//    }
+//    level++;
+//  }
 }
 
 std::string GraphVisualizer::makeScopeName(ScopeNode *n, int level) {

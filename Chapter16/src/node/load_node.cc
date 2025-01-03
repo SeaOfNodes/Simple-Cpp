@@ -43,7 +43,8 @@ Node* LoadNode::idealize() {
     // Simple Load-after-New on same address.
     auto*p = dynamic_cast<ProjNode*>(mem());
     if(p && dynamic_cast<NewNode*>(p->in(0)) && ptr1 == dynamic_cast<NewNode*>(p->in(0))->proj(1)) {
-        return alloc.new_object<ConstantNode>(declaredType->makeInit(), Parser::START);
+        auto*nnn = dynamic_cast<NewNode*>(p->in(0));
+        return nnn->in(nnn->find_alias(alias_));
     }
 
     // Load-after-Store on same address, but bypassing provably unrelated

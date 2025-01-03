@@ -17,7 +17,7 @@ int TypeInteger::log_size() {
 // Todo: understand this
 TypeInteger *TypeInteger::nonZero() {
  if(isHigh()) return this;
- if(min_ == 0) return make(static_cast<long>(1), max_);
+ if(min_ == 0) return make(static_cast<long>(1), std::max(max_, static_cast<long>(1)));
  if(max_ == 0) return make(min_, static_cast<long>(-1));
  return this;
 }

@@ -28,6 +28,9 @@ Type *MulNode::compute() {
   auto i1 = dynamic_cast<TypeInteger *>(t1);
   auto i2 = dynamic_cast<TypeInteger *>(t2);
   if (i1 && i2) {
+      if(i1 == TypeInteger::ZERO() || i2 == TypeInteger::ZERO()) {
+          return TypeInteger::ZERO();
+      }
     if (i1->isConstant() && i2->isConstant()) {
       return TypeInteger::constant(i1->value() * i1->value());
     }

@@ -12,6 +12,8 @@ public:
 
   Type *xmeet(Type *other) override;
   static TypeTuple* TEST();
+  static TypeTuple* START();
+
   // DEBUG INFO FOR DEBUGGER
   std::string ToString() override;
   static void gather(Tomi::Vector<Type *> &ts);

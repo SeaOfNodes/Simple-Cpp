@@ -292,21 +292,22 @@ Node *Node::peephole() {
     }
     Node *n = peepholeOpt();
 
-    return n == nullptr ? this : deadCodeElim(n->peephole()->keep())->unkeep();
+    return n == nullptr ? this : deadCodeElim(n->peephole());
 }
 
 /*
  * If the scope gets popped, then delete
  * each of the individual elements.
  * */
-void Node::popN(std::size_t n) {
+void Node::popUntil(std::size_t n) {
     unlock();
-    for (int i = 0; i < n; i++) {
-        Node *old_def = inputs.back();
+    while(nIns() > n) {
         inputs.pop_back();
+        Node *old_def = inputs.back();
         if (old_def != nullptr && old_def->delUse(this))
             old_def->kill();
     }
+
 }
 
 bool Node::allCons(Node *dep) {
@@ -320,6 +321,10 @@ bool Node::allCons(Node *dep) {
     return true;
 }
 
+Node* Node::insertDef(int idx, Node *new_def) {
+    inputs[idx] = nullptr;
+    return setDef(idx, new_def);
+}
 // Todo: use DelVal here
 Node *Node::delDef(int idx) {
     unlock();

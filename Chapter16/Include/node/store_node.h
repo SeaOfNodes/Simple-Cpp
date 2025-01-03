@@ -21,7 +21,7 @@
      std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited);
      Type* compute() override;
      Node* idealize() override;
-     bool checkNoUseBeyond(Node* that);
+     bool checkOnlyUse(Node* that);
      std::string err() override;
 
  };

@@ -20,7 +20,7 @@ std::ostringstream &NotNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 Type *NotNode::compute() {
     if(in(1)->type_->isHigh()) return TypeInteger::BOOL()->dual();
     if (auto *i = dynamic_cast<TypeInteger *>(in(1)->type_)) {
-        return i->max_ < 0 || i->min_ > 0? TypeInteger::FALSE() : (i == TypeInteger::ZERO() ? TypeInteger::TRUE() : TypeInteger::BOT());
+        return i->max_ < 0 || i->min_ > 0? TypeInteger::FALSE() : (i == TypeInteger::ZERO() ? TypeInteger::TRUE() : TypeInteger::BOOL());
     }
     if (auto* i = dynamic_cast<TypeFloat*>(in(1)->type_)) {
         if (i->isConstant()) {

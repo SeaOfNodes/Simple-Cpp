@@ -1,6 +1,8 @@
 #include "../../Include/node/store_node.h"
 #include "../../Include/type/type_mem.h"
 #include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/node/proj_node.h"
+#include "../../Include/node/new_node.h"
 
 StoreNode::StoreNode(std::string name, int alias, Type*glb, Node*mem, Node*ptr, Node*off, Node* value,  bool init_) : MemOpNode(name, alias,
                                                                                                                      glb, mem, ptr,
@@ -38,21 +40,42 @@ Node *StoreNode::idealize() {
         // No bother if weird dead pointers
         // Must have exactly one use of "this" or you get weird
         // non-serializable memory effects in the worse case.
-        st->checkNoUseBeyond(this)) {
+        st->checkOnlyUse(st)) {
         setDef(1, st->mem());
         return this;
     }
+    // Simple store-after-new on same address.  Should pick up the
+    // an init-store being stomped by a first user store.
+    if (auto st = dynamic_cast<ProjNode*>(mem())) {
+        if (auto nnn = dynamic_cast<NewNode*>(st->in(0))) {
+            if (auto ptrProj = dynamic_cast<ProjNode*>(ptr())) {
+                if (ptrProj->in(0) == nnn) {
+                    if (auto tmp = dynamic_cast<TypeMemPtr*>(ptr()->type_)) {
+                        if (!(tmp->obj_->isAry() && tmp->obj_->fields_.value()[1]->alias_ == alias_) &&
+                            val()->type_->isHighOrConst() &&
+                            checkOnlyUse(st)) {
+                            nnn->setDef(nnn->find_alias(alias_), val());
+                            nnn->type_ = nnn->compute();
+                            mem()->type_ = mem()->compute();
+                            return st;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     return nullptr;
 }
 
 // Check that `this` has no uses beyond `that`
-bool StoreNode::checkNoUseBeyond(Node *that) {
-    if (nOuts() == 1) return true;
+bool StoreNode::checkOnlyUse(Node *mem) {
+    if (mem->nOuts() == 1) return true;
     // Add deps on the other uses (can be e.g. ScopeNode mid-parse) so that
     // when the other uses go away we can retry.
-    for (Node *use: outputs) {
-        if (use != that) {
-            use->addDep(that);
+    for (Node *use: mem->outputs) {
+        if (use != this) {
+            use->addDep(this);
         }
     }
     return false;

@@ -42,6 +42,7 @@ public:
 
     int aryScale();
 
+    int findAlias(int alias);
 
     // TOdo: might need to set it to null
     // Field offsets as packed byte offsets

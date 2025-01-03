@@ -17,8 +17,11 @@ std::ostringstream &OrNode::print_1(std::ostringstream &builder, Tomi::Vector<bo
 
 
 Type* OrNode::compute() {
-    auto i0 = dynamic_cast<TypeInteger*>(in(1)->type_);
-    auto i1 = dynamic_cast<TypeInteger*>(in(2)->type_);
+    Type*t1 = in(1)->type_;
+    Type*t2 = in(2)->type_;
+
+    auto i0 = dynamic_cast<TypeInteger*>(t1);
+    auto i1 = dynamic_cast<TypeInteger*>(t2);
     if(i0 && i1) {
         if(i0->isConstant() && i1->isConstant()) {
             return TypeInteger::constant(i0->value() | i1->value());

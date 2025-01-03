@@ -81,7 +81,7 @@ Node *RegionNode::idealize() {
   // IF a CFG diamond with no merging, delete: "if(pred) {} else {};
   auto *p1 = dynamic_cast<CProjNode*>(in(1));
   auto *p2 = dynamic_cast<CProjNode*>(in(2));
-  if(!hashPhi() && p1 && p2 && p1->in(0) == p2->in(0) && dynamic_cast<IfNode*>(p1->in(0))) {
+  if(!hashPhi() && p1 && p2 && p1->in(0)->addDep(this) == p2->in(0)->addDep(this) && dynamic_cast<IfNode*>(p1->in(0))) {
       return dynamic_cast<IfNode*>(p1->in(0))->ctrl();
   }
   // TOdo: guarded expression here

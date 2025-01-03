@@ -19,9 +19,9 @@ TypeStruct* TypeStruct::make(std::string name) {
 
 TypeStruct* TypeStruct::make_Ary(TypeInteger* len, int lenAlias, Type *body, int bodyAlias) {
     Tomi::Vector<Field*> fields;
-    fields.push_back(Field::make("#", lenAlias, len));
-    fields.push_back(Field::make("[]", bodyAlias, body));
-    return make(body->str() + "[]", fields);
+    fields.push_back(Field::make("#", len, lenAlias, true));
+    fields.push_back(Field::make("[]", body, bodyAlias, true));
+    return make("[" + body->str() + "]", fields);
 
 }
 TypeStruct* TypeStruct::S1F() {
@@ -38,16 +38,16 @@ TypeStruct* TypeStruct::S2F() {
 }
 TypeStruct* TypeStruct::S1() {
     Tomi::Vector<Field*> fields;
-    fields.push_back(Field::make("a", -1, TypeInteger::BOT()));
-    fields.push_back(Field::make("s2", -2, TypeMemPtr::make(S2F(), false)));
+    fields.push_back(Field::make("a", TypeInteger::BOT(), -1, false));
+    fields.push_back(Field::make("s2", TypeMemPtr::make(S2F(), false), -2,  false));
     TypeStruct* s1 = TypeStruct::make("S1", fields);
     return s1;
 }
 
 TypeStruct* TypeStruct::S2() {
     Tomi::Vector<Field*> fields;
-    fields.push_back(Field::make("S1", -3, TypeMemPtr::make(S1F(), false)));
-    fields.push_back(Field::make("b", -4, TypeFloat::BOT()));
+    fields.push_back(Field::make("S1", TypeMemPtr::make(S1F(), false), -3, false));
+    fields.push_back(Field::make("b", TypeFloat::BOT(), -4, false));
 
     TypeStruct* s2 = TypeStruct::make("S2", fields);
     return s2;
@@ -77,6 +77,7 @@ void TypeStruct::gather(Tomi::Vector<Type *> &ts) {
     ts.push_back(ARY());
 }
 
+// Find field index by name
 int TypeStruct::find(std::string fname) {
     for (int i = 0; i < fields_.value().size(); i++) {
         if (fields_.value()[i]->fname_ == fname) {
@@ -86,6 +87,13 @@ int TypeStruct::find(std::string fname) {
     return -1;
 }
 
+int TypeStruct::findAlias(int alias) {
+    for(int i = 0; i < fields_.value().size(); i++) {
+        if(fields_.value()[i]->alias_ == alias) {
+            return i;
+        }
+    }
+}
 Type *TypeStruct::xmeet(Type *t) {
     auto *that = dynamic_cast<TypeStruct *>(t);
     if (this == TOP()) return that;
@@ -229,13 +237,13 @@ int TypeStruct::hash() {
 }
 
 std::ostringstream &TypeStruct::print_1(std::ostringstream &builder) {
-    builder << name_ << "{";
     // Forward reference struct, just print the name
     if(!fields_) return builder;
+    builder << name_ << " {";
     for (int i = 0; i < fields_.value().size(); i++) {
         fields_.value()[i]->print_1(builder);
         if (i < fields_.value().size() - 1) {
-            builder << ",";
+            builder << ", ";
         }
     }
     builder << "}";

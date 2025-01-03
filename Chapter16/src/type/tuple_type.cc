@@ -2,6 +2,8 @@
 #include <iostream>
 #include "../../Include/type/integer_type.h"
 #include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/type/type.h"
+#include "../../Include/type/type_mem.h"
 
 TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
   for (auto type : types) {
@@ -10,6 +12,9 @@ TypeTuple::TypeTuple(std::initializer_list<Type *> types) : Type(TTUPLE) {
 }
 TypeTuple::TypeTuple(Tomi::Vector<Type *> &types) : Type(TTUPLE) { types_ = types; }
 
+TypeTuple *TypeTuple::START() {
+    return make({Type::CONTROL(), TypeMem::TOP(), TypeInteger::BOT()});
+}
 // O(N)
 std::string TypeTuple::ToString() {
   std::ostringstream os;
@@ -53,7 +58,9 @@ Type* TypeTuple::glb() {
 }
 Type *TypeTuple::xmeet(Type *other) {
   auto *tt = dynamic_cast<TypeTuple *>(other);
-  assert(types_.size() == tt->types_.size());
+  if(types_.size() != tt->types_.size()) {
+      return  Type::BOTTOM();
+  }
   Tomi::Vector<Type *> ts;
   int cnt = 0;
   for (auto item : types_) {
@@ -109,6 +116,7 @@ TypeTuple* TypeTuple::TEST() {
 }
 void TypeTuple::gather(Tomi::Vector<Type *> &ts) {
     ts.push_back(TEST());
+    ts.push_back(START());
 }
 TypeTuple *TypeTuple::IF_BOTH() {
   static TypeTuple IF_BOTH_INSTANCE({Type::CONTROL(), Type::CONTROL()});

@@ -65,9 +65,8 @@ void GlobalCodeMotion::schedEarly() {
             // are always *added* after any Phis, so just walk the Phi prefix.
         }
         if (auto *region = dynamic_cast<RegionNode *>(cfg)) {
-            std::size_t len = region->nOuts();
-            for (std::size_t i = 0; i < len; i++) {
-                if (auto *phi = dynamic_cast<PhiNode *>(region->out(i))) {
+            for (Node *phi: region->outputs) {
+                if (dynamic_cast<PhiNode *>(phi)) {
                     schedEarly_(phi, visit);
                 }
             }
@@ -96,7 +95,7 @@ void GlobalCodeMotion::schedEarly_(Node *n, Tomi::BitArray<10> &visit) {
     // a data-only loop, eventually attempting relying on some pre-visited-
     // not-post-visited data op with no scheduled control.
     for (Node *def: n->inputs) {
-        if (def != nullptr && !def->isPinned()) {
+        if (def != nullptr && !(dynamic_cast<PhiNode *>(def))) {
             schedEarly_(def, visit);
         }
     }
@@ -117,32 +116,29 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
     // Things on the worklist have some (but perhaps not all) uses done.
     IterPeeps::WorkList work;
     work.push(stop);
-    Node* n;
-    while((n = work.pop()) != nullptr) {
+    Node *n;
+    while ((n = work.pop()) != nullptr) {
         assert(late[n->nid] == nullptr);
         // These I know the late schedule of, and need to set early for loops
-        auto*cfg = dynamic_cast<CFGNode*>(n);
-        if(cfg) {
+        auto *cfg = dynamic_cast<CFGNode *>(n);
+        if (cfg) {
             late[n->nid] = cfg->blockHead() ? cfg : cfg->cfg(0);
-        }
-        else if (auto* phi = dynamic_cast<PhiNode*>(n)) {
+        } else if (auto *phi = dynamic_cast<PhiNode *>(n)) {
             late[n->nid] = phi->region();
-        }
-        else if(n->isPinned()) {
+        } else if (n->isPinned()) {
             late[n->nid] = n->cfg0();
-        }
-        else {
+        } else {
             // All uses done?
-            for(Node* use: n->outputs) {
-                if(late[use->nid] == nullptr) {
+            for (Node *use: n->outputs) {
+                if (late[use->nid] == nullptr && !dynamic_cast<PhiNode *>(use)) {
                     continue;
                 }
             }
 
             // Loads need their memory inputs' uses also done
-            if(auto* ld = dynamic_cast<LoadNode*>(n)) {
-                for(Node* memuse: ld->mem()->outputs) {
-                    if(dynamic_cast<TypeMem*>(memuse->type_) && late[memuse->nid] == nullptr) {
+            if (auto *ld = dynamic_cast<LoadNode *>(n)) {
+                for (Node *memuse: ld->mem()->outputs) {
+                    if (!dynamic_cast<PhiNode *>(memuse) && late[memuse->nid] == nullptr) {
                         continue;
                     }
                 }
@@ -150,12 +146,12 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
             // All uses done, schedule
             doSchedLate_(n, ns, late);
             // Walk all inputs and put on worklist, as their last-use might now be done
-            for(Node* def: n->inputs) {
-                if(def != nullptr && late[def->nid] == nullptr) {
+            for (Node *def: n->inputs) {
+                if (def != nullptr && late[def->nid] == nullptr) {
                     work.push(def);
                     // if the def has a load use, maybe the load can fire
-                    for(Node* ld: def->outputs) {
-                        if(dynamic_cast<LoadNode*>(ld) && late[ld->nid] == nullptr) {
+                    for (Node *ld: def->outputs) {
+                        if (dynamic_cast<LoadNode *>(ld) && late[ld->nid] == nullptr) {
                             work.push(ld);
                         }
                     }
@@ -164,6 +160,7 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
         }
     }
 }
+
 void GlobalCodeMotion::schedLate(StartNode *start) {
     Tomi::Vector<CFGNode *> late(Node::UID(), nullptr);
     Tomi::Vector<Node *> ns(Node::UID(), nullptr);
@@ -271,13 +268,14 @@ CFGNode *GlobalCodeMotion::find_anti_dep(CFGNode *lca, LoadNode *load, CFGNode *
         } else if (dynamic_cast<ReturnNode *>(mem)) {
             // Load must already be ahead of Return
             break;
+        } else if (dynamic_cast<ScopeMinNode *>(mem)) {
+            break;
         } else if (dynamic_cast<NeverNode *>(mem)) {
             break;
         } else {
             throw std::runtime_error("TODO");
         }
     }
-
     return lca;
 }
 
@@ -285,7 +283,7 @@ CFGNode *GlobalCodeMotion::anti_dep(LoadNode *load, CFGNode *stblk, CFGNode *def
     // Walk store blocks "reach" from its scheduled location to its earliest
     for (; stblk != defblk->idom(); stblk = stblk->idom()) {
         // Store and Load overlap, need anti-dependence
-        if (stblk->anti_ == load->nid) {
+        if (!dynamic_cast<IfNode *>(stblk) && stblk->anti_ == load->nid) {
             lca = stblk->idom(lca, nullptr);
             if (lca == stblk && st != nullptr &&
                 std::find(st->inputs.begin(), st->inputs.end(), load) == st->inputs.end()) {

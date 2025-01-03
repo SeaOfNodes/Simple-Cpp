@@ -7,12 +7,9 @@ ReturnNode::ReturnNode(Node *ctrl, Node *data, ScopeNode* scope) : CFGNode({ctrl
     // We could also use implicit knowledge that all memory projects are at offset >= 2
     // Add memory slices to Return, so all memory updates are live-on-exit.
     if(scope != nullptr) {
-    Tomi::Vector<std::string> names = scope->reverseNames();
-    for(std::string name: names) {
-        if(name != "$ctrl" && name[0] == '$') {
-            addDef(scope->lookup(name));
+        for(int i = 2; i < scope->mem()->nIns(); i++) {
+            addDef(scope->mem()->in(i));
         }
-    }
     }
 }
 

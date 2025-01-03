@@ -23,6 +23,7 @@ public:
     bool nil_;
 
     TypeMemPtr(TypeStruct* obj, bool nil);
+
     static TypeMemPtr* make(TypeStruct* obj, bool nil);
     static TypeMemPtr* make(TypeStruct* obj);
     TypeMemPtr* make_from(TypeStruct* obj);
@@ -32,6 +33,9 @@ public:
     static TypeMemPtr* NULLPTR();
     static TypeMemPtr* VOIDPTR();
     static TypeMemPtr* test();
+
+    bool isConstant() override;
+    bool isHighOrConst() override;
 
     static void gather(Tomi::Vector<Type*>& ts);
     Type* xmeet(Type* other) override;

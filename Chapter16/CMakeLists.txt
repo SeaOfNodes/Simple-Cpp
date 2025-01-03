@@ -77,6 +77,8 @@ add_library(simple_lib
         src/node/xctrl_node.cc
         src/globalCodeMotion.cc
         src/node/to_float_node.cc
+        src/node/struct_node.cc
+        src/node/scope_minnode.cc
 
         # bitwise
         src/node/xor_node.cc

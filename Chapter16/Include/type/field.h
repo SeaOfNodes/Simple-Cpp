@@ -13,14 +13,19 @@ public:
     // Unique memory alias
     int alias_;
     Type *type_;
+    // Unique memory alias, not sensibly part of a "type" but very convenient here.
+    // Field must be written to exactly once, no more, no less
+    bool final_;
 
-    Field(std::string fname, int alias, Type *type);
+    Field(std::string fname, Type *type,  int alias, bool xfinal);
 
-    static Field *make(std::string fname, int alias, Type *type);
+    static Field *make(std::string fname, Type *type, int alias,  bool xfinal);
 
     static Field *test();
 
     static void gather(Tomi::Vector<Type *> &ts);
+
+    Field*makeFrom(Type* type);
 
     Field *xmeet(Type *that);
 

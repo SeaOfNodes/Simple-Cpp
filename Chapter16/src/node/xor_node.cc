@@ -28,8 +28,14 @@ Type *XorNode::compute() {
     // Todo: got rid of this, why?
     // if (in(1)->type_->isHigh() || in(2)->type_->isHigh()) return TypeInteger::TOP();
 
+    Type*t1 = in(1)->type_;
+    Type*t2 = in(2)->type_;
+    if(t1->isHigh() || t2->isHigh()) {
+        return TypeInteger::TOP();
+    }
     auto i0 = dynamic_cast<TypeInteger *>(in(1)->type_);
     auto i1 = dynamic_cast<TypeInteger *>(in(2)->type_);
+
 
     if (i0 && i1) {
         if (i0->isConstant() && i1->isConstant()) {

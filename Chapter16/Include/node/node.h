@@ -154,6 +154,8 @@ public:
     virtual std::ostringstream &print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &) = 0;
 
+    Node*insertDef(int idx, Node* new_def);
+
     virtual int hash();
 
     virtual bool isMultiHead();
@@ -202,7 +204,7 @@ public:
 
     bool delUse(Node *use);
 
-    void popN(std::size_t n);
+    void popUntil(std::size_t n);
 
     // Kill a Node with no uses, by setting all of its defs to null.
     void kill();

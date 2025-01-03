@@ -13,6 +13,12 @@ TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
     return make(obj, nil_);
 }
 
+bool TypeMemPtr::isConstant() {
+    return this == NULLPTR();
+}
+bool TypeMemPtr::isHighOrConst() {
+    return this == TOP() || this == NULLPTR();
+}
 Type* TypeMemPtr::nonZero() {
     return VOIDPTR();
 }
