@@ -63,7 +63,7 @@ try {
 }
 }
 
- Todo: Region id should be 21
+// Todo: Region id should be 21
 TEST(SimpleTest, testFinal1
 ) {
 std::string source = R"(
@@ -140,8 +140,8 @@ EXPECT_EQ(result,
 "return Point;");
 }
 
- Same as the Chapter13 test with the same name, but using the new
- constructor syntax
+// Same as the Chapter13 test with the same name, but using the new
+// constructor syntax
 TEST(SimpleTest, testLinkedList1
 ) {
 std::string source = R"(
