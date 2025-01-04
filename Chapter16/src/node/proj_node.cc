@@ -34,7 +34,8 @@ bool ProjNode::isMem() {
 Type *ProjNode::compute() {
     Type *t = in(0)->type_;
     if (auto tt = dynamic_cast<TypeTuple *>(t); tt) {
-        return tt->types_[idx_];
+        Type*c  = tt->types_[idx_];
+        return c;
     }
     return Type::BOTTOM();
 }

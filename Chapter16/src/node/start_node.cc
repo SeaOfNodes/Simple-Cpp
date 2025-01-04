@@ -1,9 +1,9 @@
 #include "../../Include/node/start_node.h"
 #include "../../Include/parser.h"
 
-StartNode::StartNode(std::initializer_list<Type *> args) : MultiNode({}) {
-  arg_ = alloc.new_object<TypeTuple>(args);
-  type_ = arg_;
+StartNode::StartNode(Type* arg) : MultiNode({}) {
+  arg_ = arg;
+  type_ = TypeTuple::make({Type::CONTROL(), TypeMem::TOP(), arg_});
 }
 
 bool StartNode::isCFG() { return true; }
@@ -47,6 +47,7 @@ void StartNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode 
 
 }
 int StartNode::loopDepth() {loopDepth_ = 1; return loopDepth_;}
+
 Type *StartNode::compute() {
     return TypeTuple::make({Type::CONTROL(), TypeMem::TOP(), arg_});
 }

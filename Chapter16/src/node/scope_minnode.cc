@@ -64,13 +64,11 @@ Node *ScopeMinNode::mem_(int alias_, Node *st) {
         Node *memdef = loopmem->alias(alias_);
         // Lazy phi!
 
-        Node *old;
         auto *phi = dynamic_cast<PhiNode *>(memdef);
         if (phi && loop->ctrl() == phi->region()) {
             old = memdef;
         } else {
             old = loopmem->alias(alias_, alloc.new_object<PhiNode>(Parser::memName(alias_), TypeMem::BOT(), std::initializer_list<Node*>{loop->ctrl(), loopmem->mem_(alias_, nullptr), nullptr})->peephole());
-            loopmem->mem_(alias_, nullptr)->peephole();
         }
         alias(alias_, old);
     }

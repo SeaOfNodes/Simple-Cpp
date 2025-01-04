@@ -368,10 +368,10 @@ namespace Tomi {
             array = tmp;
         }
 
-        Type *endPtr;
+        Type *endPtr = nullptr;
         std::size_t capacity{};
         std::size_t current{};
-        Type *array;
+        Type *array = nullptr;
     };
 
     template<size_t SIZE>

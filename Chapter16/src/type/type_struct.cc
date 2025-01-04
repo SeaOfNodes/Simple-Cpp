@@ -176,7 +176,10 @@ int TypeStruct::aryScale() {
     return fields_.value()[1]->type_->log_size();
 }
 int TypeStruct::offset(int idx) {
-    if(offs_.empty()) offs_ = offsets();
+    if(offs_.empty()) {
+        offs_ = offsets();
+
+    }
     return offs_[idx];
 }
 // Field offsets as packed byte offsets
@@ -198,7 +201,7 @@ Tomi::Vector<int> TypeStruct::offsets() {
     // Assign offsets to all fields.
     // Really a hidden radix sort.
 
-    offs_ = Tomi::Vector<int>(fields_.value().size() + 1);
+    offs_.resize(fields_.value().size() + 1);
     for(Field* f : fields_.value()) {
         int log = f->type_->log_size();
         offs_[idx++] = offs[log];  // Field offset
@@ -206,7 +209,6 @@ Tomi::Vector<int> TypeStruct::offsets() {
         cnts[log]--;    // Count down, should be all zero at end
     }
     offs_[fields_.value().size()] = (off+7)& ~7;
-    offs_ = offs;
     return offs_;
 }
 

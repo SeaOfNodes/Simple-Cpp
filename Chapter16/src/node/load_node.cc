@@ -19,6 +19,9 @@ std::ostringstream &LoadNode::print_1(std::ostringstream &builder, Tomi::Vector<
 
 Type *LoadNode::compute() {
     // Todo: understand this
+    if(nid == 14) {
+        std::cerr << "T";
+    }
     auto*mem1 = dynamic_cast<TypeMem*>(mem()->type_);
     if(mem1 && declaredType != mem1->t_ && MemOpNode::err().empty()) {
         return declaredType->join(mem1->t_);

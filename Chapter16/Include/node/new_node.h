@@ -17,7 +17,7 @@ public:
     NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes);
     NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes);
     TypeMemPtr* ptr_;
-    int len_;
+    int len_{};
 
     std::string label() override;
     std::string glabel() override;

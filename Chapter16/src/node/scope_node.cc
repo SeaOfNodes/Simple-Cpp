@@ -14,13 +14,13 @@ Type *ScopeNode::compute() { return Type::BOTTOM(); }
 Node *ScopeNode::idealize() { return nullptr; }
 
 void ScopeNode::push() {
-    lexSize.emplace_back();
+    lexSize.push_back(static_cast<int>(vars.size()));
     //decls.emplace_back();
 }
 
 void ScopeNode::pop() {
-    lexSize.pop_back();
     int n = lexSize.back();
+    lexSize.pop_back();
     popUntil(n);
     vars.resize(n);
 
@@ -150,7 +150,7 @@ ScopeMinNode::Var *ScopeNode::update_(ScopeMinNode::Var* v, Node *st) {
     return v;
 }
 
-Node *ScopeNode::ctrl() { return in(0); }
+Node *ScopeNode::ctrl() { return Node::in(0); }
 
 Node *ScopeNode::ctrl(Node *n) { return setDef(0, n); }
 
@@ -236,14 +236,17 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
 }
 
 void ScopeNode::merge_(ScopeNode*that, RegionNode*r) {
-    for(int i = 0; i < nIns(); i++) {
+    for(int i = 2; i < nIns(); i++) {
         if(in(i) != that->in(i)) {
             // No need for redundant Phis
             // If we are in lazy phi mode we need to a lookup
             // by name as it will trigger a phi creation
             ScopeMinNode::Var*v = vars[i];
             Node*lhs = in(update_(v, nullptr));
-            Node*rhs = that->in(update_(v, nullptr));
+
+            Node* a = that->in(2);
+            ScopeMinNode::Var *da  = that->update_(v, nullptr);
+            Node*rhs = that->in(da);
             setDef(i, alloc.new_object<PhiNode>(v->name_, v->type_, std::initializer_list<Node*>{r, lhs, rhs})->peephole());
         }
     }
@@ -303,7 +306,7 @@ ScopeNode *ScopeNode::dup(bool loop) {
     dup->addDef(ctrl());
 
     // Memory input is a shallow copy
-    ScopeMinNode* memdup = alloc.new_object<ScopeMinNode>();
+    auto* memdup = alloc.new_object<ScopeMinNode>();
     ScopeMinNode* mem1 = mem();
     memdup->addDef(nullptr);
     memdup->addDef(loop ? this : mem1->in(1));
@@ -313,10 +316,10 @@ ScopeNode *ScopeNode::dup(bool loop) {
     }
     dup->addDef(memdup);
     // now, all the inputs
-    for (int i = 2; i < mem()->nIns(); i++) {
+    for (int i = 2; i < nIns(); i++) {
         // For lazy phis on loops we use a sentinel
         // that will trigger phi creation on update
-        memdup->addDef(loop ? this : mem1->in(i));
+        dup->addDef(loop ? this : in(i));
     }
     return dup;
 }

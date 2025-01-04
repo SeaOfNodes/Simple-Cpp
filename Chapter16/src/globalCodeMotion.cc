@@ -53,8 +53,11 @@ void GlobalCodeMotion::schedEarly() {
     Tomi::BitArray<10> visit;
     rpo_cfg(Parser::START, visit, rpo);
     // Reverse Post-Order on CFG
-    for (int j = rpo.size() - 1; j >= 0; j--) {
+    for (int j = static_cast<int>(rpo.size() - 1); j >= 0; j--) {
         CFGNode *cfg = rpo[j];
+        if(cfg->nid == 17) {
+            std::cerr << "Here";
+        }
         cfg->loopDepth(); // have to calculate loopDepth from backwards
         for (Node *n: cfg->inputs) {
             schedEarly_(n, visit);
@@ -65,8 +68,21 @@ void GlobalCodeMotion::schedEarly() {
             // are always *added* after any Phis, so just walk the Phi prefix.
         }
         if (auto *region = dynamic_cast<RegionNode *>(cfg)) {
-            for (Node *phi: region->outputs) {
-                if (dynamic_cast<PhiNode *>(phi)) {
+//            if(cfg->nid == 17 && cfg->outputs.size() == 5) {
+//                std::cerr << "Here";
+//            }
+
+// Todo: still bug NEEDS TO GET FIXED ASAP
+//            for (auto phi: region->outputs) {
+//                Node** bl = region->outputs.begin();
+//                Node** el = region->outputs.end();
+//                if (dynamic_cast<PhiNode *>(phi)) {
+//                    schedEarly_(phi, visit);
+//                }
+//            }
+            for (std::size_t i = 0; i < region->outputs.size(); ++i) {
+                Node* phi = region->outputs[i];
+                if (dynamic_cast<PhiNode*>(phi)) {
                     schedEarly_(phi, visit);
                 }
             }

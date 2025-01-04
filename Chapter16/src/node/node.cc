@@ -13,6 +13,9 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
+    if(nid == 10) {
+        std::cerr << "Here";
+    }
      for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -23,6 +26,9 @@ Node::Node(std::initializer_list<Node *> inputNodes) {
 
 Node::Node(Tomi::Vector<Node *> inputs_) {
     nid = UNIQUE_ID++;
+    if(nid == 10) {
+        std::cerr << "Here";
+    }
     for (Node *n: inputs_) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -136,6 +142,7 @@ Node *Node::setDef(int idx, Node *new_def) {
         return new_def;
     if (new_def != nullptr)
         new_def->addUse(this);
+
     inputs[idx] = new_def;
 
     if (old_def != nullptr && old_def->delUse(this))
@@ -146,6 +153,9 @@ Node *Node::setDef(int idx, Node *new_def) {
 }
 
 Node *Node::addUse(Node *n) {
+    if(nid == 17 && outputs.size() == 4) {
+        std::cerr << "Here";
+    }
     outputs.push_back(n);
     return this;
 }
@@ -207,6 +217,11 @@ void Node::subsume(Node *nnn) {
 Type *Node::setType(Type *type) {
     Type *old = type_;
     // Todo: Monotonicity should hold here.
+    if(old != nullptr) {
+        if(!type->isa(old)) {
+            std::cerr << "Here";
+      }
+    }
     assert(old == nullptr || type->isa(old));
     if (old == type)
         return old;
@@ -302,8 +317,8 @@ Node *Node::peephole() {
 void Node::popUntil(std::size_t n) {
     unlock();
     while(nIns() > n) {
-        inputs.pop_back();
         Node *old_def = inputs.back();
+        inputs.pop_back();
         if (old_def != nullptr && old_def->delUse(this))
             old_def->kill();
     }
@@ -327,6 +342,9 @@ Node* Node::insertDef(int idx, Node *new_def) {
 }
 // Todo: use DelVal here
 Node *Node::delDef(int idx) {
+    if(idx == 0) {
+        std::cerr << "Here";
+    }
     unlock();
     Node **old_def = &inputs[idx];
     Node *nptr = *old_def;

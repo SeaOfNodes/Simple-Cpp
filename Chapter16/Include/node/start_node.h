@@ -13,8 +13,8 @@
 
 class StartNode : public MultiNode {
 public:
-  TypeTuple *arg_;
-  StartNode(std::initializer_list<Type *> args);
+  Type *arg_;
+  StartNode(Type*arg);
 
   bool isCFG() override;
 

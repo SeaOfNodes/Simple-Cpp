@@ -61,11 +61,10 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     continueScope = nullptr;
     breakScope = nullptr;
 
-    START = alloc.new_object<StartNode>(std::initializer_list < Type * > {Type::CONTROL(), arg});
+    START = alloc.new_object<StartNode>(arg);
     STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
     ZERO = dynamic_cast<ConstantNode *>(con(static_cast<long>(0))->keep());
     XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
-    START->peephole();
 }
 
 bool Parser::SCHEDULED = false;
@@ -101,8 +100,7 @@ StopNode *Parser::parse(bool show) {
             (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
     parseBlock();
     if (ctrl()->type_ == Type::CONTROL()) {
-        STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), (alloc.new_object<ConstantNode>(TypeInteger::constant(0),
-                                                                                              Parser::START))->peephole(),
+        STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), ZERO,
                                                       scope_node))->peephole());
 
     }
@@ -182,6 +180,8 @@ Node *Parser::parseStruct() {
     // Parse a collection of fields
     Tomi::Vector<Field *> fields;
     require("{");
+    // A Block scope parse, and inspect the scope afterward for fields.
+    scope_node->push();
     while (!peek('}') && !lexer->isEof()) {
         parseStatement();
     }
@@ -398,7 +398,10 @@ Node *Parser::parseIf() {
     ifF->keep();
 
     std::size_t ndefs = scope_node->nIns();
+    Node* la = scope_node->in(2);
+
     ScopeNode *fScope = scope_node->dup(); // Duplicate current scope
+    Node* fa = fScope->in(2);
     xScopes.push_back(fScope); // For graph visualisation we need all scopes
 
     // Parse the true side
@@ -422,6 +425,8 @@ Node *Parser::parseIf() {
     scope_node = tScope;
     xScopes.pop_back(); // Discard pushed from graph display
 
+    Node*b = fScope->in(2);
+    Node *c = tScope->in(2);
     // Merge scope here
     return ctrl(tScope->mergeScopes(fScope));
 }
@@ -517,7 +522,7 @@ Node *Parser::parseExpressionStatement() {
     size_t old = lexer->position;
     Type *t = type();
     Node *n;
-    if (t == nullptr) {
+    if (t != nullptr) {
         // now parse final [, final]*
         n = parseFinal(t);
         while (match(",")) {
@@ -700,7 +705,7 @@ Node *Parser::newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node*
         error("Unknown struct type'" + obj->name_ + "'");
     }
     int len = fs.size();
-    Tomi::Vector<Node *> ns(2 + fs.size());
+    Tomi::Vector<Node *> ns(2 + len + len);
 
     ns[0] = ctrl();
     ns[1] = size;
@@ -711,7 +716,12 @@ Node *Parser::newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node*
     for(int i = 0; i < len; i++) {
         ns[2 + len + i] = init[i + idx];
     }
-    Node *nnn = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ns))->peephole();
+    TypeMemPtr*m = TypeMemPtr::make(obj);
+
+    Node *nnn = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ns));
+
+    nnn = nnn->peephole();
+
     for (int i = 0; i < len; i++) {
         Node *pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs[i]->alias_))->peephole();
         memAlias(fs[i]->alias_, pr);
@@ -797,7 +807,8 @@ Node *Parser::parsePostFix(Node *expr) {
 
     } else {
         // Hardwired field offset
-        off = con(base->offset(fidx));
+        int val = base->offset(fidx);
+        off = con(val);
     }
     if (match("=")) {
         if (peek('=')) lexer->position--;
@@ -816,7 +827,7 @@ Node *Parser::parsePostFix(Node *expr) {
             return val->unkeep();
         }
     }
-    Node *load = (alloc.new_object<LoadNode>(name, f->alias_, f->type_->glb(), memAlias(f->alias_), expr->unkeep(),
+    Node *load = (alloc.new_object<LoadNode>(name, f->alias_, f->type_->glb(), memAlias(f->alias_), expr,
                                              off));
     // Arrays include control, as a proxy for a safety range check
     // Structs don't need this; they only need a NPE check which is
@@ -929,10 +940,10 @@ Node *Parser::alloc_() {
     // Check that all fields are initialized
     for (int i = idx; i < init.size(); i++) {
         if (init[i]->type_ == Type::TOP()) {
-
+            error(tmp->obj_->name_ + " is not fully initialized, field '" + fs[i-idx]->fname_ + "' needs to be set in a constructor");
         }
     }
-    Node *ptr = newStruct(tmp->obj_, con(tmp->obj_->offset(fs.size())), idx, init);
+    Node *ptr = newStruct(tmp->obj_, con(tmp->obj_->offset(static_cast<int>(fs.size()))), idx, init);
     if (hasConstdructor) {
         scope_node->pop();
     }
@@ -970,7 +981,6 @@ std::string Parser::requireId() {
 }
 
 void Parser::errorSyntax(std::string syntax) {
-    std::cerr << "Here";
     error("Syntax error, expected " + syntax + ": " + lexer->getAnyNextToken());
 }
 

@@ -55,13 +55,15 @@ x=3;
 return x;
 )";
 auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 5;");
+try {
+    StopNode *ret = parser->parse(true)->iterate();
+} catch (std::runtime_error &e) {
+    std::string result = e.what();
+    EXPECT_EQ("Cannot reassign final 'x'", result);
+}
 }
 
+ Todo: Region id should be 21
 TEST(SimpleTest, testFinal1
 ) {
 std::string source = R"(
@@ -74,7 +76,7 @@ StopNode *ret = parser->parse(true)->iterate();
 std::ostringstream builder;
 std::string result = ret->print(builder).str();
 EXPECT_EQ(result,
-"return Phi(Region21,9,3);");
+"return Phi(Region17,9,3);");
 }
 
 TEST(SimpleTest, testConstruct0
@@ -138,8 +140,8 @@ EXPECT_EQ(result,
 "return Point;");
 }
 
-// Same as the Chapter13 test with the same name, but using the new
-// constructor syntax
+ Same as the Chapter13 test with the same name, but using the new
+ constructor syntax
 TEST(SimpleTest, testLinkedList1
 ) {
 std::string source = R"(

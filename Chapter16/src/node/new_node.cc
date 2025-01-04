@@ -2,10 +2,10 @@
 #include "../Include/type/type_mem.h"
 #include "../../Include/type/tuple_type.h"
 #include "../../Include/node/proj_node.h"
-#include "../../Include/type/type_mem.h"
 
-NewNode::NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes) : Node(nodes), ptr_(ptr), len_(ptr->obj_->fields_.value().size()) {}
-NewNode::NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes) : Node(nodes), ptr_(ptr) {}
+
+NewNode::NewNode(TypeMemPtr* ptr, std::initializer_list<Node*> nodes) : Node(nodes), ptr_(ptr), len_(static_cast<int>(ptr->obj_->fields_.value().size())) {}
+NewNode::NewNode(TypeMemPtr* ptr, Tomi::Vector<Node*> nodes) : Node(std::move(nodes)), ptr_(ptr), len_(static_cast<int>(ptr->obj_->fields_.value().size())) {}
 std::string NewNode::label() {return "new" + (ptr_->obj_->isAry() ? "ary_" + ptr_->obj_->fields_.value()[1]->type_->str() : ptr_->obj_->str());}
 std::string NewNode::glabel() {return "new " + ptr_->obj_->name_;}
 
@@ -28,7 +28,7 @@ Type* NewNode::compute() {
     ts[0] = Type::CONTROL();
     ts[1] = ptr_;
     for(int i = 0; i < fs.size(); i++) {
-        TypeMem* mem = dynamic_cast<TypeMem*>(in(2)->type_);
+        auto* mem = dynamic_cast<TypeMem*>(in(i + 2)->type_);
         Type*tfld = in(2+len_ + i)->type_->meet(mem->t_);
         ts[i+2] =  TypeMem::make(fs[i]->alias_, tfld);
     }
