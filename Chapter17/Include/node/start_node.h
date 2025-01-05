@@ -11,7 +11,7 @@
 #include "node.h"
 
 
-class StartNode : public MultiNode {
+class StartNode : public LoopNode {
 public:
   Type *arg_;
   StartNode(Type*arg);

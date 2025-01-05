@@ -13,6 +13,21 @@ TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
     return make(obj, nil_);
 }
 
+TypeMemPtr* TypeMemPtr::make_from(bool nil) {
+    return nil == nil_ ? this : make(obj_, nil);
+}
+
+TypeMemPtr* TypeMemPtr::lub() {
+    return make(obj_->lub(), false);
+}
+
+bool TypeMemPtr::isFinal() {
+    return obj_->isFinal();
+}
+TypeMemPtr* TypeMemPtr::makeR0() {
+    return make_from(obj_->makeR0());
+}
+
 bool TypeMemPtr::isConstant() {
     return this == NULLPTR();
 }

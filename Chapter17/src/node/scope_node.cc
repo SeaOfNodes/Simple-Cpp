@@ -14,13 +14,20 @@ Type *ScopeNode::compute() { return Type::BOTTOM(); }
 Node *ScopeNode::idealize() { return nullptr; }
 
 void ScopeNode::push() {
-    lexSize.push_back(static_cast<int>(vars.size()));
+    push(false);
     //decls.emplace_back();
 }
 
+void ScopeNode::push(bool InCon) {
+    lexSize.push_back(vars.size());
+    _inCons.push_back(InCon);
+    //idxs.emplace_back();
+    //if(InCon) decls.emplace_back();
+}
 void ScopeNode::pop() {
     int n = lexSize.back();
     lexSize.pop_back();
+    _inCons.pop_back();
     popUntil(n);
     vars.resize(n);
 
@@ -98,6 +105,9 @@ bool ScopeNode::define(std::string name, Type *declaredType, bool xfinal, Node *
     return true;
 }
 
+bool ScopeNode::inCon() {
+    return _inCons.back();
+}
 Node* ScopeNode::mem(int alias) {
     return mem()->mem_(alias, nullptr);
 }
@@ -106,15 +116,15 @@ void ScopeNode::mem(int alias, Node*st) {
 }
 ScopeMinNode::Var *ScopeNode::lookup(std::string name) {
     int idx = find(name);
-    return idx == -1 ? nullptr : update_(vars[idx], nullptr);
+    return idx == -1 ? nullptr : update(vars[idx], nullptr);
 }
 
 void ScopeNode::update(std::string name, Node *n) {
     int idx = find(name);
-    update_(vars[idx], n);
+    update(vars[idx], n);
 }
 
-ScopeMinNode::Var *ScopeNode::update_(ScopeMinNode::Var* v, Node *st) {
+ScopeMinNode::Var *ScopeNode::update(ScopeMinNode::Var* v, Node *st) {
 //    // nesting level is negative if nothing is found
 //    if (nestingLevel < 0) // Missed in all scopes, not found
 //        return nullptr;
@@ -133,8 +143,7 @@ ScopeMinNode::Var *ScopeNode::update_(ScopeMinNode::Var* v, Node *st) {
         if (phi && loop->ctrl() == phi->region()) {
             old = def;
         } else {
-            Node* new_node =(alloc.new_object<PhiNode>(v->name_, dynamic_cast<TypeMemPtr*>(v->type_) ?
-                                                                                  v->type_ : v->type_->glb(),
+            Node* new_node =(alloc.new_object<PhiNode>(v->name_,v->lazyGLB(),
                                                        std::initializer_list<Node *>{loop->ctrl(),
                                                                                      loop->in(loop->update_(v, nullptr)->idx_),
                                                                                      nullptr}))->peephole();
@@ -168,7 +177,7 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
             j++;
         }
         ScopeMinNode::Var* v = vars[i];
-        v->type_->print_1(builder);
+        v->type()->print_1(builder);
         builder << " ";
         if(v->final_) builder << "!";
         builder << v->name_;
@@ -203,7 +212,7 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
 //    return builder;
 }
 
-Node *ScopeNode::mergeScopes(ScopeNode *that) {
+RegionNode *ScopeNode::mergeScopes(ScopeNode *that) {
     // not called with keep here
     RegionNode *r = dynamic_cast<RegionNode *>(
             ctrl((alloc.new_object<RegionNode>(
@@ -232,7 +241,7 @@ Node *ScopeNode::mergeScopes(ScopeNode *that) {
 //    }
     that->kill();
     IterPeeps::add(r);
-    return r->unkeep()->peephole();
+    return r->unkeep();
 }
 
 void ScopeNode::merge_(ScopeNode*that, RegionNode*r) {
@@ -242,14 +251,84 @@ void ScopeNode::merge_(ScopeNode*that, RegionNode*r) {
             // If we are in lazy phi mode we need to a lookup
             // by name as it will trigger a phi creation
             ScopeMinNode::Var*v = vars[i];
-            Node*lhs = in(update_(v, nullptr));
+            Node*lhs = in(update(v, nullptr));
 
             Node* a = that->in(2);
-            ScopeMinNode::Var *da  = that->update_(v, nullptr);
+            ScopeMinNode::Var *da  = that->update(v, nullptr);
             Node*rhs = that->in(da);
-            setDef(i, alloc.new_object<PhiNode>(v->name_, v->type_, std::initializer_list<Node*>{r, lhs, rhs})->peephole());
+            setDef(i, alloc.new_object<PhiNode>(v->name_, v->type(), std::initializer_list<Node*>{r, lhs, rhs})->peephole());
         }
     }
+}
+void ScopeNode::addGuards(Node *ctrl, Node *pred, bool invert) {
+    _guards.push_back(ctrl);  // Marker to distinguish 0,1,2 guards
+    // add pred & its cast to the normal input list, with special Vars
+    if(ctrl->type_ == Type::XCONTROL() || pred == nullptr || pred->isDead()) {
+        return;      // Dead, do not add any guards
+    }
+    // Invert the If conditional
+    if(invert) {
+        auto* notl =  dynamic_cast<NotNode*>(pred);
+        pred = notl ? notl->in(1) : IterPeeps::add(alloc.new_object<NotNode>(pred)->peephole());
+
+    }
+    // This is a zero/null test.
+    // Compute the positive test type.
+    Type*tnz = pred->type_->nonZero();
+    Type*tcast = tnz->join(pred->type_);
+
+    if(tcast != pred->type_) {
+        Node *cast = alloc.new_object<CastNode>(tnz, ctrl, pred->keep())->peephole()->keep();
+        _guards.push_back(pred);
+        _guards.push_back(cast);
+
+        replace(pred, cast);
+    }
+        // Compute the negative test type.
+        if(auto* notl = dynamic_cast<NotNode*>(pred)) {
+            Node* npred = notl->in(1);
+            Type*tzero = npred->type_->makeZero();
+            Type*tzcast = tzero->join(npred->type_);
+            if(tzcast != npred->type_) {
+                Node*cast = alloc.new_object<CastNode>(tzero, ctrl, npred->keep())->peephole()->keep();
+                _guards.push_back(npred);
+                _guards.push_back(cast);
+                replace(npred, cast);
+            }
+        }
+}
+void ScopeNode::removeGuards(Node *ctrl) {
+    // 0,1 or 2 guards
+    while(true) {
+        Node*g = _guards.back();
+        _guards.pop_back();
+        if(g == ctrl) break;
+        if(dynamic_cast<CFGNode*>(g)) continue;
+        g->unkill(); // pop/kill cast
+        _guards.pop_back(); // pop/kill pred
+        _guards.back()->unkill(); // pop/kill pred
+
+    }
+}
+Node* ScopeNode::upcastGuard(Node *pred) {
+    int i = _guards.size();
+    while (i > 0) {
+        Node*cast = _guards[--i];
+        if(dynamic_cast<CFGNode*>(cast)) continue;
+        Node*xpred=  _guards[--i];
+        if(xpred == pred) {
+            return cast;
+        }
+    }
+    return pred;
+}
+
+void ScopeNode::kill() {
+    for(Node*n: _guards) {
+        if(!dynamic_cast<CFGNode*>(n)) n->unkill();
+    }
+    _guards.clear();
+    ScopeMinNode::kill();
 }
 void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
     Node *ctrl1 = ctrl();
@@ -301,6 +380,17 @@ ScopeNode *ScopeNode::dup(bool loop) {
     }
     for (const auto &declaredType: lexSize) {
         dup->lexSize.push_back(declaredType);
+    }
+    for(const auto &inCon: _inCons) {
+        dup->_inCons.push_back(inCon);
+    }
+    for(const auto&guard : _guards) {
+        dup->_guards.push_back(guard);
+    }
+    // The dup'd guards all need dup'd keepers, to keep proper accounting
+    // when later removing all guards
+    for(Node*n : _guards) {
+        if(!dynamic_cast<CFGNode*>(n)) n->keep();
     }
     // Control comes first
     dup->addDef(ctrl());

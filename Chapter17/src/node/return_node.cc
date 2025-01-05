@@ -18,9 +18,6 @@ ReturnNode::ReturnNode(Node *ctrl, Node *data, ScopeNode* scope) : CFGNode({ctrl
 
 bool ReturnNode::isCFG() { return true; }
 
-Node* ReturnNode::getBlockStart() {
-  return ctrl()->getBlockStart();
-}
 std::ostringstream &ReturnNode::print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &visited) {
   builder << "return ";

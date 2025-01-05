@@ -29,7 +29,7 @@ public:
    * */
   Type *compute() override;
 
-  bool overflow(long x, long y);
+  static bool overflow(long x, long y);
 
   Node *idealize() override;
 

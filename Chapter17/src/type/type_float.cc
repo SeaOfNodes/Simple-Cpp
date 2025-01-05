@@ -19,6 +19,14 @@ int TypeFloat::log_size() {
     // 1 << 2(32 bits), 1 << 3(64 bits)
     return sz == 32 ?  2 : 3;
 }
+
+Type *TypeFloat::lub() {
+    return TOP();
+}
+TypeFloat* TypeFloat::makeZero() {
+    return ZERO();
+}
+
 TypeFloat *TypeFloat::ZERO() {
     static TypeFloat *zero =  make(static_cast<std::int8_t>(0), 0);
     return zero;

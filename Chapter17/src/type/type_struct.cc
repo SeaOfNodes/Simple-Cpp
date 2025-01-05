@@ -11,29 +11,41 @@ TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
     return dynamic_cast<TypeStruct *>((alloc.new_object<TypeStruct>(name, fields))->intern());
 }
 
-TypeStruct* TypeStruct::make(std::string name) {
+TypeStruct* TypeStruct::makeFRef(std::string name) {
 
     auto*a = dynamic_cast<TypeStruct*>((alloc.new_object<TypeStruct>(name, std::nullopt))->intern());
     return a;
 }
 
+TypeStruct *TypeStruct::makeR0() {
+    if(isFinal()) return this;
+    Tomi::Vector<Field*> flds(fields_->size());
+    for(int i = 0; i < fields_->size(); i++) {
+        flds[i] = fields_.value()[i]->makeR0();
+    }
+    return make(name_, flds);
+}
 TypeStruct* TypeStruct::make_Ary(TypeInteger* len, int lenAlias, Type *body, int bodyAlias) {
     Tomi::Vector<Field*> fields;
     fields.push_back(Field::make("#", len, lenAlias, true));
-    fields.push_back(Field::make("[]", body, bodyAlias, true));
+    fields.push_back(Field::make("[]", body, bodyAlias, false));
     return make("[" + body->str() + "]", fields);
 
 }
 TypeStruct* TypeStruct::S1F() {
-    TypeStruct* s1f = make("S1");
+    TypeStruct* s1f = makeFRef("S1");
     return s1f;
 }
 TypeStruct* TypeStruct::ARY() {
     // what does this represent
     return make_Ary(TypeInteger::BOT(), -1, TypeFloat::BOT(),  -2);
 }
+Field* TypeStruct::field(std::string fname) {
+    int idx = find(fname);
+    return idx == -1? nullptr : fields_.value()[idx];
+}
 TypeStruct* TypeStruct::S2F() {
-    TypeStruct* s2f = make("S2");
+    TypeStruct* s2f = makeFRef("S2");
     return s2f;
 }
 TypeStruct* TypeStruct::S1() {
@@ -111,8 +123,8 @@ Type *TypeStruct::xmeet(Type *t) {
     if (name_ != that->name_) {
         return BOT();  // It's a struct; that's about all we know
     }
-    if(!fields_.has_value()) return this;
-    if(!that->fields_.has_value()) return that;
+    if(!fields_.has_value()) return that;
+    if(!that->fields_.has_value()) return this;
     if(fields_.value().size() != that->fields_.value().size()) return BOT();
 
     // Now all fields should be the same, so just do field meets
@@ -129,6 +141,35 @@ Type *TypeStruct::xmeet(Type *t) {
     return make(name_, newFields);
 }
 
+TypeStruct *TypeStruct::lub() {
+    if(lub_()) return this;
+    // need to glb each field
+    Tomi::Vector<Field*> fls(fields_.value().size());
+    for(int i = 0; i < fields_.value().size(); i++) {
+        fls[i] = fields_.value()[i]->lub();
+    }
+    return make(name_, fls);
+}
+
+bool TypeStruct::lub_() {
+    if(!fields_.has_value()) {
+        for(Field* f: fields_.value()) {
+            if(!f->lub()) return false;
+        }
+    }
+    return true;
+}
+
+bool TypeStruct::isFRef() {
+    return !fields_.has_value();
+}
+bool TypeStruct::isFinal() {
+    if(fields_.has_value()) return true;
+    for(Field* f: fields_.value()) {
+        if(!f->isFinal()) return false;
+    }
+    return true;
+}
 TypeStruct *TypeStruct::dual() {
     if (this == TOP()) return BOT();
     if (this == BOT()) return TOP();

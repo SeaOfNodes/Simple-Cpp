@@ -201,10 +201,16 @@ void Node::subsume(Node *nnn) {
             *it = nnn;
         }
         nnn->addUse(n);
+        IterPeeps::addAll(n->outputs);
     }
     kill();
 }
 
+void Node::unkill() {
+    if(unkeep()->isUnused()) {
+        kill();
+    }
+}
 Type *Node::setType(Type *type) {
     Type *old = type_;
     // Todo: Monotonicity should hold here.
@@ -356,10 +362,6 @@ bool Node::isCFG() { return false; }
 
 bool Node::isMem() {
     return false;
-}
-
-Node *Node::getBlockStart() {
-    return nullptr;
 }
 
 bool Node::isPinned() {

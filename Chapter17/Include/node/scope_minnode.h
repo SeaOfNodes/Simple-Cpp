@@ -12,13 +12,21 @@ class ScopeMinNode : public Node {
 public:
      class Var {
      public:
-         int idx_;
-         std::string name_;
-         Type*type_;
-         bool final_;
+         int idx_;    // index in containing scope
+         std::string name_; ;   // Declared name
+         Type*type_;  // Declared type
+         bool final_;  // Final field
         Var(int idx, std::string name, Type* type, bool final);
+
+         Type* type();
+         Type* lazyGLB();
+
+         std::string ToString();
     };
     ScopeMinNode();
+
+
+
 
     std::string label() override;
 

@@ -133,7 +133,7 @@ public:
     // Graphical label, e.g. "+" or "Region" or "=="
     virtual std::string glabel();
 
-    std::string ToString();
+    virtual std::string ToString();
 
     // ------------------------------------------------
 
@@ -177,8 +177,8 @@ public:
 
     [[nodiscard]] virtual bool isMem();
 
-    /** Return block start from a isCFG() */
-    [[nodiscard]] virtual Node *getBlockStart();
+//    /** Return block start from a isCFG() */
+//    [[nodiscard]] virtual Node *getBlockStart();
 
 
     /** Pinned in the schedule */
@@ -220,6 +220,8 @@ public:
     bool iskeep();
 
     Node *unkeep();
+
+    void unkill();
 
     // Replace self with nnn in the graph, making 'this' go dead
     void subsume(Node *nnn);

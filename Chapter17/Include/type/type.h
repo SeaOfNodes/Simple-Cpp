@@ -78,6 +78,19 @@ public:
   virtual std::ostringstream& typeName(std::ostringstream& builder);
 
   virtual Type* makeInit();
+  // Make a zero version of this type, 0 for integers and null for pointers.
+  virtual Type* makeZero();
+  // Make a non-zero version of this type, if possible.  Integers attempt to
+  // exclude zero from their range and pointers become not-null.
+
+
+  // Is forward-reference
+  virtual bool isFRef();
+
+  virtual bool isFinal();
+ // Make all reachable struct Fields final
+ virtual Type* makeR0();
+
   virtual bool eq(Type *t);
 
   static Tomi::Vector<Type*> gather();
@@ -94,6 +107,8 @@ public:
    * Compute greatest lower bound in the lattice
    */
    virtual Type* glb();
+    /** Compute least upper bound in the lattice */
+   virtual Type* lub();
 
   // Our lattice is defined with a MEET and a DUAL.
   // JOIN is dual of meet of both duals.

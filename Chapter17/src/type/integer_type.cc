@@ -7,6 +7,12 @@ std::ostream &operator<<(std::ostream &os, TypeInteger &type_integer) {
     return os;
 }
 
+TypeInteger *TypeInteger::lub() {
+    return TOP();
+}
+TypeInteger* TypeInteger::makeZero() {
+    return ZERO();
+}
 int TypeInteger::log_size() {
     if(this == I8() || this == U8() || this == BOOL()) return 0; // 1<<0 == 1 bytes
     if(this == I16() || this == U16()) return 1; // 1<<1 == 2 bytes

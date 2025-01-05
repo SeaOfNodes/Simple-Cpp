@@ -7,8 +7,11 @@ TypeMem *TypeMem::make(int alias, Type*t) {
     return dynamic_cast<TypeMem *>((alloc.new_object<TypeMem>(alias, t))->intern());
 }
 
+Type* TypeMem::lub() {
+    return make(alias_, t_->lub());
+}
 TypeMem *TypeMem::TOP() {
-    static TypeMem *top = make(0, Type::TOP());
+    static TypeMem *top = make(-1, Type::TOP());
     return top;
 }
 

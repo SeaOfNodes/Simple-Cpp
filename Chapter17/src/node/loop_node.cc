@@ -23,29 +23,7 @@ Node *LoopNode::idealize() {
 int LoopNode::idepth() {return idepth_ == 0 ? (idepth_ = CFGNode::idom()->idepth() + 1) : idepth_; }
 CFGNode *LoopNode::idom(Node* dep) { return entry(); }
 
-int LoopNode::loopDepth() {
-    if(loopDepth_ != 0) return loopDepth_;
-    loopDepth_ = entry()->loopDepth_ + 1;
-    // One-time tag loop exists
-
-    for(CFGNode* idom_ = back(); idom_ != this; idom_ = idom_->idom()) {
-        // Walk idom in loop, setting depth
-        idom_->loopDepth_ = loopDepth_;
-        // Loop exit hits the CProj before the If, instead of jumping from
-        // Region directly to If.
-        if(auto* proj = dynamic_cast<CProjNode*>(idom_)) {
-            assert(dynamic_cast<IfNode*>(proj->in(0)));
-            // Find the loop exit CProj, and set loop_depth
-            for(Node* use: proj->in(0)->outputs) {
-                if(auto* proj2 = dynamic_cast<CProjNode*>(use); proj2 != idom_) {
-                    proj2->loopDepth_ = loopDepth_ + 1;
-                }
-            }
-        }
-    }
-    return loopDepth_;
-}
-void LoopNode::forceExit(StopNode *stop) {
+StopNode* LoopNode::forceExit(StopNode *stop) {
     // Walk the backedge, then immediate dominator tree util we hit this
     // Loop again.  If we ever hit a CProj from an If (as opposed to
     // directly on the If) we found our exit.
@@ -54,10 +32,10 @@ void LoopNode::forceExit(StopNode *stop) {
         auto* exit = dynamic_cast<CProjNode*>(x);
         auto* iff = dynamic_cast<IfNode*>(exit->in(0));
         if(exit && iff) {
-            Node* other = iff->cproj(1-exit->idx_);
+            CFGNode* other = iff->cproj(1-exit->idx_);
             auto* ou = dynamic_cast<LoopNode*>(other->out(0));
-            if(!ou || ou->entry() == exit) {
-                return;
+            if(other->loopDepth() < loopDepth()) {
+                return stop;
             }
         }
         x = x->idom();
@@ -74,4 +52,5 @@ void LoopNode::forceExit(StopNode *stop) {
 
     setDef(2, f);
     stop->addDef(alloc.new_object<ReturnNode>(t, Parser::ZERO, nullptr));
+    return stop;
 }

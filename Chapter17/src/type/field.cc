@@ -20,18 +20,30 @@ Field *Field::xmeet(Type *that) {
     Field *fld = dynamic_cast<Field *>(that);
     // Todo: Missing assert(how is it true?)
     assert(fname_ == fld->fname_ && alias_ == fld->alias_ && final_ == fld->final_);
-    return make(fname_, type_->meet(fld->type_), alias_, final_);
+    return make(fname_, type_->meet(fld->type_), alias_, final_ | fld->final_);
 }
 
 Field *Field::dual() {
-    return make(fname_, type_->dual(), alias_, final_);
+    return make(fname_, type_->dual(), alias_, !final_);
 }
 
 Field *Field::makeFrom(Type *type) {
-    return dynamic_cast<Field*>((alloc.new_object<Field>(fname_, type, alias_, final_))->intern());
+    return type == type_ ? this:  dynamic_cast<Field*>((alloc.new_object<Field>(fname_, type, alias_, final_))->intern());
 }
 Field *Field::glb() {
-    return make(fname_,  type_->glb(), alias_, final_);
+    Type*glb = type_->glb();
+    return glb  == type_ ? this : make(fname_, glb, alias_, final_);
+}
+
+Field* Field::makeR0() {
+    return final_ ? this : make(fname_, type_->makeR0(), alias_, true);
+}
+Field* Field::lub() {
+    Type*lub = type_->lub();
+    return lub == type_ ? this : make(fname_, lub, alias_, final_);
+}
+bool Field::isFinal() {
+    return final_ && type_->isFinal();
 }
 
 int Field::hash() {
@@ -44,7 +56,7 @@ bool Field::eq(Type *t) {
 }
 
 std::ostringstream &Field::print_1(std::ostringstream &builder) {
-    builder << (final_ ? "!" : ":");
+    builder << (final_ ? "" : "!");
     builder << fname_ << ":";
     builder << alias_ << ":";
     return builder;

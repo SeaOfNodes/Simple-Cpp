@@ -13,12 +13,16 @@ public:
     // Load a value from a ptr.field.
     LoadNode(std::string name, int alias, Type* glb, Node* mem, Node* ptr, Node*off);
 
+    static bool hoistPtr(Node*ptr, PhiNode* memphi);
+
     std::string label() override;
     std::string glabel() override;
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
     Type* compute() override;
     Node* idealize() override;
+
+    Node*castR0(Node*rez);
 
     // Profitable if we find a matching Store on this Phi arm.
     bool profit(PhiNode* phi, int idx);

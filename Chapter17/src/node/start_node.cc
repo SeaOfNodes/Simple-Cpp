@@ -1,7 +1,7 @@
 #include "../../Include/node/start_node.h"
 #include "../../Include/parser.h"
 
-StartNode::StartNode(Type* arg) : MultiNode({}) {
+StartNode::StartNode(Type* arg) : LoopNode({nullptr}) {
   arg_ = arg;
   type_ = TypeTuple::make({Type::CONTROL(), TypeMem::TOP(), arg_});
 }
@@ -42,14 +42,6 @@ void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
 //        if(args[i] == nullptr) args[i] = Type::TOP();
 //    }
 //    type_ = args_ = TypeTuple::make(args);
-}
-void StartNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> &unreach) {
-
-}
-int StartNode::loopDepth() {loopDepth_ = 1; return loopDepth_;}
-
-Type *StartNode::compute() {
-    return TypeTuple::make({Type::CONTROL(), TypeMem::TOP(), arg_});
 }
 
 std::string StartNode::label() { return "Start"; }

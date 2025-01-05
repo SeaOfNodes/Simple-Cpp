@@ -17,6 +17,25 @@ std::string ScopeMinNode::label() {
     return "MEM";
 }
 
+Type* ScopeMinNode::Var::type() {
+   if(!type_->isFRef()) return type_;
+    // Update self to no longer use the forward ref type
+    Type**def = Parser::TYPES.get(dynamic_cast<TypeMemPtr*>(type_)->obj_->name_);
+    type_ = type_->meet(*def);
+    return type_;
+}
+
+Type* ScopeMinNode::Var::lazyGLB() {
+    Type*t = type();
+    if(dynamic_cast<TypeMemPtr*>(t)) {
+        return t;
+    }
+    return t->glb();
+}
+std::string ScopeMinNode::Var::ToString() {
+    return type_->ToString() + (final_ ? " ": " ! ") + name_;
+
+}
 std::ostringstream &ScopeMinNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     builder << "MEM[ ";
     for (int j = 2; j < nIns(); j++) {

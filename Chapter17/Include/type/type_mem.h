@@ -23,6 +23,7 @@ public:
     TypeMem* xmeet(Type* t);
     Type* dual() override;
     Type* glb();
+    Type* lub() override;
     int hash() override;
     bool eq(Type* t) override;
     std::ostringstream &print_1(std::ostringstream &builder) override;

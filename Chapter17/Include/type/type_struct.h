@@ -20,8 +20,12 @@ public:
     std::optional<Tomi::Vector<Field*>> fields_;
     explicit TypeStruct(std::string name, std::optional<Tomi::Vector<Field*>> fields);
     // Forward-ref version
-    static TypeStruct* make(std::string name);
+    static TypeStruct* makeFRef(std::string name);
     static TypeStruct* make_Ary(TypeInteger* len, int lenAlias, Type*body, int bodyAlias);
+
+    TypeStruct* makeR0() override;
+
+    Field* field(std::string fname);
 
     // All fields directly listed
     static TypeStruct* make(std::string name, Tomi::Vector<Field*> fields);
@@ -35,6 +39,14 @@ public:
     static TypeStruct* S2();
 
     static TypeStruct* ARY();
+
+    TypeStruct* lub() override;
+    bool lub_();
+
+    bool isFRef() override;
+    bool isFinal() override;
+
+
 
     bool isAry();
 

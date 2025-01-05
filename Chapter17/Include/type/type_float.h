@@ -45,6 +45,8 @@ public:
     Type* xmeet(Type *other) override;
     Type* dual() override;
     Type* glb() override;
+    Type* lub() override;
+    TypeFloat* makeZero() override;
     TypeFloat* makeInit() override;
     int hash() override;
 

@@ -51,7 +51,7 @@ Type *PhiNode::compute() {
     }
     if (r->inProgress()) return declaredType;
     // Set type to local top of the starting type
-    Type *t = declaredType->glb()->dual();
+    Type *t = declaredType->lub();
     for (int i = 1; i < nIns(); i++) {
         // If the region's control input is live, add this as a dependency
         // to the control because we can be peeped should it become dead.
@@ -147,7 +147,7 @@ Node *PhiNode::idealize() {
         if (in(2)->type_ == in(2)->type_->makeInit()) nullx = 2;
         if (nullx != -1) {
             Node *val = in(3 - nullx);
-            if (auto *iff = dynamic_cast<IfNode *>(region()->idom(this)); iff && iff->pred()->addDep(this) == val) {
+            if (auto *iff = dynamic_cast<IfNode *>(region()->idom(this)->addDep(this)); iff && iff->pred()->addDep(this) == val) {
                 // Must walk the idom on the null side to make sure we hit False.
                 CFGNode *idom = (CFGNode *) region()->in(nullx);
                 while (idom->nIns() > 0 && idom->in(0) != iff) idom = idom->idom();

@@ -46,6 +46,12 @@ public:
     // Since of each nested lexical scope
     Tomi::Vector<int> lexSize;
 
+    // True if parsing inside of a constructor
+    Tomi::Vector<bool> _inCons;
+
+    // Extra guards; tested predicates and casted results
+    Tomi::Vector<Node*> _guards;
+
     void merge_(ScopeNode* that, RegionNode* r);
 
     // Find name in reverse, return an index into _vars or -1.  Linear scan
@@ -101,7 +107,7 @@ public:
      */
     void update(std::string name, Node *n);
 
-    ScopeMinNode::Var* update_(ScopeMinNode::Var* v, Node*st);
+    ScopeMinNode::Var* update(ScopeMinNode::Var* v, Node*st);
     /**
      * Both recursive lookup and update.
      * <p>
@@ -156,8 +162,15 @@ public:
      * @param that The ScopeNode to be merged into this
      * @return A new node representing the merge point
      */
-    Node *mergeScopes(ScopeNode *that);
+    RegionNode *mergeScopes(ScopeNode *that);
 
+    void addGuards(Node* ctlr, Node* pred, bool invert);
+
+    // Remove matching pred/cast pairs from this guarded region.
+    void removeGuards(Node* ctrl);
+
+    Node* upcastGuard(Node* pred);
+    void kill();
     // Merge the backedge scope into this loop head scope
     // We set the second input to the phi from the back edge (i.e. loop body)
     void endLoop(ScopeNode *back, ScopeNode *exit);
@@ -176,7 +189,8 @@ public:
     Node *ctrl(Node *n);
 
     void push();
-
+    bool inCon();
+    void push(bool InCon);
     void pop();
 };
 

@@ -41,7 +41,7 @@ public:
   Type *compute() override;
   Node *idealize() override;
   CFGNode *idom(Node* dep) override;
-  void forceExit(StopNode* stop);
+  StopNode* forceExit(StopNode* stop);
   int loopDepth() override;
   int idepth() override;
 };

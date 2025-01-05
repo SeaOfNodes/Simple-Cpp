@@ -53,7 +53,7 @@ Node* ShlNode::idealize() {
         // (x + c) << i  =>  (x << i) + (c << i)
         auto* add = dynamic_cast<AddNode*>(lhs);
         if(add) {
-            auto*c = dynamic_cast<TypeInteger*>(add->in(2));
+            auto*c = dynamic_cast<TypeInteger*>(add->addDep(this)->in(2)->type_);
             if(c && c->isConstant()) {
                 long sum = c->value() << shl->value();
                 if (std::numeric_limits<long>::min() <= sum && sum <= std::numeric_limits<long>::max()) {

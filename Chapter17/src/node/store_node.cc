@@ -26,7 +26,18 @@ std::ostringstream &StoreNode::print_1(std::ostringstream &builder, Tomi::Vector
 Type *StoreNode::compute() {
     Type*val_ = val()->type_;
     auto* mem1 = dynamic_cast<TypeMem*>(mem()->type_);
-    Type*t = mem1->alias_ == alias_ ? val_->meet(mem1->t_) : Type::BOTTOM();
+    Type* t= Type::BOTTOM();      // No idea on field contents
+    // Same alias, lift val to the declared type and then meet into other fields
+    if(mem1->alias_ == alias_) {
+        auto*tmp = dynamic_cast<TypeMemPtr*>(val_);
+        // Update declared forward ref to the actual
+        if(declaredType->isFRef() && tmp && !tmp->isFRef()) {
+            declaredType = tmp;
+        }
+        val_ = val_->join(declaredType);
+        t = val_->meet(mem1->t_);
+    }
+
     return TypeMem::make(alias_, t);
 }
 
@@ -84,6 +95,10 @@ bool StoreNode::checkOnlyUse(Node *mem) {
 std::string StoreNode::err() {
     std::string err = MemOpNode::err();
     if (!err.empty()) return err;
+    TypeMemPtr*tmp = dynamic_cast<TypeMemPtr*>(ptr()->type_);
+    if(tmp->obj_->field(name_)->final_) {
+        return "Cannot modify final field '" + name_ + "'";
+    }
     Type* ptr = val()->type_;
     return (init || ptr->isa(declaredType) ? "" : "Cannot store " + ptr->str() + " into field " + declaredType->str() + " " + name_);
 }

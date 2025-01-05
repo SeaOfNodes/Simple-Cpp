@@ -36,7 +36,7 @@ Type *NotNode::compute() {
         if(p0 == TypeMemPtr::TOP()) return TypeInteger::TOP();
         if(p0 == TypeMemPtr::NULLPTR()) return TypeInteger::constant(1);
         if(!p0->nil_) return TypeInteger::constant(0);
-        return TypeInteger::BOT();
+        return TypeInteger::BOOL();
     }
     if(dynamic_cast<Type*>(in(1)->type_)) {
         auto* t = in(1)->type_;
@@ -46,7 +46,7 @@ Type *NotNode::compute() {
         }
         return t == Type::TOP() ? Type::TOP() : Type::BOTTOM();
     }
-    return TypeInteger::TOP()->meet(in(1)->type_);
+    return TypeInteger::BOOL();
 }
 
 Node *NotNode::idealize() { return nullptr; }

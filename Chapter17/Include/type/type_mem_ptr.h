@@ -27,6 +27,10 @@ public:
     static TypeMemPtr* make(TypeStruct* obj, bool nil);
     static TypeMemPtr* make(TypeStruct* obj);
     TypeMemPtr* make_from(TypeStruct* obj);
+    TypeMemPtr* make_from(bool nil);
+
+    TypeMemPtr* makeR0() override;
+    bool isFinal() override;
 
     static TypeMemPtr* BOT();
     static TypeMemPtr* TOP();
@@ -41,6 +45,8 @@ public:
     Type* xmeet(Type* other) override;
     TypeMemPtr* dual();
     TypeMemPtr* glb();
+
+    TypeMemPtr* lub();
 
     Type* nonZero() override;
     int log_size() override;

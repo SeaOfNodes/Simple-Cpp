@@ -1,8 +1,10 @@
 #include "../../Include/node/stop_node.h"
 #include "../../Include/globalCodeMotion.h"
+#include "../../Include/parser.h"
 #include <functional>
 
 StopNode *StopNode::GCM(bool show) {
+    Parser::START::buildLoopTree(this);
     GlobalCodeMotion::fixLoops(this);
     GlobalCodeMotion::buildCFG(this);
     return this;
@@ -36,9 +38,7 @@ ReturnNode *StopNode::ret() {
 int StopNode::loopDepth() {
     return (loopDepth_=1);
 }
-Node* StopNode::getBlockStart() {
-    return this;
-}
+
 CFGNode* StopNode::idom(Node* dep) { return nullptr; }
 
 Type *StopNode::compute() { return Type::BOTTOM(); }

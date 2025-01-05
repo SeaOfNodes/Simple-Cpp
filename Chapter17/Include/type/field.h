@@ -25,6 +25,9 @@ public:
 
     static void gather(Tomi::Vector<Type *> &ts);
 
+    Field* makeR0() override;
+    bool isFinal() override;;
+
     Field*makeFrom(Type* type);
 
     Field *xmeet(Type *that);
@@ -33,6 +36,7 @@ public:
 
     Field *glb();
 
+    Field* lub() override;
     int hash() override;
 
     bool eq(Type *t) override;

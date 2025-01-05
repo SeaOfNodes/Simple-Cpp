@@ -36,6 +36,12 @@ public:
 
     std::string getAnyNextToken();
 
+    char peek(int off);
+
+    char nextXChar();
+
+    char matchOperAssign();
+
     bool matchx(std::string syntax);
 
     bool match(std::string syntax);
@@ -59,6 +65,7 @@ public:
     std::string get_input();
 
     bool peek(char ch);
+
 
     std::string matchId();
 
@@ -94,6 +101,12 @@ public:
 
     static Tomi::Vector<Node*> ALIMP;
 
+    Node*peep(Node*n);
+    int pos();
+    int pos(int p);
+
+    Type* posT(int pos);
+
     static StopNode *STOP;
     static ConstantNode* ZERO; // Very common node, cached here
     static XCtrlNode* XCTRL; // Very common node, cached here
@@ -103,11 +116,16 @@ public:
     Tomi::Vector<ScopeNode *> xScopes;
 
     ScopeNode *continueScope;
-    ScopeNode *breakScope;
+    ScopeNode *breakScope;   // Merge all the while-breaks here
 
-    Node* parseAsgn(Type* t, bool xfinal);
+    Node* parseAsgn();
     Node* parseFinal(Type *t);
     Node* alloc_();
+
+    // Look for an unbalanced `)`, skipping balanced
+    Type* skipAsgn();
+
+    Node* parseTrinary(Node*pred, bool stmt, std::string fside);
 
     static Node* con(long con);
     static ConstantNode* con(Type*t);
@@ -130,6 +148,12 @@ public:
     TypeMemPtr* typeAry(Type* t);
 
     StopNode *parse(bool show);
+
+    Node* widenInt(Node*expr, Type*t);
+
+    // Make finals deep; widen ints to floats; narrow wide int types.
+    // Early error if types do not match variable.
+    Node* liftExpr(Node*expr, Type*t, bool xfinal);
 
     // zero/sign extend.  "i" is limited to either classic unsigned (min==0) or
     // classic signed (min=minus-power-of-2); max=power-of-2-minus-1.
@@ -162,12 +186,15 @@ private:
 
     Node *parseStatement();
 
+    ScopeMinNode::Var * requireLookUpId(std::string msg);
+
     Node *parseReturn();
 
-    Node *parseExpression();
+    Node *parseDeclarationStatement();
 
     Node *parseIf();
 
+    Node* parseDeclaration(Type*t);
     /**
    * Parse a struct declaration, and return the following statement.
    * Only allowed in top level scope.
@@ -208,8 +235,12 @@ private:
 
     Node *showGraph();
 
-    Node *parseBlock();
+    Node *parseBlock(bool inCon);
 
+    Node*parseFor();
+
+    // Shared by `for` and `while`
+    Node* parseLooping(bool doFor);
     // require an exact match
 
     Parser* require(std::string syntax);

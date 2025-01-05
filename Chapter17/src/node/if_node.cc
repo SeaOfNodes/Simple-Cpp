@@ -43,6 +43,8 @@ Type *IfNode::compute() {
         return TypeTuple::IF_TRUE();
     }
   }
+    // Integers allow non-zero ranges: "1-65535"
+    if(t->makeZero()->meet(t) !=t) return TypeTuple::IF_TRUE();
 
   return TypeTuple::IF_BOTH();
 }
@@ -70,17 +72,4 @@ Node *IfNode::idealize() {
     }
   }
   return nullptr;
-}
-
-void IfNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach) {
-    for(Node* proj: outputs) {
-        if(dynamic_cast<CProjNode*>(proj)->loopDepth_ == 0) {
-            unreach.put((CProjNode*)proj);
-        }
-    }
-    CFGNode::walkUnreach_(visited, unreach);
-}
-
-Node* IfNode::getBlockStart() {
-   return ctrl()->getBlockStart();
 }

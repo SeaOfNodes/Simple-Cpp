@@ -79,6 +79,7 @@ add_library(simple_lib
         src/node/to_float_node.cc
         src/node/struct_node.cc
         src/node/scope_minnode.cc
+        src/node/read_only_node.cc
 
         # bitwise
         src/node/xor_node.cc

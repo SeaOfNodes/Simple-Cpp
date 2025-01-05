@@ -3,12 +3,15 @@
 
 #include "node.h"
 
+// forward-refs
 class CFGNode;
+class LoopNode;
 
 template<>
 struct Tomi::hash<CFGNode*> {
     unsigned long long operator()(CFGNode *val);
 };
+
 
 class CFGNode : public Node {
 public:
@@ -43,8 +46,29 @@ public:
 
     int loopDepth_{};
 
-    virtual int loopDepth();
+    LoopNode* loop();
+    int loopDepth();
 
+    void buildLoopTree(StopNode* stop);
+
+    int bltWalk_(int pre, StopNode* stop, Tomi::BitArray<10>& post);
+
+    class LoopTree {
+    public:
+        LoopTree* par_;
+        LoopNode* head;
+        int depth_;
+        LoopTree(LoopNode* head);
+        std::string ToString();
+        int depth();
+    };
+    // ------------------------------------------------------------------------
+    // Tag all CFG Nodes with their containing LoopNode; LoopNodes themselves
+    // also refer to *their* containing LoopNode, as well as have their depth.
+    // Start is a LoopNode which contains all at depth 1.
+
+    LoopTree* ltree;
+    int pre_; // Pre-order numbers for loop tree finding
     // Anti-dependence field support
     int anti_{};   // Per-CFG field to help find anti-deps
 // ------------------------------------------------------------------------

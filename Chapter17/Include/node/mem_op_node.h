@@ -12,6 +12,8 @@ public:
     std::string name_;
     Type* declaredType;
     int alias_{};
+    //  // Declared type; not final because it might be a forward-reference
+    //    // which will be lazily improved when the reference is declared.
     MemOpNode(std::string name, int alias, Type*glb, Node* mem, Node*ptr, Node*off);
     MemOpNode(std::string name, int alias, Type*glb, Node*mem, Node*ptr, Node*off, Node*val);
 

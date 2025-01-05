@@ -88,9 +88,6 @@ Node *RegionNode::idealize() {
   return nullptr;
 }
 
-int RegionNode::loopDepth() {
-    return loopDepth_ == 0 ? (loopDepth_ = cfg(1)->loopDepth()) : loopDepth_;
-}
 int RegionNode::findDeadInput() {
   for (int i = 1; i < nIns(); i++) {
     if (in(i)->type_ == Type::XCONTROL()) {
@@ -119,15 +116,6 @@ for(int i = 1; i< nIns(); i++) {
     lca = cfg(i)->idom(lca, dep);
 }
 return lca;
-}
-
-Node* RegionNode::getBlockStart() {
-    return this;
-}
-void RegionNode::walkUnreach_(Tomi::BitArray<10> &visit, Tomi::HashSet<CFGNode*>& unreach){
-    for(int i =1; i <nIns(); i++) {
-        cfg(i)->walkUnreach(visit, unreach);
-    }
 }
 
 bool RegionNode::inProgress() {

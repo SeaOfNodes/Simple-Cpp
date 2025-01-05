@@ -16,6 +16,9 @@ public:
 
   int log_size() override;
 
+  TypeInteger* lub() override;
+  TypeInteger* makeZero() override;
+
   TypeInteger* nonZero() override;
 /**
  * Describes an integer *range* - everything from min to max; both min and

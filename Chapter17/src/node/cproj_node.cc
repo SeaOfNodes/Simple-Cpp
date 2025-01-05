@@ -52,13 +52,6 @@ Node *CProjNode::idealize() {
     return nullptr;
 }
 
-Node *CProjNode::getBlockStart() {
-    if (dynamic_cast<IfNode *>(ctrl())) {
-        return this;
-    }
-    return ctrl()->getBlockStart();
-}
-
 bool CProjNode::eq(Node *n) {
     return idx_ == dynamic_cast<CProjNode *>(n)->idx_;
 }

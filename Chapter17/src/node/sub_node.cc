@@ -30,6 +30,13 @@ Type *SubNode::compute() {
     if (t1 && t1->isConstant() && t2 && t2->isConstant()) {
         return TypeInteger::constant(t1->value() - t2->value());
     }
+
+    // Fold ranges like {2-3} - {0-1} into {1-3}.
+    if(!AddNode::overflow(t1->min_, -t2->max_) &&
+      !AddNode::overflow(t1->max_, -t2->max_) &&
+      t2->min_ != std::numeric_limits<long>::min()) {
+        return TypeInteger::make(t1->min_ - t2->max_, t1->max_ - t2->min_);
+    }
     if (in(1) == in(2))
         return TypeInteger::ZERO();
 

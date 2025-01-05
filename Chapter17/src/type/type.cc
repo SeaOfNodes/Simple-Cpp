@@ -10,6 +10,10 @@ int Type::get_hash() { return hash_; }
 bool Type::isHighOrConst() { return type_ == TTOP || type_ == TXCTRL; }
 bool Type::isConstant() { return false; }
 
+/** Compute least upper bound in the lattice */
+Type* Type::lub() {
+    return type_ == TCTRL ? Type::XCONTROL() : Type::TOP();
+}
 
 int Type::log_size() {
     throw std::runtime_error("Todo");
@@ -27,7 +31,22 @@ std::ostringstream &Type::print_1(std::ostringstream &builder) {
 }
 
 Type* Type::makeInit() {
+    return this;
+}
+
+Type* Type::makeZero() {
     return nullptr;
+}
+
+bool Type::isFRef() {
+    return false;
+}
+
+bool Type::isFinal() {
+    return true;
+}
+Type* Type::makeR0() {
+    return this;
 }
 
 Type *Type::CONTROL() {
