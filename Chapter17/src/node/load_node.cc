@@ -7,7 +7,7 @@
 
 #include "../../Include/type/type_mem.h"
 #include "../../Include/parser.h"
-#include "../../Include/read_only_node.h"
+#include "node/read_only_node.h"
 
 LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node*off) : MemOpNode(name, alias, glb, mem, ptr, off){}
 
@@ -60,7 +60,7 @@ Node* LoadNode::idealize() {
     while(true) {
        if(auto*st = dynamic_cast<StoreNode*>(mem1)) {
            if(ptr1 == st->ptr() && off() == st->off()) {
-               return castRO(st->val());
+               return castR0(st->val());
            }
            // Can we prove unequal?  Offsets do not overlap?
            if(!off()->type_->join(st->off()->type_)->isHigh() && !neverAlias(ptr1, st->ptr())){
@@ -75,7 +75,7 @@ Node* LoadNode::idealize() {
     if(auto*mproj = dynamic_cast<ProjNode*>(mem1)) {
         if(auto*nnn1 =dynamic_cast<NewNode*>(mproj->in(0))) {
             if(auto*pproj = dynamic_cast<ProjNode*>(ptr1); pproj->in(0) == mproj->in(0)) {
-                return castRO(nnn1->in(nnn1->find_alias(alias_)));
+                return castR0(nnn1->in(nnn1->find_alias(alias_)));
             }
             if(auto*pproj = dynamic_cast<ProjNode*>(ptr1); !pproj && !dynamic_cast<NewNode*>(pproj->in(0))) {
                 break;

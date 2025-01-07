@@ -26,9 +26,6 @@ public:
   bool inProgress();
   bool hashPhi();
   bool eq(Node* n) override;
-  void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach) override;
-  int loopDepth() override;
-  Node* getBlockStart();
 
 };
 
@@ -42,7 +39,6 @@ public:
   Node *idealize() override;
   CFGNode *idom(Node* dep) override;
   StopNode* forceExit(StopNode* stop);
-  int loopDepth() override;
   int idepth() override;
 };
 #endif

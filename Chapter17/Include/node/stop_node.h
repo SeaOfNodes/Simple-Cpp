@@ -25,10 +25,8 @@ public:
   int idepth() override;
   StopNode* typeCheck();
 
-  int loopDepth() override;
   Node *addReturn(Node *node);
   StopNode* iterate();
   StopNode* iterate(bool show);
-  Node* getBlockStart() override;
 };
 #endif

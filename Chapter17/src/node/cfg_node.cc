@@ -11,6 +11,9 @@ CFGNode *CFGNode::cfg(int idx) {
     return dynamic_cast<CFGNode *>(in(idx));
 }
 
+CFGNode::LoopTree::LoopTree(LoopNode *head) : head(head) {}
+
+std::string CFGNode::LoopTree::ToString() {return "LOOP" + std::to_string(head->nid);}
 unsigned long long Tomi::hash<CFGNode *>::operator()(CFGNode *val) {
     return val->hash();
 }

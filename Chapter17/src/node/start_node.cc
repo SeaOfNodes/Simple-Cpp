@@ -44,6 +44,9 @@ void StartNode::addMemProj(TypeStruct *ts, ScopeNode *scope) {
 //    type_ = args_ = TypeTuple::make(args);
 }
 
+Type*StartNode::compute() {
+    return  TypeTuple::make({Type::CONTROL(), TypeMem::TOP(), arg_});
+}
 std::string StartNode::label() { return "Start"; }
 
 Node *StartNode::idealize() { return nullptr; }

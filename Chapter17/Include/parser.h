@@ -119,7 +119,7 @@ public:
     ScopeNode *breakScope;   // Merge all the while-breaks here
 
     Node* parseAsgn();
-    Node* parseFinal(Type *t);
+
     Node* alloc_();
 
     // Look for an unbalanced `)`, skipping balanced
@@ -257,6 +257,7 @@ private:
 
     bool mathcOpx(char c0, char c1);
 
+    Node* parseExpression();
     Node *parseExpressionStatement();
 
     void errorSyntax(std::string syntax);

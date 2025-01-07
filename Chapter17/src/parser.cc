@@ -223,7 +223,7 @@ Node *Parser::parseStatement() {
     if (matchx("return"))
         return parseReturn();
     else if (match("{"))
-        return require(parseBlock(), "}");
+        return require(parseBlock(false), "}");
     else if (matchx("if"))
         return parseIf();
     else if (matchx("while"))
@@ -245,12 +245,17 @@ Node *Parser::parseStatement() {
         return parseDeclarationStatement();
 }
 
+Node* Parser::parseExpression() {
+        Node*expr = parseBitWise();
+        return match("?") ? parseTrinary(expr, false, ":") : expr;
+
+}
 Node *Parser::parseAsgn() {
     // Having a type is a declaration, missing one is updating a prior name
     int old = pos();
     std::string name = requireId();
 
-    if(name.empty() || KEYWORDS.get(name) || !matchopx('=', '=')) {
+    if(name.empty() || KEYWORDS.contains(name) || !matchOpx('=', '=')) {
         pos(old);
         return parseExpression();
     }
@@ -387,7 +392,7 @@ Type* Parser::skipAsgn() {
         // Next X char handles skipping complex comments
         switch(lexer->nextXChar()) {
             case ')': {
-                if(--paren < 0) return pos(pos() - 1);
+                if(--paren < 0) return posT(pos() - 1);
                 break;
             }
             case '(' : {
@@ -398,10 +403,7 @@ Type* Parser::skipAsgn() {
         }
     }
 }
-Node *Parser::parseFinal(Type *t) {
-    bool xfinal = t != nullptr && match("!");
-    return parseAsgn(t, xfinal);
-}
+
 
 Node* Parser::parseFor() {
     require("(");
@@ -602,8 +604,8 @@ Node* Parser::parseTrinary(Node* pred, bool stmt, std::string fside) {
     scope_node = tScope;
     xScopes.pop_back(); // Discard pushed from graph display
 
-    RegionNode*r = ctrl(tScope->mergeScopes(fScope));
-    Node*ret = stmt ? r : peep(alloc.new_object<PhiNode>("", lhs->type_->meet(rhs->type_), r, lhs->unkeep(), rhs));
+    auto*r = dynamic_cast<RegionNode*>(ctrl(tScope->mergeScopes(fScope)));
+    Node*ret = stmt ? r : peep(alloc.new_object<PhiNode>(std::string(), lhs->type_->meet(rhs->type_), std::initializer_list<Node*>{r, lhs->unkeep(), rhs}));
     r->peephole();
     return ret;
 }
@@ -634,7 +636,7 @@ TypeMemPtr *Parser::typeAry(Type *t) {
 }
 
 Type *Parser::type() {
-    int old_1 = pos();
+    int old1 = pos();
     std::string tname = lexer->matchId();
     if (tname.empty()) return nullptr;
     // Convert the type name to a type.
@@ -667,7 +669,7 @@ Type *Parser::type() {
     int old_2 = pos();
     std::string id = lexer->matchId();
     pos(old_2);
-    if(id.empty() || scope_node->lookup(id) != nullptr) return posT(old_1);
+    if(id.empty() || scope_node->lookup(id) != nullptr) return posT(old1);
 
     // Yes a forward ref, so declare it
     TYPES.put(tname, t1);
@@ -792,7 +794,7 @@ Node *Parser::parseShift() {
             lhs = (alloc.new_object<SarNode>(lhs, nullptr));
         } else break;
         lhs->setDef(2, parseAddition());
-        lhs = peep(lhs.widen());
+        lhs = peep(lhs->widen());
     }
     return lhs;
 }
@@ -819,10 +821,6 @@ bool Lexer::peek(char ch) {
 
 bool Parser::peek(char ch) { return lexer->peek(ch); }
 
-Node *Parser::parseExpression() {
-    Node*expr = parseBitWise();
-    return match("?") ? parseTrinary(expr, false, ":") : expr;
-}
 
 Node *Parser::parseComparison() {
     auto lhs = parseShift(); // Parse the left-hand side
@@ -1044,7 +1042,9 @@ Node *Parser::parsePostFix(Node *expr) {
     Type*tf = f->type_;
     if(auto* ftmp = dynamic_cast<TypeMemPtr*>(tf)) {
         if(ftmp->isFRef()) {
-            tf = ftmp->makeFrom(dynamic_cast<TypeMemPtr*>(TYPES.get((ftmp->obj_->name_))))->obj_;
+            auto** typePtr = TYPES.get(ftmp->obj_->name_);
+            auto* typeMemPtr = dynamic_cast<TypeMemPtr*>(*typePtr);
+            tf = ftmp->make_from(typeMemPtr->obj_);
         }
     }
     // Field offset; fixed for structs, computed for arrays
@@ -1082,7 +1082,7 @@ Node *Parser::parsePostFix(Node *expr) {
     if(matchx("++") || matchx("--")) {
         if(f->final_ && f->fname_ != "[]") error("Cannot reassign final '" + f->fname_ + "'");
 
-        Node*inc = peep(alloc.new_object<AddNode>(load, con(lexer->peek(-1) == "+" ? 1: -1)));
+        Node*inc = peep(alloc.new_object<AddNode>(load, con(lexer->peek(-1) == '+' ? 1: -1)));
         Node*val = ZSMask(inc, tf);
         Node*st = alloc.new_object<StoreNode>(name, f->alias_, tf, memAlias(f->alias_), expr->unkeep(), off, val, false);
         // Arrays include control, as a proxy for a safety range check.
@@ -1098,8 +1098,8 @@ Node *Parser::parsePostFix(Node *expr) {
 Node *Parser::newArray(TypeStruct *ary, Node *len) {
     int base = ary->aryBase();
     int scale = ary->aryScale();
-    Node *size = peep(alloc.new_object<AddNode>(con(base)),
-                                           peep(alloc.new_object<ShlNode>(len->keep(), con(scale))));
+    Node *size = peep(alloc.new_object<AddNode>(con(base),
+                                           peep(alloc.new_object<ShlNode>(len->keep(), con(scale)))));
 
     ALIMP.clear();
     ALIMP.push_back(len->unkeep());
@@ -1144,7 +1144,7 @@ Node *Parser::parsePrimary() {
 ////        return newStruct(obj);
 //    }
     // Expect an identifier now
-    ScopeMinNode::Var*n = requireLookupId("an identifier or expression");
+    ScopeMinNode::Var*n = requireLookUpId("an identifier or expression");
     Node*rvalue = scope_node->in(n);
     if(rvalue->type_ == Type::BOTTOM()) error("Cannot read uninitialized field '" + n->name_ + "'");
     // Check for assign-update, x += e0;

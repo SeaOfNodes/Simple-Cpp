@@ -4,7 +4,7 @@
 #include <functional>
 
 StopNode *StopNode::GCM(bool show) {
-    Parser::START::buildLoopTree(this);
+    Parser::START->buildLoopTree(this);
     GlobalCodeMotion::fixLoops(this);
     GlobalCodeMotion::buildCFG(this);
     return this;
@@ -33,10 +33,6 @@ StopNode *StopNode::iterate(bool show) {
 bool StopNode::blockHead() { return true; }
 ReturnNode *StopNode::ret() {
   return nIns() == 1 ? (ReturnNode *)(in(0)) : nullptr;
-}
-
-int StopNode::loopDepth() {
-    return (loopDepth_=1);
 }
 
 CFGNode* StopNode::idom(Node* dep) { return nullptr; }

@@ -119,7 +119,6 @@ public:
      * @param nestingLevel The starting nesting level
      * @return node being looked up, or the one that was updated
      */
-    ScopeMinNode::Var* update(ScopeMinNode::Var* v, Node *st);
 
     /**
      * Recover the names for all variable bindings.

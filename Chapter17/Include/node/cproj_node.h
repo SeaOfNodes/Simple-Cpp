@@ -14,7 +14,6 @@ public:
      CFGNode* ctrl();
      Type* compute() override;
      Node* idealize() override;
-     Node* getBlockStart() override;
      bool eq(Node* n) override;
      int hash() override;
 };

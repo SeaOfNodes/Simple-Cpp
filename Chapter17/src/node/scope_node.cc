@@ -145,7 +145,7 @@ ScopeMinNode::Var *ScopeNode::update(ScopeMinNode::Var* v, Node *st) {
         } else {
             Node* new_node =(alloc.new_object<PhiNode>(v->name_,v->lazyGLB(),
                                                        std::initializer_list<Node *>{loop->ctrl(),
-                                                                                     loop->in(loop->update_(v, nullptr)->idx_),
+                                                                                     loop->in(loop->update(v, nullptr)->idx_),
                                                                                      nullptr}))->peephole();
 
             old = loop->setDef(
@@ -241,7 +241,7 @@ RegionNode *ScopeNode::mergeScopes(ScopeNode *that) {
 //    }
     that->kill();
     IterPeeps::add(r);
-    return r->unkeep();
+    return dynamic_cast<RegionNode*>(r->unkeep());
 }
 
 void ScopeNode::merge_(ScopeNode*that, RegionNode*r) {

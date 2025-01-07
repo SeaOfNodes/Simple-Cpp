@@ -16,7 +16,5 @@ public:
   std::string label() override;
   Type*compute() override;
   Node*idealize() override;
-  Node* getBlockStart() override;
-
 };
 #endif
