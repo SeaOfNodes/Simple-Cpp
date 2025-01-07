@@ -253,7 +253,7 @@ Node* Parser::parseExpression() {
 Node *Parser::parseAsgn() {
     // Having a type is a declaration, missing one is updating a prior name
     int old = pos();
-    std::string name = requireId();
+    std::string name = lexer->matchId();
 
     if(name.empty() || KEYWORDS.contains(name) || !matchOpx('=', '=')) {
         pos(old);
@@ -647,11 +647,11 @@ Type *Parser::type() {
     Type *t1 = t0 == nullptr ? TypeMemPtr::make(TypeStruct::makeFRef(tname)) : *t0;
     // Nest arrays and '?' as needed
 
-    Type*nptr = *t0;
     Type*t2 = t1;
     while(true) {
         if(match("?")) {
             auto*tmp = dynamic_cast<TypeMemPtr*>(t2);
+            Type*nptr = *t0;
             if(!tmp) error("Type " + nptr->str() + " cannot be null");
             if(tmp->nil_) error("Type " + t2->str() + " already allows null");
             t2 = TypeMemPtr::make(tmp->obj_, true);
@@ -909,8 +909,14 @@ Node *Parser::parseUnary() {
         pos(old);
     }
 
-    if (match("-"))
-        return peep(alloc.new_object<MinusNode>(parseUnary())->widen());
+    if (match("-")) {
+        Node*lhs = parseUnary();
+        Node*minused = alloc.new_object<MinusNode>(lhs);
+        Node*widened = minused->widen();
+        Node*l = peep(widened);
+        return l;
+    }
+
     if (match("!")) return peep(alloc.new_object<NotNode>(parseUnary()));
     return parsePostFix(parsePrimary());
 }
@@ -1256,12 +1262,9 @@ std::string Parser::memName(int alias) {
 
 std::string Parser::requireId() {
     std::string id = lexer->matchId();
-    if (id != "" && (KEYWORDS.find(id) == KEYWORDS.end()))
+    if (!id.empty() && !(KEYWORDS.contains(id)))
         return id;
 
-    if (id == "") {
-        error("Expected an identifier, found 'NULLPTR'");
-    }
     error("Expected an identifier, found " + id);
 }
 

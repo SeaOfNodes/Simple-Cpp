@@ -76,9 +76,9 @@ public:
 
 // Tik-tok recursion pattern.  This method is final, and every caller does
 // this work.
-    virtual void walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach);
-
-    virtual void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach);
+//    virtual void walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *>& unreach);
+//
+//    virtual void walkUnreach_(Tomi::BitArray<10> &vitisted, Tomi::HashSet<CFGNode *>& unreach);
 
 };
 

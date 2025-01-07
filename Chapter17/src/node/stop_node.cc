@@ -5,7 +5,6 @@
 
 StopNode *StopNode::GCM(bool show) {
     Parser::START->buildLoopTree(this);
-    GlobalCodeMotion::fixLoops(this);
     GlobalCodeMotion::buildCFG(this);
     return this;
 }

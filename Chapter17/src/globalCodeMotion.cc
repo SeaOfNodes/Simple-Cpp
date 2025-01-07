@@ -12,42 +12,6 @@ void GlobalCodeMotion::buildCFG(StopNode *stop) {
     schedLate(Parser::START);
 }
 
-void GlobalCodeMotion::fixLoops(StopNode *stop) {
-    Tomi::BitArray<10> visited;
-    Tomi::HashSet<CFGNode *> unreach;
-    unreach.put(Parser::START);
-
-    for (Node *ret: stop->inputs) {
-        ((ReturnNode *) ret)->walkUnreach(visited, unreach);
-    }
-    if (unreach.isEmpty()) return;
-    // Forwards walk from unreachable, looking for loops with no exit test.
-    visited.reset();
-    for (auto cfg: unreach) {
-        walkInfinite(cfg.getValue(), visited, stop);
-    }
-    // Set loop depth on remaining graph
-    unreach.clear();
-    visited.reset();
-    for (Node *ret: stop->inputs) {
-        ((ReturnNode *) ret)->walkUnreach(visited, unreach);
-    }
-    assert(unreach.isEmpty());
-}
-
-void GlobalCodeMotion::walkInfinite(CFGNode *n, Tomi::BitArray<10> &visited, StopNode *stop) {
-    if (visited.test(n->nid)) return;
-    visited.set(n->nid);
-    if (auto *loop = dynamic_cast<LoopNode *>(n)) {
-        loop->forceExit(stop);
-    }
-    for (Node *use: n->outputs) {
-        if (dynamic_cast<CFGNode *>(use) != nullptr) {
-            walkInfinite((CFGNode *) use, visited, stop);
-        }
-    }
-}
-
 void GlobalCodeMotion::schedEarly() {
     Tomi::Vector<CFGNode *> rpo;
     Tomi::BitArray<10> visit;
@@ -153,7 +117,7 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
         } else {
             // All uses done?
             for (Node *use: n->outputs) {
-                if (late[use->nid] == nullptr && !dynamic_cast<PhiNode *>(use)) {
+                if (use!= nullptr && late[use->nid] == nullptr && !dynamic_cast<PhiNode *>(use)) {
                     continue;
                 }
             }
@@ -161,7 +125,7 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
             // Loads need their memory inputs' uses also done
             if (auto *ld = dynamic_cast<LoadNode *>(n)) {
                 for (Node *memuse: ld->mem()->outputs) {
-                    if (!dynamic_cast<PhiNode *>(memuse) && late[memuse->nid] == nullptr) {
+                    if (late[memuse->nid] == nullptr) {
                         continue;
                     }
                 }

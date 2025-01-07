@@ -63,6 +63,10 @@ Node* LoadNode::idealize() {
                return castR0(st->val());
            }
            // Can we prove unequal?  Offsets do not overlap?
+           if(!st->off()->type_) {
+               // error here // Todo: fix
+               std::cerr << "Here";
+           }
            if(!off()->type_->join(st->off()->type_)->isHigh() && !neverAlias(ptr1, st->ptr())){
                break;
            }

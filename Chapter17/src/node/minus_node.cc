@@ -22,9 +22,12 @@ Type *MinusNode::compute() {
       if (i0->isHigh()) return TypeInteger::TOP();
       // Catch overflow wrapping on `-Long.MIN_VALUE`
         if(i0 == TypeInteger::BOT() || i0->min_ == std::numeric_limits<long>::min() || i0->max_ == std::numeric_limits<long>::max()) {
-            return TypeInteger::TOP();
+            return TypeInteger::BOT();
         }
       return TypeInteger::make(-i0->max_, -i0->min_);
+  }
+  if(in(1)->type_ == nullptr) {
+      std::cerr << "Test";
   }
   return TypeInteger::TOP()->meet(in(1)->type_);
 }

@@ -115,13 +115,3 @@ int CFGNode::bltWalk_(int pre, StopNode *stop, Tomi::BitArray<10> &post) {
     post.set(nid);
     return pre;
 }
-void CFGNode::walkUnreach(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> &unreach) {
-    if (visited.test(nid)) return;
-    visited.set(nid);
-    walkUnreach_(visited, unreach);
-    unreach.remove(this);
-}
-
-void CFGNode::walkUnreach_(Tomi::BitArray<10> &visited, Tomi::HashSet<CFGNode *> &unreach) {
-    cfg(0)->walkUnreach(visited, unreach);
-}

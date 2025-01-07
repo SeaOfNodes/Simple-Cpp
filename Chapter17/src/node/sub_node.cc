@@ -50,7 +50,8 @@ Node *SubNode::idealize() {
     }
     // (-x) - y is -(x+y)
     if (auto *min = dynamic_cast<MinusNode *>(in(1))) {
-        return (new MinusNode(new AddNode(min->in(1), in(2))))->peephole();
+        Node*add = alloc.new_object<AddNode>(min->in(1), in(2))->peephole();
+        return (alloc.new_object<MinusNode>(add));
     }
     return nullptr;
 }
