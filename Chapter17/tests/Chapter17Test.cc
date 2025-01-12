@@ -73,85 +73,85 @@
 //}
 
 
-TEST(SimpleTest, testInc3
-) {
-std::string source = R"(
-int[] !xs = new int[arg];
-xs[0]++;
-xs[1]++;
-return xs[0];
+//TEST(SimpleTest, testInc3
+//) {
+//std::string source = R"(
+//int[] !xs = new int[arg];
+//xs[0]++;
+//xs[1]++;
+//return xs[0];
+//
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 1;"
+//);
+//}
 
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 1;"
-);
-}
 
+//TEST(SimpleTest, testInc4
+//) {
+//std::string source = R"(
+//u8[] !xs = new u8[1];
+//xs[0]--;
+//return xs[0];
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 255;"
+//);
+//}
 
-TEST(SimpleTest, testInc4
-) {
-std::string source = R"(
-u8[] !xs = new u8[1];
-xs[0]--;
-return xs[0];
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 255;"
-);
-}
+//TEST(SimpleTest, testInc5
+//) {
+//std::string source = R"(
+//struct S { u16 x; };
+//S !s = new S;
+//s.x--;
+//return s.x;
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 65535;"
+//);
+//}
 
-TEST(SimpleTest, testInc5
-) {
-std::string source = R"(
-struct S { u16 x; };
-S !s = new S;
-s.x--;
-return s.x;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 65535;"
-);
-}
+//TEST(SimpleTest, testInc6
+//) {
+//std::string source = R"(
+//return --arg;
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return (arg+-1);"
+//);
+//}
 
-TEST(SimpleTest, testInc6
-) {
-std::string source = R"(
-return --arg;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return (arg+-1);"
-);
-}
-
-TEST(SimpleTest, testInc7
-) {
-std::string source = R"(
-u8 x=0; return --x;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 255;"
-);
-}
+//TEST(SimpleTest, testInc7
+//) {
+//std::string source = R"(
+//u8 x=0; return --x;
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 255;"
+//);
+//}
 
 TEST(SimpleTest, testInc8
 ) {

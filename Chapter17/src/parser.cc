@@ -75,7 +75,7 @@ bool Parser::SCHEDULED = false;
 Parser::Parser(std::string source) : Parser(source, TypeInteger::BOT()) {}
 
 Node *Parser::con(long con) {
-    return (alloc.new_object<ConstantNode>(TypeInteger::constant(con), Parser::START))->peephole();
+    return Parser::con(TypeInteger::constant(con));
 }
 
 Parser::~Parser() {
@@ -1001,6 +1001,9 @@ Type* Parser::posT(int pos) {
     return nullptr;
 }
 Node* Parser::peep(Node*n) {
+    if(n->nid == 49) {
+        std::cerr << "Here";
+    }
     // Peephole, then improve with lexically scoped guards
     return scope_node->upcastGuard(n->peephole());
 }
@@ -1061,27 +1064,44 @@ Node *Parser::parsePostFix(Node *expr) {
         Node *shl = alloc.new_object<ShlNode>(idx, con(base->aryScale()))->peephole();
         int basel = base->aryBase();
         off = alloc.new_object<AddNode>(con(base->aryBase()), shl)->peephole();
-
+       off->keep();
     } else {
         // Hardwired field offset
         int val = base->offset(fidx);
-        off = con(val)->keep();
+        off = con(val);
+        off->keep();
     }
     if(matchOpx('=', '=')) {
         Node*val = parseAsgn()->keep();
         Node*lift = liftExpr(val, tf, f->final_);
 
-        Node*st = alloc.new_object<StoreNode>(name, f->alias_, tf, memAlias(f->alias_), expr, off->unkeep(), lift, false);
+        Node*st = alloc.new_object<StoreNode>(name, f->alias_, tf, memAlias(f->alias_), expr,off ->unkeep(), lift, false);
         memAlias(f->alias_, st->peephole());
         return val->unkeep();
     }
 
+    Node*mem1 = memAlias(f->alias_);
+
+    // Todo: off is not added to load's outputs
+    if(off->nid == 36) {
+        std::cerr << "Here";
+    }
     Node *load = (alloc.new_object<LoadNode>(name, f->alias_, tf->glb(), memAlias(f->alias_), expr->keep(),
                                              off));
     // Arrays include control, as a proxy for a safety range check
     // Structs don't need this; they only need a NPE check which is
     // done via the type system.
     if (base->isAry()) load->setDef(0, ctrl());
+    // off is not added to load's outputs so it will get killed and will cause the null type
+    if(load->nid == 49) {
+        std::cerr << "Here";
+    }
+    if(off->nid == 36) {
+        std::cerr << "Here";
+    }
+    // off goes dead in peep
+    // becomes null in between
+    // here load goes dead and off gets killed, and it trusn to 1. compare it with other one.
     load = peep(load);
 
     // ary[idx]++ or ptr.fld++
@@ -1091,6 +1111,9 @@ Node *Parser::parsePostFix(Node *expr) {
         Node*inc = peep(alloc.new_object<AddNode>(load, con(lexer->peek(-1) == '+' ? 1: -1)));
         Node*val = ZSMask(inc, tf);
         Node*st = alloc.new_object<StoreNode>(name, f->alias_, tf, memAlias(f->alias_), expr->unkeep(), off, val, false);
+        if(st->nid == 41) {
+            std::cerr << "Here";
+        }
         // Arrays include control, as a proxy for a safety range check.
         // Structs don't need this; they only need a NPE check which is
         // done via the type system.

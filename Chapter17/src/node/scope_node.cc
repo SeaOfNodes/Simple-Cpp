@@ -311,7 +311,7 @@ void ScopeNode::removeGuards(Node *ctrl) {
     }
 }
 Node* ScopeNode::upcastGuard(Node *pred) {
-    int i = _guards.size();
+    size_t i = _guards.size();
     while (i > 0) {
         Node*cast = _guards[--i];
         if(dynamic_cast<CFGNode*>(cast)) continue;

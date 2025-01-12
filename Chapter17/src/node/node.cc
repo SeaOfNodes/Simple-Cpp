@@ -13,6 +13,9 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
+    if(nid == 36) {
+        std::cerr << "Here";
+    }
      for (Node *n: inputNodes) {
         inputs.push_back(n);
         if (n != nullptr) {
@@ -237,7 +240,12 @@ Node *Node::peepholeOpt() {
     // end loop
     Type *inner = compute();
     Type *old = setType(inner);
-
+    if(nid == 37) {
+        std::cerr << "Here";
+    }
+    if(nid == 38) {
+        std::cerr << "Here";
+    }
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
     auto* b = dynamic_cast<XCtrlNode *>(this);
@@ -245,8 +253,13 @@ Node *Node::peepholeOpt() {
         if (type_ == Type::XCONTROL()) {
             return alloc.new_object<XCtrlNode>();
         }
+        if(!type_) {
+            std::cerr << "Type is not set";
+        }
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START))->peepholeOpt();
-
+        if(peepholedNode->nid == 36) {
+            std::cerr << "Here";
+        }
         return peepholedNode;
     }
     // Global Value Numbering
@@ -299,6 +312,7 @@ Node *Node::peephole() {
         type_ = compute(); // assign type_ to con_
         return this;
     }
+
     Node *n = peepholeOpt();
 
     return n == nullptr ? this : deadCodeElim(n->peephole());
@@ -370,6 +384,9 @@ bool Node::isPinned() {
 
 void Node::kill() {
     unlock();
+    if(nid == 36) {
+        std::cerr << "Here";
+    }
     moveDepsToWorkList();
     assert(isUnused()); // has no uses so it is dead
     type_ = nullptr;
@@ -378,6 +395,9 @@ void Node::kill() {
         Node *old_def = inputs.back();
         inputs.pop_back();
         if (old_def != nullptr) {
+            if(old_def->nid == 36) {
+                std::cerr << "Here";
+            }
             IterPeeps::add(old_def);
             if (old_def->delUse(this))
                 old_def->kill();

@@ -9,7 +9,7 @@
 #include "../../Include/parser.h"
 #include "node/read_only_node.h"
 
-LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node*off) : MemOpNode(name, alias, glb, mem, ptr, off){}
+LoadNode::LoadNode(std::string name, int alias, Type *glb, Node *mem_, Node *ptr, Node*off_) : MemOpNode(name, alias, glb, mem_, ptr, off_){}
 
 std::string LoadNode::label() {return "ld_" + mlabel();}
 std::string LoadNode::glabel() {return "."+name_;}
@@ -56,18 +56,24 @@ Node* LoadNode::idealize() {
     if(ro) {
         ptr1 =ro->in(1);
     }
+    if(nid == 49) {
+        std::cerr << "Here";
+    }
     Node*mem1 = mem();
     while(true) {
-       if(auto*st = dynamic_cast<StoreNode*>(mem1)) {
-           if(ptr1 == st->ptr() && off() == st->off()) {
+       if(auto*st_ = dynamic_cast<StoreNode*>(mem1)) {
+           if(ptr1 == st_->ptr() && off() == st_->off()) {
                return castR0(st->val());
            }
            // Can we prove unequal?  Offsets do not overlap?
-           if(!st->off()->type_) {
+           if(!st_->off()->type_) {
                // error here // Todo: fix
                std::cerr << "Here";
            }
-           if(!off()->type_->join(st->off()->type_)->isHigh() && !neverAlias(ptr1, st->ptr())){
+           if(!st_->off()->type_) {
+               std::cerr << "Here";
+           }
+           if(!off()->type_->join(st_->off()->type_)->isHigh() && !neverAlias(ptr1, st_->ptr())){
                break;
            }
            mem1 = st->mem();

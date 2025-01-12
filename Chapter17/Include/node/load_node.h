@@ -11,7 +11,7 @@
 class LoadNode: public MemOpNode {
 public:
     // Load a value from a ptr.field.
-    LoadNode(std::string name, int alias, Type* glb, Node* mem, Node* ptr, Node*off);
+    LoadNode(std::string name, int alias, Type* glb, Node* mem, Node* ptr, Node*off_);
 
     static bool hoistPtr(Node*ptr, PhiNode* memphi);
 
