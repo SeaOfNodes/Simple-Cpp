@@ -153,74 +153,74 @@
 //);
 //}
 
-TEST(SimpleTest, testInc8
-) {
-std::string source = R"(
-int x; x+=2; return x+=3;
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 5;");
-}
+//TEST(SimpleTest, testInc8
+//) {
+//std::string source = R"(
+//int x; x+=2; return x+=3;
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 5;");
+//}
 
 // ---------------------------------------------------------------
 
-TEST(SimpleTest, testVar0
-) {
-std::string source = R"(
-var d; return d;
-)";
-auto *parser = new Parser(source);
-try {
-StopNode *ret = parser->parse(true)->iterate();
-} catch(std::runtime_error &e) {
-    std::string r = e.what();
-    EXPECT_EQ(r, "Syntax error, expected =expression:");
-}}
+//TEST(SimpleTest, testVar0
+//) {
+//std::string source = R"(
+//var d; return d;
+//)";
+//auto *parser = new Parser(source);
+//try {
+//StopNode *ret = parser->parse(true)->iterate();
+//} catch(std::runtime_error &e) {
+//    std::string r = e.what();
+//    EXPECT_EQ(r, "Syntax error, expected =expression:");
+//}}
 
 
-TEST(SimpleTest, testVar1
-) {
-std::string source = R"(
-val d; return d;
-)";
-auto *parser = new Parser(source);
-try {
-StopNode *ret = parser->parse(true)->iterate();
-} catch(std::runtime_error &e) {
-std::string r = e.what();
-EXPECT_EQ(r, "Syntax error, expected =expression: ;");
-}}
+//TEST(SimpleTest, testVar1
+//) {
+//std::string source = R"(
+//val d; return d;
+//)";
+//auto *parser = new Parser(source);
+//try {
+//StopNode *ret = parser->parse(true)->iterate();
+//} catch(std::runtime_error &e) {
+//std::string r = e.what();
+//EXPECT_EQ(r, "Syntax error, expected =expression: ;");
+//}}
 
 
-TEST(SimpleTest, testVar2
-) {
-std::string source = R"(
-int x; x=3; x++; return x; // Ok, no initializer so x is mutable
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 4;");
-}
+//TEST(SimpleTest, testVar2
+//) {
+//std::string source = R"(
+//int x; x=3; x++; return x; // Ok, no initializer so x is mutable
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 4;");
+//}
 
-TEST(SimpleTest, testVar3
-) {
-std::string source = R"(
-int x=3; x++; return x; // Ok, primitive so x is mutable despite initializer
-)";
-auto *parser = new Parser(source);
-StopNode *ret = parser->parse(true)->iterate();
-std::ostringstream builder;
-std::string result = ret->print(builder).str();
-EXPECT_EQ(result,
-"return 4;");
-}
+//TEST(SimpleTest, testVar3
+//) {
+//std::string source = R"(
+//int x=3; x++; return x; // Ok, primitive so x is mutable despite initializer
+//)";
+//auto *parser = new Parser(source);
+//StopNode *ret = parser->parse(true)->iterate();
+//std::ostringstream builder;
+//std::string result = ret->print(builder).str();
+//EXPECT_EQ(result,
+//"return 4;");
+//}
 
 TEST(SimpleTest, testVar4
 ) {

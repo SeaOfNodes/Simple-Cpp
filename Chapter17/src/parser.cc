@@ -293,7 +293,10 @@ Node* Parser::liftExpr(Node *expr, Type *t, bool xfinal) {
     // Auto-widen int to float
     expr = widenInt(expr, t);
     // Auto-narrow wide ints to narrow ints
-    if(!expr->type_->isa(t)) error("Type  " + expr->type_->str() + "is not of declared type " + t->str());
+    expr = ZSMask(expr, t);
+    if(!expr->type_->isa(t)) {
+        error("Type  " + expr->type_->str() + "is not of declared type " + t->str());
+    }
     return expr;
 }
 Node* Parser::widenInt(Node *expr, Type*t) {
@@ -719,6 +722,9 @@ Node* Parser::parseDeclaration(Type*t) {
     bool inferType = t == Type::TOP() || t == Type::BOTTOM();
     bool hasBang = match("!");
     std::string name = requireId();
+    if(name == "s") {
+        std::cout << "here";
+    }
     // Optional initializing expression follows
     bool xfinal = false;
     Node*expr;
@@ -731,10 +737,14 @@ Node* Parser::parseDeclaration(Type*t) {
         // var/val, then type comes from expression
         if(inferType) t = expr->type_->glb();
     } else {
-        if(inferType && !scope_node->inCon()) error("=expression");
+        if(inferType && !scope_node->inCon()) errorSyntax("=expression");
         expr = con(t->makeInit());
     }
+    // Should be TOP not TypeMemPtr
     // Lift expression, based on type
+    if(name == "s") {
+        std::cout << "here";
+    }
     Node*lift = liftExpr(expr, t, xfinal);
     auto*tmp = dynamic_cast<TypeMemPtr*>(t);
 
@@ -1206,8 +1216,11 @@ Node *Parser::parsePrimary() {
 
 ScopeMinNode::Var* Parser::requireLookUpId(std::string msg) {
     std::string id = lexer->matchId();
+    if(id == "x") {
+        std::cerr << "Here";
+    }
     if(id.empty() || KEYWORDS.contains(id)) {
-        error(msg);
+        errorSyntax(msg);
     }
     ScopeMinNode::Var*n = scope_node->lookup(id);
     if(n == nullptr) error("Undefined name '" + id + "'");
@@ -1367,7 +1380,7 @@ char Lexer::matchOperAssign() {
     char ch0 = input[position];
     if(std::string("+-/*&|^").find(ch0) == std::string::npos) return 0;
     char ch1 = input[position + 1];
-    if(ch0 == '=') {
+    if(ch1 == '=') {
         position += 2;
         return ch0;
     }
