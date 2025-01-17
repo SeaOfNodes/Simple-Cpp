@@ -23,6 +23,9 @@ std::ostringstream &NewNode::print_1(std::ostringstream &builder, Tomi::Vector<b
  return builder;
 }
 Type* NewNode::compute() {
+    if(nid == 19) {
+        std::cerr << "NewNode::compute() nid == 19" << std::endl;
+    }
     Tomi::Vector<Field*> fs = ptr_->obj_->fields_.value();
     Tomi::Vector<Type*> ts(fs.size()+2);
     ts[0] = Type::CONTROL();

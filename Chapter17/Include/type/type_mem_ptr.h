@@ -52,7 +52,8 @@ public:
     int log_size() override;
 
     bool isHigh() override;
-    TypeMemPtr* makeInit() override;
+    Type* makeInit() override;
+    Type* makeZero() override;
 
     int hash();
 

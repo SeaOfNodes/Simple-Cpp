@@ -187,6 +187,9 @@ unsigned int Type::hashCode() {
   if (hash_ != 0)
     return hash_;
   hash_ = hash();
+  if(hash_ ==  2242607260) {
+      std::cerr << "here";
+  }
   if (hash_ == 0)
     hash_ = 0xDEADBEEF;
   return hash_;

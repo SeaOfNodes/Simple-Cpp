@@ -9,6 +9,9 @@ TypeMemPtr *TypeMemPtr::make(TypeStruct *obj, bool nil) {
   return dynamic_cast<TypeMemPtr*>((alloc.new_object<TypeMemPtr>(obj, nil))->intern());
 }
 
+Type* TypeMemPtr::makeZero() {
+    return NULLPTR();
+}
 TypeMemPtr* TypeMemPtr::make_from(TypeStruct* obj) {
     return make(obj, nil_);
 }
@@ -91,12 +94,21 @@ TypeMemPtr* TypeMemPtr::glb() {
     return make(obj_->glb(), true);
 }
 
-TypeMemPtr* TypeMemPtr::makeInit() {
-    return NULLPTR();
+Type* TypeMemPtr::makeInit() {
+    return nil_ ? NULLPTR() : Type::TOP();
 }
 
 int TypeMemPtr::hash() {
-    return (obj_ == nullptr ? 0xDEADBEEF : obj_->hash())^ ( nil_ ? 1024: 0);
+    if(obj_->hashCode() == -2052359012) {
+        std::cerr << "Here";
+    }
+    if(obj_->hashCode() ^ 1024 == 639589409){
+        std::cerr << "Here";
+    }
+    if(obj_->hashCode() == 639589409){
+        std::cerr << "Here";
+    }
+    return static_cast<int>(obj_->hashCode() ^ (nil_ ? 1024 : 0));
 }
 
 bool TypeMemPtr::isHigh() {

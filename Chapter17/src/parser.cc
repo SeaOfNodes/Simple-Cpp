@@ -100,7 +100,7 @@ StopNode *Parser::parse(bool show) {
     scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, mem->peephole());
 
     scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(), false,
-            (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
+                       (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
     parseBlock(false);
     if (ctrl()->type_ == Type::CONTROL()) {
         STOP->addReturn((alloc.new_object<ReturnNode>(ctrl(), ZERO,
@@ -180,6 +180,9 @@ Node *Parser::parseContinue() {
 Node *Parser::parseStruct() {
     if (xScopes.size() > 1) throw std::runtime_error("struct declarations can only appear in top level scope");
     std::string typeName = requireId();
+    if(typeName == "Foo") {
+        std::cerr << "Test";
+    }
     Type **t = TYPES.get(typeName);
     if (t != nullptr) {
         auto *tmp = dynamic_cast<TypeMemPtr *>(*t);
@@ -198,11 +201,11 @@ Node *Parser::parseStruct() {
         parseStatement();
     }
     // Grab the declarations and build fields and a Struct
-    int lexlen = scope_node->lexSize.size();
-    int varlen = scope_node->vars.size();
-    StructNode* s = new StructNode;
+    size_t lexlen = scope_node->lexSize.back();
+    size_t varlen = scope_node->vars.size();
+    StructNode* s = alloc.new_object<StructNode>();
     Tomi::Vector<Field*> fs(varlen - lexlen);
-    for(int i = lexlen; i < varlen; i++) {
+    for(size_t i = lexlen; i < varlen; i++) {
         s->addDef(scope_node->in(i));
         ScopeMinNode::Var* v=  scope_node->vars[i];
         fs[i-lexlen] = Field::make(v->name_, v->type(), ALIAS++, v->final_);
@@ -246,15 +249,17 @@ Node *Parser::parseStatement() {
 }
 
 Node* Parser::parseExpression() {
-        Node*expr = parseBitWise();
-        return match("?") ? parseTrinary(expr, false, ":") : expr;
+    Node*expr = parseBitWise();
+    return match("?") ? parseTrinary(expr, false, ":") : expr;
 
 }
 Node *Parser::parseAsgn() {
     // Having a type is a declaration, missing one is updating a prior name
     int old = pos();
     std::string name = lexer->matchId();
-
+    if(name == "next") {
+        std::cerr << "Test";
+    }
     if(name.empty() || KEYWORDS.contains(name) || !matchOpx('=', '=')) {
         pos(old);
         return parseExpression();
@@ -275,7 +280,11 @@ Node *Parser::parseAsgn() {
         error("Cannot reassign final '" + name + "'");
     }
 
+    if(name == "next") {
+        std::cerr << "Test";
+    }
     // Lift expression, based on type
+    // Todo: expr->type_ should hash to be the same as def->type_
     Node*lift = liftExpr(expr, def->type(), def->final_);
     // Update
     scope_node->update(name, lift);
@@ -294,16 +303,20 @@ Node* Parser::liftExpr(Node *expr, Type *t, bool xfinal) {
     expr = widenInt(expr, t);
     // Auto-narrow wide ints to narrow ints
     expr = ZSMask(expr, t);
+    // expr_->type_ and `t` should be interned to be the same.
+    // t results in negative hash
     if(!expr->type_->isa(t)) {
+        // why are they not the same here
+        // they should hash to be the same thing
         error("Type  " + expr->type_->str() + "is not of declared type " + t->str());
     }
     return expr;
 }
 Node* Parser::widenInt(Node *expr, Type*t) {
-if(dynamic_cast<TypeInteger*>(expr->type_) && dynamic_cast<TypeFloat*>(t)) {
-    return peep(alloc.new_object<ToFloatNode>(expr));
-}
-return expr;
+    if(dynamic_cast<TypeInteger*>(expr->type_) && dynamic_cast<TypeFloat*>(t)) {
+        return peep(alloc.new_object<ToFloatNode>(expr));
+    }
+    return expr;
 }
 Node* Parser::parseLooping(bool doFor) {
     auto *savedContinueScope = continueScope;
@@ -314,7 +327,7 @@ Node* Parser::parseLooping(bool doFor) {
     auto *head = dynamic_cast<ScopeNode *>(scope_node->keep());
 
     xScopes.push_back(scope_node = scope_node->dup(
-        true)); // The true argument triggers creating phis
+            true)); // The true argument triggers creating phis
 
     auto pred = peek(';') ? con(1) : parseAsgn();
     require(doFor ? ";": ")");
@@ -344,6 +357,7 @@ Node* Parser::parseLooping(bool doFor) {
     ctrl(ifF);
 
     xScopes.push_back(breakScope = scope_node->dup());
+    breakScope->addGuards(ifF, pred, true);
     // No continues yet
 
     continueScope = nullptr;
@@ -356,7 +370,7 @@ Node* Parser::parseLooping(bool doFor) {
     parseStatement(); // parse loop body
     scope_node->removeGuards(ifT);
 
-        if (continueScope != nullptr) {
+    if (continueScope != nullptr) {
         continueScope = jumpTo(continueScope);
         scope_node->kill();
         scope_node = continueScope;
@@ -365,7 +379,8 @@ Node* Parser::parseLooping(bool doFor) {
     if(doFor) {
         int old = pos(nextPos);
         if(!peek(')')) parseAsgn();
-        if(pos() != nextEnd) throw std::runtime_error("Unexpected code after expression");
+        if(pos() != nextEnd){
+            errorSyntax("code after expression");}
         pos(old);
     }
 
@@ -568,7 +583,7 @@ Node* Parser::parseTrinary(Node* pred, bool stmt, std::string fside) {
     Node *ifF =
             (alloc.new_object<CProjNode>(ifNode->unkeep(), 1, "False"))->peephole();
     // In if true branch, the ifT proj node becomes the ctrl
-        ifF->keep();
+    ifF->keep();
 
     std::size_t ndefs = scope_node->nIns();
 
@@ -591,6 +606,7 @@ Node* Parser::parseTrinary(Node* pred, bool stmt, std::string fside) {
     scope_node->addGuards(ifF, pred, true);
     bool doRHS = match(fside);
     Node* rhs = doRHS ? (stmt ? parseStatement() : parseAsgn()) : (stmt ? nullptr : con(lhs->type_->makeZero()));
+    // makes lhs type null
     scope_node->removeGuards(ifF);
     if(doRHS) fScope = scope_node;
     pred->unkeep();
@@ -641,6 +657,9 @@ TypeMemPtr *Parser::typeAry(Type *t) {
 Type *Parser::type() {
     int old1 = pos();
     std::string tname = lexer->matchId();
+    if(tname == "Foo") {
+        std::cout << "here";
+    }
     if (tname.empty()) return nullptr;
     // Convert the type name to a type.
     Type **t0 = TYPES.get(tname);
@@ -654,9 +673,11 @@ Type *Parser::type() {
     while(true) {
         if(match("?")) {
             auto*tmp = dynamic_cast<TypeMemPtr*>(t2);
-            Type*nptr = *t0;
-            if(!tmp) error("Type " + nptr->str() + " cannot be null");
+            if(!tmp) error("Type " + t1->str() + " cannot be null");
             if(tmp->nil_) error("Type " + t2->str() + " already allows null");
+            if(tname == "LLI") {
+                std::cerr << "here";
+            }
             t2 = TypeMemPtr::make(tmp->obj_, true);
         } else if(match("[]")) {
             t2 = typeAry(t2);
@@ -732,8 +753,8 @@ Node* Parser::parseDeclaration(Type*t) {
         expr = parseAsgn();
         // `val` is always final
         xfinal = (t == Type::TOP()) ||
-        // var is always not-final, final if no Bang AND TMP since primitives are not-final by default
-        (t != Type::BOTTOM() && !hasBang && dynamic_cast<TypeMemPtr*>(t));
+                 // var is always not-final, final if no Bang AND TMP since primitives are not-final by default
+                 (t != Type::BOTTOM() && !hasBang && dynamic_cast<TypeMemPtr*>(t));
         // var/val, then type comes from expression
         if(inferType) t = expr->type_->glb();
     } else {
@@ -940,17 +961,17 @@ void Parser::memAlias(int alias, Node *st) {
 }
 
 Node *Parser::newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node*> init) {
-    Tomi::Vector<Field *> fs = obj->fields_.value();
-    if(fs.empty()) {
+    auto fs = obj->fields_;
+    if(!fs.has_value()) {
         error("Unknown struct type'" + obj->name_ + "'");
     }
-    int len = fs.size();
+    size_t len = fs.value().size();
     Tomi::Vector<Node *> ns(2 + len + len);
 
     ns[0] = ctrl();
     ns[1] = size;
     for (int i = 0; i < len; i++) {
-        ns[i + 2] = memAlias(fs[i]->alias_);
+        ns[i + 2] = memAlias(fs.value()[i]->alias_);
     }
     // Initial values for every field
     for(int i = 0; i < len; i++) {
@@ -959,12 +980,14 @@ Node *Parser::newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node*
     TypeMemPtr*m = TypeMemPtr::make(obj);
 
     Node *nnn = (alloc.new_object<NewNode>(TypeMemPtr::make(obj), ns));
-
+    if(nnn->nid == 19) {
+        std::cerr << "Here";
+    }
     nnn = nnn->peephole();
 
     for (int i = 0; i < len; i++) {
-        Node *pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs[i]->alias_))->peephole();
-        memAlias(fs[i]->alias_, pr);
+        Node *pr = alloc.new_object<ProjNode>(nnn, i + 2, memName(fs.value()[i]->alias_))->peephole();
+        memAlias(fs.value()[i]->alias_, pr);
     }
     Node *r = (alloc.new_object<ProjNode>(nnn, 1, obj->name_))->peephole();
     return r;
@@ -993,7 +1016,7 @@ Node *Parser::ZSMask(Node *val, Type *t) {
 
     if (shf->type_ == TypeInteger::ZERO()) return val;
     return peep(alloc.new_object<SarNode>(peep(alloc.new_object<ShlNode>(val, shf->keep())),
-                                      shf->unkeep()));
+                                          shf->unkeep()));
 }
 
 int Parser::pos() {
@@ -1011,9 +1034,6 @@ Type* Parser::posT(int pos) {
     return nullptr;
 }
 Node* Parser::peep(Node*n) {
-    if(n->nid == 49) {
-        std::cerr << "Here";
-    }
     // Peephole, then improve with lexically scoped guards
     return scope_node->upcastGuard(n->peephole());
 }
@@ -1074,7 +1094,7 @@ Node *Parser::parsePostFix(Node *expr) {
         Node *shl = alloc.new_object<ShlNode>(idx, con(base->aryScale()))->peephole();
         int basel = base->aryBase();
         off = alloc.new_object<AddNode>(con(base->aryBase()), shl)->peephole();
-       off->keep();
+        off->keep();
     } else {
         // Hardwired field offset
         int val = base->offset(fidx);
@@ -1094,6 +1114,9 @@ Node *Parser::parsePostFix(Node *expr) {
 
     // Todo: off is not added to load's outputs
     if(off->nid == 36) {
+        std::cerr << "Here";
+    }
+    if(name == "not_array_of_b") {
         std::cerr << "Here";
     }
     Node *load = (alloc.new_object<LoadNode>(name, f->alias_, tf->glb(), memAlias(f->alias_), expr->keep(),
@@ -1138,7 +1161,7 @@ Node *Parser::newArray(TypeStruct *ary, Node *len) {
     int base = ary->aryBase();
     int scale = ary->aryScale();
     Node *size = peep(alloc.new_object<AddNode>(con(base),
-                                           peep(alloc.new_object<ShlNode>(len->keep(), con(scale)))));
+                                                peep(alloc.new_object<ShlNode>(len->keep(), con(scale)))));
 
     ALIMP.clear();
     ALIMP.push_back(len->unkeep());
@@ -1228,6 +1251,8 @@ ScopeMinNode::Var* Parser::requireLookUpId(std::string msg) {
 }
 Node *Parser::alloc_() {
     Type *t = type();
+    auto obj = dynamic_cast<TypeMemPtr *>(t);
+
     if (t == nullptr) error("Expected a type");
     // Parse ary[ length_expr ]
     if (match("[")) {
@@ -1270,6 +1295,7 @@ Node *Parser::alloc_() {
             error(tmp->obj_->name_ + " is not fully initialized, field '" + fs[i-idx]->fname_ + "' needs to be set in a constructor");
         }
     }
+
     Node *ptr = newStruct(tmp->obj_, con(tmp->obj_->offset(static_cast<int>(fs.size()))), idx, init);
     if (hasConstdructor) {
         scope_node->pop();

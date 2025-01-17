@@ -26,6 +26,9 @@ public:
        return nullptr;
     };
 
+    // Rotate a long, nice for hashes
+    static long rot(unsigned long x, int n);
+
     template<typename E>
     static int delVal(Tomi::Vector<E> &array, E i) {
         int counter{};

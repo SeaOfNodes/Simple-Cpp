@@ -299,15 +299,17 @@ void ScopeNode::addGuards(Node *ctrl, Node *pred, bool invert) {
 }
 void ScopeNode::removeGuards(Node *ctrl) {
     // 0,1 or 2 guards
+    if(_guards.empty()) {
+        std::cerr << "Here";
+    }
     while(true) {
         Node*g = _guards.back();
         _guards.pop_back();
         if(g == ctrl) break;
         if(dynamic_cast<CFGNode*>(g)) continue;
         g->unkill(); // pop/kill cast
-        _guards.pop_back(); // pop/kill pred
         _guards.back()->unkill(); // pop/kill pred
-
+        _guards.pop_back();
     }
 }
 Node* ScopeNode::upcastGuard(Node *pred) {

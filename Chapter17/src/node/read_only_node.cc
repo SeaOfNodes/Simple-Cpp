@@ -20,6 +20,9 @@ Type* ReadOnlyNode::compute() {
 }
 
 Node* ReadOnlyNode::idealize() {
+    if(nid == 21) {
+        std::cerr << "Hello";
+    }
     if(auto* tmp = dynamic_cast<TypeMemPtr*>(in(1)->type_); tmp->isFinal()) {
         return in(1);
     }

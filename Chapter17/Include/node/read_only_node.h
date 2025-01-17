@@ -5,15 +5,15 @@
 
 class ReadOnlyNode: public Node {
 public:
-        ReadOnlyNode(Node*n );
+    explicit ReadOnlyNode(Node*n );
         std::string label() override;
 
     std::ostringstream &print_1(std::ostringstream &builder,
                                 Tomi::Vector<bool> &) override;
 
-    Type* compute();
+    Type* compute() override;
 
-    Node* idealize();
+    Node* idealize() override;
 };
 
 #endif

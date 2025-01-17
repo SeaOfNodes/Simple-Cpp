@@ -13,7 +13,7 @@
 
 Node::Node(std::initializer_list<Node *> inputNodes) {
     nid = UNIQUE_ID++;
-    if(nid == 36) {
+    if(nid == 20) {
         std::cerr << "Here";
     }
      for (Node *n: inputNodes) {
@@ -238,14 +238,14 @@ void Node::moveDepsToWorkList() {
 Node *Node::peepholeOpt() {
     ITER_CNT++;
     // end loop
+
+    //AddNode
+    if(nid == 21) {
+        std::cerr << "Here";
+    }
     Type *inner = compute();
     Type *old = setType(inner);
-    if(nid == 37) {
-        std::cerr << "Here";
-    }
-    if(nid == 38) {
-        std::cerr << "Here";
-    }
+
     // Replace constant computations from non-constants with a constant node
     auto *a = dynamic_cast<ConstantNode *>(this);
     auto* b = dynamic_cast<XCtrlNode *>(this);
@@ -257,7 +257,7 @@ Node *Node::peepholeOpt() {
             std::cerr << "Type is not set";
         }
         auto peepholedNode = (alloc.new_object<ConstantNode>(type_, Parser::START))->peepholeOpt();
-        if(peepholedNode->nid == 36) {
+        if(peepholedNode->nid == 18) {
             std::cerr << "Here";
         }
         return peepholedNode;

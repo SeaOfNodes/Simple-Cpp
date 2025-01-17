@@ -3,7 +3,7 @@
 #include "../../Include/type/integer_type.h"
 #include "../../Include/type/type_mem_ptr.h"
 #include "../../Include/type/type_float.h"
-
+#include "../../Include/utils.h"
 TypeStruct::TypeStruct(std::string name, std::optional<Tomi::Vector<Field *>> fields) : Type(TSTRUCT), name_(name), fields_(fields) {
 }
 
@@ -13,6 +13,11 @@ TypeStruct *TypeStruct::make(std::string name, Tomi::Vector<Field *> fields) {
 
 TypeStruct* TypeStruct::makeFRef(std::string name) {
 
+    // this results in the negative hash
+    if(name == "LLI") {
+        std::cerr << "Here";
+    }
+    //
     auto*a = dynamic_cast<TypeStruct*>((alloc.new_object<TypeStruct>(name, std::nullopt))->intern());
     return a;
 }
@@ -164,7 +169,7 @@ bool TypeStruct::isFRef() {
     return !fields_.has_value();
 }
 bool TypeStruct::isFinal() {
-    if(fields_.has_value()) return true;
+    if(!fields_.has_value()) return true;
     for(Field* f: fields_.value()) {
         if(!f->isFinal()) return false;
     }
@@ -266,13 +271,14 @@ bool TypeStruct::eq(Type *t) {
 }
 
 int TypeStruct::hash() {
-    long hash = std::hash < std::string > {}(name_);
+    unsigned long hash = std::hash < std::string > {}(name_);
     if(fields_.has_value()) {
         for (Field *f: fields_.value()) {
-            hash ^= f->hash();
+            hash = Utils::rot(hash, 13) ^ f->hashCode();
         }
     }
     // fold long into int (64 bits into 32 bits);
+    // negative and too big so it overflows to negative
     return (int) (hash ^ (hash >> 32));
 }
 

@@ -34,6 +34,9 @@ Type *LoadNode::compute() {
 // Todo: understand this
 Node* LoadNode::idealize() {
     // Simple Load-after-Store on same address.
+    if(nid == 28) {
+        std::cerr << "Here";
+    }
     Node* ptr1 = ptr();
     auto st = dynamic_cast<StoreNode*>(mem());
     auto stm = dynamic_cast<PhiNode*>(mem());
@@ -46,6 +49,7 @@ Node* LoadNode::idealize() {
     auto*p = dynamic_cast<ProjNode*>(mem());
     if(p && dynamic_cast<NewNode*>(p->in(0)) && ptr1 == dynamic_cast<NewNode*>(p->in(0))->proj(1)) {
         auto*nnn = dynamic_cast<NewNode*>(p->in(0));
+        // nnn->find_alias(alias_) should return ReadOnlyNode
         return nnn->in(nnn->find_alias(alias_));
     }
 

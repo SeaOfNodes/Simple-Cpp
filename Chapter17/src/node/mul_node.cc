@@ -32,7 +32,7 @@ Type *MulNode::compute() {
           return TypeInteger::ZERO();
       }
     if (i1->isConstant() && i2->isConstant()) {
-      return TypeInteger::constant(i1->value() * i1->value());
+      return TypeInteger::constant(i1->value() * i2->value());
     }
   }
   // Todo: understand why bot here
