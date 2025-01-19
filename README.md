@@ -18,3 +18,4 @@ TODO:
  - Make sure graphviz output generates good graph
  - Finish off IrPrinter and tools for all the chapters as well as the evaluator
  - Make code more readable, less copying, use std::format to output good graph.
+ - IR printing needs improvement
