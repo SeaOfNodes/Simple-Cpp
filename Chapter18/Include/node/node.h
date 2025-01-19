@@ -346,7 +346,7 @@ public:
      * Iterate peepholes to a fixed point
      */
 
-    static StopNode *iterate(StopNode *stop, bool show);
+    static void iterate(StopNode *stop, bool show);
 
     static bool MidAssert();
 

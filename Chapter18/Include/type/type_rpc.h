@@ -2,7 +2,7 @@
 #define TYPE_RPC_H
 
 #include "../type/type.h"
-#include "../../include/tomi.h"
+#include "../../Include/tomi.h"
 class TypeRPC : public Type {
 public:
     // A set of CallEndNode IDs (or StopNode); commonly just one.

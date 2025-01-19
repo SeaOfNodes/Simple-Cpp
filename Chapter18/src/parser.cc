@@ -1488,16 +1488,22 @@ Node *Parser::parsePrimary() {
     }
     Node *op = [&]() -> Node * {
         switch (ch) {
+            case 1:
+            case static_cast<char>(-1): // Handle (char)-1
             case '+':
-                return new AddNode(lhs, rhs);
+                op = new AddNode(lhs, rhs);
+                break;
             case '-':
-                return new SubNode(lhs, rhs);
+                op = new SubNode(lhs, rhs);
+                break;
             case '*':
-                return new MulNode(lhs, rhs);
+                op = new MulNode(lhs, rhs);
+                break;
             case '/':
-                return new DivNode(lhs, rhs);
+                op = new DivNode(lhs, rhs);
+                break;
             default:
-                throw std::runtime_error("TODO"); // Unreachable
+                throw std::runtime_error("Unhandled operation in switch.");
         }
     }(); // <-- Lambda is called here
     // Return pre-value (x+=1) or post-value (x++)
@@ -1629,7 +1635,7 @@ void Parser::errorSyntax(std::string syntax) {
 }
 
 void Parser::error(std::string errorMessage) {
-    throw std::runtime_error(errorMessage);
+    return alloc.new_object<ParserException>(msg, loc);
 }
 
 bool Parser::match(std::string syntax) { return lexer->match(syntax); }
@@ -1813,4 +1819,11 @@ void Lexer::skipWhiteSpace() {
     }
     while (isWhiteSpace())
         position++;
+}
+ParserException::ParserException(const std::string &msg, const Lexer *loc) : std::runtime_error(msg), loc_(loc){
+
+}
+
+ParserException ParserException::error(const std::string &msg, const Lexer *loc) {
+    return ParserException(msg, loc);
 }

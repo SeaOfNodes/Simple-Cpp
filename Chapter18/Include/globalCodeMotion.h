@@ -10,7 +10,7 @@ public:
     // Arrange that the existing isCFG() Nodes form a valid CFG.  The
     // Node.use(0) is always a block tail (either IfNode or head of the
     // following block).  There are no unreachable infinite loops.
-    static void buildCFG(StopNode* stop);
+    static void buildCFG(StartNode* start, StopNode* stop);
     // ------------------------------------------------------------------------
     // Backwards walk on the CFG only, looking for unreachable code - which has
     // to be an infinite loop.  Insert a bogus never-taken exit to Stop, so the
@@ -25,10 +25,10 @@ public:
     // exit test.
     static void walkInfinite(CFGNode* n, Tomi::BitArray<10>& visited, StopNode* stop);
 
-    static void schedEarly();
+    static void schedEarly(StartNode* start);
     // Post-Order of CFG
 
-    static void rpo_cfg(Node* n, Tomi::BitArray<10>& visited, Tomi::Vector<CFGNode*>& rpo);
+    static void rpo_cfg(CFGNode* n, Node*use, Tomi::BitArray<10>& visited, Tomi::Vector<CFGNode*>& rpo);
     static void schedEarly_(Node* n, Tomi::BitArray<10>& visit);
     static void schedLate(StartNode* start);
     // Forwards post-order pass.  Schedule all outputs first, then draw an

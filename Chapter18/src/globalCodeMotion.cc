@@ -2,20 +2,21 @@
 #include "../Include/parser.h"
 #include "../Include/node/store_node.h"
 #include "../Include/node/never_node.h"
+#include "../Include/node/call_node.h"
+#include "../Include/node/fun_node.h"
 #include "../Include/Iter_peeps.h"
 #include <cassert>
 #include <algorithm>
 
-void GlobalCodeMotion::buildCFG(StopNode *stop) {
-    schedEarly();
-    Parser::SCHEDULED = true;
-    schedLate(Parser::START);
+void GlobalCodeMotion::buildCFG(StartNode *start, StopNode*stop) {
+    schedEarly(start);
+    schedLate(stop);
 }
 
 void GlobalCodeMotion::schedEarly() {
     Tomi::Vector<CFGNode *> rpo;
     Tomi::BitArray<10> visit;
-    rpo_cfg(Parser::START, visit, rpo);
+    rpo_cfg(nullptr, start, visit, rpo);
     // Reverse Post-Order on CFG
     for (int j = static_cast<int>(rpo.size() - 1); j >= 0; j--) {
         CFGNode *cfg = rpo[j];
@@ -61,14 +62,15 @@ void GlobalCodeMotion::schedEarly() {
     }
 }
 
-void GlobalCodeMotion::rpo_cfg(Node *n, Tomi::BitArray<10> &visited, Tomi::Vector<CFGNode *> &rpo) {
-    auto *cfg = dynamic_cast<CFGNode *>(n);
+void GlobalCodeMotion::rpo_cfg(CfgNode *n,Node*use, Tomi::BitArray<10> &visited, Tomi::Vector<CFGNode *> &rpo) {
+    auto *cfg = dynamic_cast<CFGNode *>(use);
     if (!cfg || visited.test(cfg->nid)) {
         return;
     }
+    if(dynamic_cast<CallNode*>(def) && dynamic_cast<FunNode*>(cfg)) return;
     visited.set(cfg->nid);
-    for (Node *use: cfg->outputs) {
-        rpo_cfg(use, visited, rpo);
+    for (Node *useuse: cfg->outputs) {
+        rpo_cfg(cfg, useuse, visited, rpo);
     }
     rpo.push_back(cfg);
 
@@ -91,7 +93,7 @@ void GlobalCodeMotion::schedEarly_(Node *n, Tomi::BitArray<10> &visit) {
         // Schedule at deepest input
         CFGNode *early = Parser::START;
         for (int i = 1; i < n->nIns(); i++) {
-            if (n->in(i)->cfg0()->idepth() > early->idepth()) {
+            if (n.in(1) != nullptr && n->in(i)->cfg0()->idepth() > early->idepth()) {
                 early = n->in(i)->cfg0();
             }
         }
@@ -125,8 +127,13 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
             // Loads need their memory inputs' uses also done
             if (auto *ld = dynamic_cast<LoadNode *>(n)) {
                 for (Node *memuse: ld->mem()->outputs) {
-                    if (late[memuse->nid] == nullptr) {
-                        continue;
+                    if (late[memuse->getId()] == nullptr &&
+                        !dynamic_cast<NewNode*>(memuse) &&
+                        (dynamic_cast<TypeMem*>(memuse->_type) ||
+                         (dynamic_cast<TypeTuple*>(memuse->_type) &&
+                          dynamic_cast<TypeMem*>(
+                                  dynamic_cast<TypeTuple*>(memuse->_type)->_types[ld->_alias].get())))) {
+                        continue; // Simulating `continue outer`
                     }
                 }
             }
@@ -212,7 +219,7 @@ CFGNode *GlobalCodeMotion::use_block(Node *n, Node *use, Tomi::Vector<CFGNode *>
     CFGNode *found = nullptr;
     for (int i = 1; i < phi->nIns(); i++) {
         if (phi->in(i) == n) {
-            if (found == nullptr) found = phi->region()->cfg(i);
+            if (found == nullptr) found = phi->region()->cfg(i)->idom_();
         }
     }
     assert(found != nullptr);
@@ -241,7 +248,9 @@ CFGNode *GlobalCodeMotion::find_anti_dep(CFGNode *lca, LoadNode *load, CFGNode *
     for (Node *mem: load->mem()->outputs) {
         if (auto *st = dynamic_cast<StoreNode *>(mem)) {
             lca = anti_dep(load, late[st->nid], st->cfg0(), lca, st);
-        } else if (auto *phi = dynamic_cast<PhiNode *>(mem)) {
+        } else if(dynamic_cast<CallNode*>(st)) {
+            lca = anti_dep(load, late[st->nid], st->cfg0(), lca, st);
+        }else if (auto *phi = dynamic_cast<PhiNode *>(mem)) {
             // Repeat anti-dep for matching Phi inputs.
             // No anti-dep edges but may raise the LCA.
             for (int i = 1; i < phi->nIns(); i++) {
@@ -252,10 +261,12 @@ CFGNode *GlobalCodeMotion::find_anti_dep(CFGNode *lca, LoadNode *load, CFGNode *
         } else if (dynamic_cast<LoadNode *>(mem)) {
             // Loads do not cause anti-deps on other loads
             break;
-        } else if (dynamic_cast<ReturnNode *>(mem)) {
+        } else if(dynamic_cast<NewNode*>(st)) {
+            break;
+        }else if (dynamic_cast<ReturnNode *>(mem)) {
             // Load must already be ahead of Return
             break;
-        } else if (dynamic_cast<ScopeMinNode *>(mem)) {
+        } else if (dynamic_cast<MergeMemNode *>(mem)) {
             break;
         } else if (dynamic_cast<NeverNode *>(mem)) {
             break;

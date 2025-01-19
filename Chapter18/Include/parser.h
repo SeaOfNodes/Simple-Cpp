@@ -26,6 +26,8 @@
 #include <iostream>
 #include <unordered_set>
 
+class ParserException;
+
 class Lexer {
 public:
     Lexer() = default;
@@ -289,7 +291,7 @@ private:
 
     void errorSyntax(std::string syntax);
 
-    void error(std::string errorMessage);
+    ParserException& error(std::string errorMessage);
 
     bool match(std::string syntax);
 
@@ -298,4 +300,10 @@ private:
     Lexer *lexer;
 };
 
+class ParserException : public std::runtime_error {
+    Lexer* loc_;
+    ParserException(const std::string&msg, const Lexer* loc);
+
+
+};
 #endif

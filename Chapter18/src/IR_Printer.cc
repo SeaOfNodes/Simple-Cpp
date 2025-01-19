@@ -4,6 +4,9 @@
 #include "../Include/parser.h"
 #include "../Include/node/cfg_node.h"
 #include "../Include/utils.h"
+#include "../Include/codegen.h"
+#include "../Include/node/call_node.h"
+
 #include <limits>
 
 void IRPrinter::printLine(Node *n, std::ostringstream &sb) {
@@ -47,15 +50,15 @@ void IRPrinter::printLine_(Node *n, std::ostringstream &builder) {
 
 // Another bulk pretty-printer.  Makes more effort at basic-block grouping.
 std::string IRPrinter::prettyPrint(Node *node, int depth) {
-    if (Parser::SCHEDULED) {
-        return prettyPrintScheduled(node, depth, false);
+    if (CodeGen::CODE->phase_ > CodeGen::Phase::schedule) {
+        return prettyPrintScheduled(node, depth);
     }
     BFS *bfs = new BFS(node, depth);
     // First, a Breadth First Search at a fixed depth.
     Tomi::Vector<Node *> rpos;
     Tomi::BitArray<10> visit;
     for (int i = bfs->lim_; i < bfs->_bfs.size(); i++) {
-        postOrd(bfs->_bfs[i], rpos, visit, bfs->_bs);
+        postOrd(bfs->_bfs[i], nullptr, rpos, visit, bfs->_bs);
     }
     // Reverse the post-order walk
     std::ostringstream builder;
@@ -64,6 +67,17 @@ std::string IRPrinter::prettyPrint(Node *node, int depth) {
         Node *n = rpos[i];
         if (n->isCFG() || n->isMultiHead()) {
             if (!gap) builder << "\n";
+            if(auto*fun = dynamic_cast<FunNode*>(n)) {
+                TypeFunPtr*sig = fun.sig();
+                builder << "--- ";
+                sig->print(builder);
+                if(sig->name_.empty()) {
+                    builder << "";
+                }
+                builder << sig->name_;
+                builder << " ";
+                builder << "----------------------\n";
+            }
             printLine(n, builder);
             while (--i >= 0) {
                 Node *m = rpos[i];
@@ -72,6 +86,20 @@ std::string IRPrinter::prettyPrint(Node *node, int depth) {
                     break;
                 }
                 printLine(n, builder);
+            }
+            if(auto*ret = dynamic_cast<ReturnNode*>(n)) {
+                TypeFunPtr* sig = ret->fun()->sig();
+                builder << "--- ";
+                if(sig->name_.empty()) {
+                    builder << "";
+                }
+                builder << sig->name_;
+                builder << " ";
+                builder << "----------------------\n";
+            }
+            if(!dynamic_cast<CallNode*>(n)) {
+                builder << "\n";
+                gap = true;
             }
             builder << "\n";
             gap = true;
@@ -84,22 +112,50 @@ std::string IRPrinter::prettyPrint(Node *node, int depth) {
 }
 
 // This requires recursion
-void IRPrinter::postOrd(Node *n, Tomi::Vector<Node *> &rpos, Tomi::BitArray<10> &visit, Tomi::BitArray<10> &bfs) {
+void IRPrinter::postOrd(Node *n, Node*prior, Tomi::Vector<Node *> &rpos, Tomi::BitArray<10> &visit, Tomi::BitArray<10> &bfs) {
     if (!bfs.test(n->nid)) return; // NOT in the BFS visit
+    if(dynamic_cast<FunNode*>(n) && !(dynamic_cast<StartNode*>(prior))) {
+        return;     // Only visit Fun from Start
+    }
+
     if (visit.test(n->nid)) return; // Already post order walked
     visit.set(n->nid);
-    if (n->isCFG()) {
+    if (dynamic_cast<CFGNode*>(n)) {
         for (Node *use: n->outputs) {
-            if (use != nullptr && use->isCFG() && use->nOuts() >= 1 && !(dynamic_cast<LoopNode *>(use->outputs[0]))) {
-                postOrd(use, rpos, visit, bfs);
+            // Follow CFG, not across call/function borders, and not around backedges
+            if (dynamic_cast<CFGNode*>(use) &&
+                // Ensure `n` is not a CallNode AND `use` is not a FunNode
+                !(dynamic_cast<CallNode*>(n) && dynamic_cast<FunNode*>(use)) &&
+                // Ensure `use` has at least 1 output
+                static_cast<Use*>(use)->nOuts() >= 1 &&
+                // Ensure the first output of `use` is not a LoopNode
+                !dynamic_cast<LoopNode*>(static_cast<Use*>(use)->getOutputs()[0])) {
+
+                // Call postOrd function
+                postOrd(use, n, rpos, visit, bfs);
             }
         }
         for (Node *use: n->outputs) {
-            if (use != nullptr && use->isCFG()) postOrd(use, rpos, visit, bfs);
+            if (dynamic_cast<CFGNode*>(use) &&
+                // Ensure `n` is not a CallNode AND `use` is not a FunNode
+                !(dynamic_cast<CallNode*>(n) && dynamic_cast<FunNode*>(use))) {
+
+                // Call postOrd function
+                postOrd(use, n, rpos, visit, bfs);
+            }
         }
     }
+    // Follow all outputs
     for (Node *use: n->outputs) {
-        if (use != nullptr) postOrd(use, rpos, visit, bfs);
+        if (use &&
+            // Ensure `n` is not a CallNode AND `use` is not a FunNode
+            !(dynamic_cast<CallNode*>(n) && dynamic_cast<FunNode*>(use)) &&
+            // Ensure `n` is a FunNode OR `use` is not a ParmNode
+            (dynamic_cast<FunNode*>(n) || !dynamic_cast<ParmNode*>(use))) {
+
+            // Call postOrd function
+            postOrd(use, n, rpos, visit, bfs);
+        }
     }
     // Post order
     rpos.push_back(n);
@@ -139,7 +195,7 @@ BFS::BFS(Node *root, int d) {
     lim_ = lim;
 }
 
-std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmFormat) {
+std::string IRPrinter::prettyPrintScheduled(Node *node, int depth) {
     Tomi::HashMap<Node *, int> ds;
     walk_(ds, node, depth);
     std::ostringstream builder;
@@ -167,6 +223,7 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
             label(builder, blk->cfg(0));
         }
         builder << "]]\n";
+        printLine(blk, builder);
         // Collect block contents that are in the depth limit
         bns.clear();
         int xd = std::numeric_limits<int>::max();
@@ -174,7 +231,9 @@ std::string IRPrinter::prettyPrintScheduled(Node *node, int depth, bool llvmForm
             int *i = ds.get(use);
             auto *cfg = dynamic_cast<CFGNode *>(use);
             if (i != nullptr && !(cfg && cfg->blockHead())) {
-                bns.push_back(use);
+                if(bns.find(use) == -1) {
+                    bns.push_back(use);
+                }
                 xd = std::min(xd, *i);
             }
         }
@@ -215,10 +274,16 @@ std::string IRPrinter::label(CFGNode *blk) {
 void IRPrinter::walk_(Tomi::HashMap<Node *, int> &ds, Node *node, int d) {
     int *nd = ds.get(node);
     if (nd != nullptr && d <= *nd) return;
-    ds.put(node, d);
+    if(old == nullptr) ds.put(node, d);
     if (d == 0) return;
-    for (Node *def: node->inputs) {
-        if (def != nullptr) walk_(ds, def, d - 1);
+    for (Node* def : node->_inputs) { // Assuming `_inputs` is a std::vector<Node*>
+        if (def &&
+            !(dynamic_cast<LoopNode*>(node) && node->back() == def) &&
+            !(dynamic_cast<CallEndNode*>(node) && dynamic_cast<ReturnNode*>(def)) &&
+            !(dynamic_cast<FunNode*>(node) && dynamic_cast<CallNode*>(def)) &&
+            !(dynamic_cast<ParmNode*>(node) && !dynamic_cast<FunNode*>(def))) {
+            walk_(ds, ns, def, d - 1);
+        }
     }
 }
 

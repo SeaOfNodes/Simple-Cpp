@@ -88,6 +88,7 @@ add_library(simple_lib
         src/node/call_node.cc
         src/node/call_end_node.cc
 
+
         # bitwise
         src/node/xor_node.cc
         src/node/shr_node.cc
@@ -124,6 +125,8 @@ add_library(simple_lib
         src/graphEvaluator.cc
         src/iterPeeps.cc
         src/IR_Printer.cc
+        src/list_scheduler.cc
+        src/codegen.cc
         )
 
 set(CMAKE_BUILD_TYPE Debug)

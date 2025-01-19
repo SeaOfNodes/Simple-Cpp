@@ -14,13 +14,13 @@ class IRPrinter {
 public:
     static std::string prettyPrint(Node *node, int depth);
 
-    static std::string prettyPrintScheduled(Node *node, int depth, bool llvmFormat);
+    static std::string prettyPrintScheduled(Node *node, int depth);
 
     static std::string label(CFGNode *blk);
 
     static void label(std::ostringstream &sb, CFGNode *blk);
 
-    static void printLine(Node *n, std::ostringstream &sb);
+    static std::ostringstream& printLine(Node *n, std::ostringstream &sb);
 
     static void printLine_(Node *n, std::ostringstream &sb);
 
@@ -28,7 +28,7 @@ public:
     printLine(Node *n, std::ostringstream &sb, Tomi::Vector<Node *> &bns, int i, Tomi::HashMap<Node *, int> &ds);
 
 private:
-    static void postOrd(Node *n, Tomi::Vector<Node *> &rpos, Tomi::BitArray<10> &visit, Tomi::BitArray<10> &bfs);
+    static void postOrd(Node *n, Node*prior, Tomi::Vector<Node *> &rpos, Tomi::BitArray<10> &visit, Tomi::BitArray<10> &bfs);
 
     static void walk_(Tomi::HashMap<Node *, int> &visit, Node *n, int d);
 };
