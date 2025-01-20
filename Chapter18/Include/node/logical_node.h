@@ -12,6 +12,6 @@ public:
     virtual std::string op() = 0;
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool> &visit) override;
     // Todo: Parser.ParseException comes here
-}
+};
 
 #endif

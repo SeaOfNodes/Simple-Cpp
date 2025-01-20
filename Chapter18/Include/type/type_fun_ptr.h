@@ -52,7 +52,7 @@ public:
 
     Type*xmeet(Type*other) override;
     TypeFunPtr* dual() override;
-    Type*meet0(Type*other) override;
+    Type*meet0() override;
     TypeFunPtr* glb() override;
 
     bool isHigh() override;
@@ -67,11 +67,11 @@ public:
 
     int hash() override;
 
-    bool eq() override;
+    bool eq(Type*t) override;
     TypeFunPtr*setName(std::string name);
 
     std::string str() override;
-    std::ostringstream&print(std::ostringstream&os) override;
+    std::ostringstream&print(std::ostringstream&os);
     std::ostringstream& print(std::ostringstream& sb, bool n);
     std::ostringstream& gprint(std::ostringstream& sb) override;
     static long nextFIDX(long fidxs);

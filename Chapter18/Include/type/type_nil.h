@@ -12,7 +12,6 @@ public:
     unsigned int nil_{};
     TypeNil(unsigned int t, unsigned int nil);
     static void gather(Tomi::Vector<Type *> &ts);
-    TypeNil* makeFrom(unsigned int nil);
 
     virtual TypeNil* makeFrom(unsigned int nil);
 
@@ -20,7 +19,7 @@ public:
     unsigned int dual0();
 
     // RHS is NIL
-    Type* meet0();
+    virtual Type* meet0();
     // RHS is XNIL
     Type* meetX();
 
@@ -28,7 +27,7 @@ public:
 
     bool isHigh() override;
     bool isConstant() override;
-    bool isHighOrConstant() override;
+    bool isHighOrConst() override;
 
     Type* glb() override;
 
@@ -41,5 +40,5 @@ public:
     int hash();
     bool eq(TypeNil* ptr);
 
-}
+};
 #endif

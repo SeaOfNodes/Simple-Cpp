@@ -72,7 +72,7 @@ TypeFunPtr *TypeFunPtr::dual() {
     return TypeFunPtr::make(dual0(), sig_->dual(), ret_->dual(), ~fidxs_);
 }
 
-Type *TypeFunPtr::meet0(Type *other) {
+Type *TypeFunPtr::meet0() {
     return nil_ == 3? this: make(3, sig_, ret_, fidxs_);
 }
 

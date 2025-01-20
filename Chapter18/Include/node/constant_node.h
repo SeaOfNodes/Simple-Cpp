@@ -15,7 +15,7 @@ public:
   bool isMultiTail() override;
 
   bool skip(CFGNode* usecfg);
-  CFGNode*uctrl() override;
+//  CFGNode*uctrl() override;
 
   static Node* make(Type* type);
 

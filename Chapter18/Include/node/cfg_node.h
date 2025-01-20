@@ -22,7 +22,7 @@ public:
 
     CFGNode *cfg(int idx);
 
-    CFGNode* uctrl();
+    virtual CFGNode* uctrl();
     // Block head is Start, Region, CProj, but not e.g. If, Return, Stop
     virtual bool blockHead();
 

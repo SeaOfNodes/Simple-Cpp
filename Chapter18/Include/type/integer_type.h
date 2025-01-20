@@ -79,7 +79,7 @@ public:
 
   Type* dual() override;
   std::string str() override;
-  std::string str_(long lo, long hi) override;
+  std::string str_(long lo, long hi);
 
   TypeInteger* makeInit() override;
   std::ostringstream& typeName(std::ostringstream& builder) override;

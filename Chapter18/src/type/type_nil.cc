@@ -44,7 +44,7 @@ bool TypeNil::isHigh() {
 bool TypeNil::isConstant() {
     return false;
 }
-bool TypeNil::isHighOrConstant() {
+bool TypeNil::isHighOrConst() {
     return isHigh() || isConstant();
 }
 

@@ -133,7 +133,7 @@ bool ScopeNode::define(std::string name, Type *declaredType, bool xfinal, Node *
     return true;
 }
 
-ScopeMinNode *ScopeNode::mem(Node*n) {
+Node* *ScopeNode::mem(Node*n) {
     return setDef(1, n);
 }
 bool ScopeNode::inCon() {
@@ -243,7 +243,7 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
 //    return builder;
 }
 
-RegionNode *ScopeNode::mergeScopes(ScopeNode *that) {
+RegionNode *ScopeNode::mergeScopes(ScopeNode *that, Lexer* loc) {
     // not called with keep here
     RegionNode *r = dynamic_cast<RegionNode *>(
             ctrl((alloc.new_object<RegionNode>(
@@ -333,6 +333,18 @@ void ScopeNode::addGuards(Node *ctrl, Node *pred, bool invert) {
                 replace(npred, cast);
             }
         }
+}
+
+void ScopeNode::balanceIf(ScopeNode *scope) {
+    for(int i = nIns(); i < scope->nIns(); i++) {
+        ScopeMinNode::Var*v = scope->vars[i];
+        if(n->isFref()) {
+            vars.add(n);
+            addDef(scope->in(i));
+        } else {
+            Parser::error("Cannot define a '" + v->name_ + "' one one arm of an if", v->loc_);
+        }
+    }
 }
 void ScopeNode::removeGuards(Node *ctrl) {
     // 0,1 or 2 guards

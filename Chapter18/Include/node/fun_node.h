@@ -8,13 +8,13 @@
 #include "../../Include/type/type_fun_ptr.h"
 #include "../../Include/parser.h"
 
-class FunNode : RegionNode{
+class FunNode : public RegionNode{
     // When set true, this Call/CallEnd/Fun/Return is being trivially inlined
 public:
     bool folding_;
     TypeFunPtr* sig_; // Initial signature
     ReturnNode* ret_; // Return Pointer
-    FunNode(Lexer loc, StartNode* start, TypeFunPtr* sig);
+    FunNode(Lexer* loc, StartNode* start, TypeFunPtr* sig);
 
     std::string label() override;
 
@@ -42,7 +42,7 @@ public:
     Tomi::BitArray<10> body();
 
 private:
-    static void walkUp(CFGNode* N, Tomi::HashSet<10>& body);
+    static void walkUp(CFGNode* N, Tomi::BitArray<10>& body);
  static bool walkDown(Node*n, Tomi::BitArray<10> cfgs, Tomi::BitArray<10>body, Tomi::BitArray<10>& visit);
 
 

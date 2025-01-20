@@ -14,7 +14,7 @@
 #include <stack>
 #include <unordered_map>
 
-class ScopeNode : public MemMergeNode {
+class ScopeNode : public MergeMemNode {
 public:
     /**
      * A Stack of symbol tables; a symbol table is a map from names to node
@@ -36,7 +36,7 @@ public:
     Tomi::Vector<ScopeMinNode::Var*> vars;
 
     // Read from memory
-    ScopeMinNode *mem();
+    MergeMemNode *mem();
     // Write to memory
     Node* mem(int alias);
 
@@ -66,6 +66,7 @@ public:
     // typically hits many dozens of variables.
     int find(std::string name);
 
+    void balanceIf(ScopeNode* scope);
 //  Tomi::Vector<Tomi::HashMap<std::string, int>> idxs;
     Tomi::Vector<std::string> keys;
 
@@ -168,7 +169,7 @@ public:
      * @param that The ScopeNode to be merged into this
      * @return A new node representing the merge point
      */
-    RegionNode *mergeScopes(ScopeNode *that);
+    RegionNode *mergeScopes(ScopeNode *that, Lexer* loc);
 
     void addGuards(Node* ctlr, Node* pred, bool invert);
 

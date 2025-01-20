@@ -6,7 +6,7 @@ class XCtrlNode : public CFGNode {
 public:
     XCtrlNode();
     std::string label() override;
-    bool isConst() override;
+    bool isConst();
     bool isMultiTail() override;
 
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;

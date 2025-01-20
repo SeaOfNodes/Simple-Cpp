@@ -12,12 +12,12 @@ public:
     std::string label() override;
     std::string uniqueName() override;
 
-    std::ostringstream& print_1(std::ostringstream&os, Tomi::BitArray<10>& visited) override;
+    std::ostringstream& print_1(std::ostringstream&os,  Tomi::Vector<bool>& visited) override;
 
     Node* idealize() override;
 
     // Todo: parser err comes here
     bool eq(Node*n) override;
     int hash() override;
-}
+};
 #endif

@@ -120,6 +120,11 @@ public:
 
     Node(Tomi::Vector<Node *> inputs);
 
+    template <typename T>
+    T*init() {
+        return this;
+    }
+
     bool operator==(Node &);
 
     virtual ~Node() = default;
@@ -250,6 +255,7 @@ public:
     // Set the type.  Assert monotonic progress.
     // If changing, add users to worklist.
     Type *setType(Type *type);
+
 
     virtual Node *idealize();
 

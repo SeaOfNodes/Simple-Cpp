@@ -6,8 +6,10 @@
 
 #include <initializer_list>
 
+class Lexer;
 class RegionNode : public CFGNode {
 public:
+    Lexer* loc_;
   RegionNode(std::initializer_list<Node *> nodes);
   std::string label() override;
   std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;

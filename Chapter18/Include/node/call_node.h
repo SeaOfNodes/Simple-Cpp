@@ -2,6 +2,8 @@
 #define CALL_NODE_H
 
 #include "cfg_node.h"
+class CallEndNode;
+
 class Lexer;
 class CallNode : public CFGNode {
     // Source location for late reported errors

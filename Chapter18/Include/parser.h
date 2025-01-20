@@ -27,6 +27,7 @@
 #include <unordered_set>
 
 class ParserException;
+class TypeFunPtr;
 
 class Lexer {
 public:
@@ -144,7 +145,7 @@ public:
     /**
  *  Parses a function body, assuming the header is parsed.
  */
-    ReturnNode* parseFunctionBody(TypeFunPtr* sig, Lexer loc, std::initializer_list<std::string> ids);
+    ReturnNode* parseFunctionBody(TypeFunPtr* sig, Lexer* loc, Tomi::Vector<std::string> ids);
 
     Node* parseTrinary(Node*pred, bool stmt, std::string fside);
 
@@ -291,7 +292,7 @@ private:
 
     void errorSyntax(std::string syntax);
 
-    ParserException& error(std::string errorMessage);
+    static ParserException& error(std::string errorMessage);
 
     bool match(std::string syntax);
 

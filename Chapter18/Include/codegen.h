@@ -36,8 +36,8 @@ public:
     // Last created CodeGen as a global, for easier debugging prints
     static CodeGen* CODE;
 
-    Codegen(std::string src, TypeInteger* arg);
-    Codegen(std::string src);
+    CodeGen(std::string src, TypeInteger* arg);
+    CodeGen(std::string src);
 
     CodeGen* parse();
     CodeGen* parse(bool disable);
@@ -50,13 +50,13 @@ public:
 
     CodeGen* localSched();
 
-    FunNode* link(TypeFunPtr* tfp);
+    FunNode* link(FunNode* tfp);
 
     Node*ctrl();
     Node*expr();
     std::string print();
 
-    std::string ToString() override;
+    std::string ToString();
 
     Node*f(int idx);
 

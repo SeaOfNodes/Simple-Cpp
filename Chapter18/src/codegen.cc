@@ -70,7 +70,7 @@ CodeGen* CodeGen::localSched() {
     ListScheduler::sched(this);
     return this;
 }
-FunNode* CodeGen::link(TypeFunPtr* tfp) {
+FunNode* CodeGen::link(FunNode* tfp) {
     return linker_.get(tfp->makeFrom(Type::BOTTOM()));
 }
 void CodeGen::link(FunNode* fun) {

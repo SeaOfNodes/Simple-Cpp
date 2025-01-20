@@ -23,6 +23,11 @@ std::ostringstream& print_1(std::ostringstream& builder, Tomi::Vector<bool>& vis
 Node* merge();
 Type*compute() override;
 Node*idealize() override;
+
+// Todo: why is this happening
+// name hiding BS
+using Node::in;
+
 Node* in(ScopeMinNode::Var* v);
 Node*alias(int alias);
 Node*alias(int alias, Node*st);
@@ -30,9 +35,9 @@ Node*alias(int alias, Node*st);
 // A shared implementation allows us to create lazy phis both during
 // lookups and updates; the lazy phi creation is part of chapter 8.
 Node* mem_(int alias, Node*st);
-void merge_(MemMergeNode* that, RegionNode* r);
+void merge_(MergeMemNode* that, RegionNode* r);
 // Fill in the backedge of any inserted Phis
-void endLoopMem_(ScopeNode* scope, MergeMemNode*back, MemMergeNode* exit);
+void endLoopMem_(ScopeNode* scope, MergeMemNode*back, MergeMemNode* exit);
 // Now one-time do a useless-phi removal
 void useless_();
 bool eq(Node*n) override;

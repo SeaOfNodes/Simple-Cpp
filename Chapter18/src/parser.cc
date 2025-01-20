@@ -1,3 +1,4 @@
+// NODES
 #include "../Include/parser.h"
 #include "../Include/graph_visualizer.h"
 #include "../Include/node/new_node.h"
@@ -9,7 +10,12 @@
 #include "../Include/node/mem_merge_node.h"
 #include "../Include/type/type_fun_ptr.h"
 #include "../Include/node/fref_node.h"
-// bitiwse
+#include "../Include/node/fun_node.h"
+#include "../Include/node/cast_node.h"
+#include "../Include/node/addf_node.h"
+#include "../Include/node/call_node.h"
+#include "../Include/node/call_end_node.h"
+// BITWISE
 #include "../Include/node/and_node.h"
 #include "../Include/node/or_node.h"
 #include "../Include/node/xor_node.h"
@@ -23,6 +29,9 @@
 #include "../Include/node/struct_node.h"
 #include "../Include/node/read_only_node.h"
 #include "../Include/type/type_rpc.h"
+
+// CODEGEN
+#include "../Include/codegen.h"
 
 #include <cmath> // For std::abs
 #include <bit>
@@ -71,9 +80,9 @@ Parser::Parser(std::string source, TypeInteger *arg) {
 
     START = alloc.new_object<StartNode>(arg);
     STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
-    ZERO = con(TypeInteger::ZERO())->keep();
+    ZERO = dynamic_cast<ConstantNode*>(con(TypeInteger::ZERO())->keep());
     XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
-    NIL = con(Type::NIL())->keep();
+    NIL = dynamic_cast<ConstantNode*>(con(Type::NIL())->keep());
 }
 
 bool Parser::SCHEDULED = false;
@@ -84,7 +93,7 @@ Node *Parser::con(long con) {
     return con == 0 ? ZERO : Parser::con(TypeInteger::constant(con));
 }
 
-Parser::loc() {
+Lexer* Parser::loc() {
     return alloc.new_object<Lexer>(lexer);
 }
 Parser::~Parser() {
@@ -111,15 +120,15 @@ StopNode *Parser::parse(bool show) {
     scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(), false,
                        (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
     ctrl(XCTRL);
-    scope_node->mem(alloc.new_object<MemMergeNode>(false));
+    scope_node->mem(alloc.new_object<MergeMemNode>(false));
     //      // Parse whole program, as-if function header "{ int arg -> body }"
-    parseFunctionBody(TypeFunPtr::MAIN(), loc(), "arg");
+    parseFunctionBody(TypeFunPtr::MAIN(), loc(), std::initializer_list<std::string>{"arg"});
     if (lexer->isEof()) throw std::runtime_error("unexpected");
     // Clean up and reset
-    xScopes.pop();
-    scope_node.kill();
-    for (StructNode *init: INITS.values()) {
-        init->unkeep()->kill();
+    xScopes.pop_back();
+    scope_node->kill();
+    for (auto init: INITS) {
+        init.val->unkeep()->kill();
     }
     INITS.clear();
     STOP = (StopNode *) STOP->peephole();
@@ -130,28 +139,29 @@ StopNode *Parser::parse(bool show) {
     return STOP;
 }
 
-ReturnNode *Parser::parseFunctionBody(int *sig, Lexer loc, std::initializer_list <std::string> ids) {
+ReturnNode *Parser::parseFunctionBody(TypeFunPtr* sig, Lexer* loc_, Tomi::Vector<std::string> ids) {
     // Stack parser state on the local Java stack, and unstack it later
     Node *oldctrl = ctrl()->keep();
-    NOde *oldmem = scope_node->mem()->keep();
+    Node *oldmem = scope_node->mem()->keep();
     FunNode *oldfun = fun_;
     ScopeNode *breakScope_ = breakScope;
     ScopeNode *continueScope_ = continueScope;
-    FunNode *fun = fun_ = peep(alloc.new_object<FunNode>(loc(), START, sig));
+    FunNode* bpeep = alloc.new_object<FunNode>(loc(), START, sig);
+    FunNode *fun = fun_ = dynamic_cast<FunNode*>(peep(bpeep));
     // Once the function header is available, install in linker table -
     // allowing recursive functions.  Linker matches on declared args and
     // exact fidx, and ignores the return (because the fidx will only match
     // the exact single function).
-    CodeGen::CODE::link(fun);
+    CodeGen::CODE->link(fun);
 
     Node *rpc = alloc.new_object<ParmNode>("$rpc", 0, TypeRPC::BOT(), fun, con(TypeRPC::BOT())->peephole());
 
     // Build a multi-exit return point for all function returns
-    RegionNode *r = alloc.new_object<RegionNode>(nullptr, nullptr)->init();
-    PhiNode *rmem =
-            PhiNode * rrez =
-            ReturnNode * ret =
-                    fun->setRet(ret);
+    RegionNode *r = alloc.new_object<RegionNode>(nullptr, nullptr);
+    PhiNode *rmem = alloc.new_object<PhiNode>(ScopeNode::MEM0, TypeMem::BOT(), std::initializer_list<Node*>{r, nullptr})->init<PhiNode>();
+    PhiNode * rrez = alloc.new_object<PhiNode>(ScopeNode::ARG0, Type::BOTTOM(), std::initializer_list<Node*>{r, nullptr})->init<PhiNode>();
+    ReturnNode*ret = alloc.new_object<ReturnNode>(r, rmem, rrez, rpc, fun)->init<ReturnNode>();
+   fun->setRet(ret);
     STOP->addDef(ret);
     // Pre-call the function from Start, with worse-case arguments.  This
     // represents all the future, yet-to-be-parsed functions calls and
@@ -165,11 +175,11 @@ ReturnNode *Parser::parseFunctionBody(int *sig, Lexer loc, std::initializer_list
     // All args, "as-if" called externally
     for (int i = 0; i < ids.size(); i++) {
         Type *t = sig->arg(i);
-        scope_node->define(ids[i], t, false, alloc.new_object<ParmNode>(ids[i], i + 2, t, fun, con(t)->peephole(), loc);
+        scope_node->define(ids[i], t, false, alloc.new_object<ParmNode>(ids[i], i + 2, t, fun, con(t)->peephole(), loc()));
     }
 
     // Parse the body
-    Node *last = Parser::ZERO();
+    Node *last = Parser::ZERO;
     while (!peek('}') && !lexer->isEof()) {
         last = parseStatement();
     }
@@ -187,7 +197,7 @@ ReturnNode *Parser::parseFunctionBody(int *sig, Lexer loc, std::initializer_list
     ret->setDef(1, rmem->peephole());
     ret->setDef(2, rrez->peephole());
     ret->setDef(0, r->peephole());
-    ret = ret->peephole();
+    ret = dynamic_cast<ReturnNode*>(ret->peephole());
 
     // Function scope ends
     scope_node->pop();
@@ -219,7 +229,7 @@ Node *Parser::parseBreak() {
     breakScope = dynamic_cast<ScopeNode *>(require(jumpTo(breakScope), ";"));
 
     breakScope->addGuards(breakScope->ctrl(), nullptr, false);
-    return ZERO();
+    return ZERO;
 }
 
 ScopeNode *Parser::jumpTo(ScopeNode *toScope) {
@@ -249,7 +259,7 @@ Node *Parser::parseContinue() {
     checkLoopActive();
     continueScope =
             dynamic_cast<ScopeNode *>(require(jumpTo(continueScope), ";"));
-    return ZERO();
+    return ZERO;
 }
 
 Node *Parser::parseStruct() {
@@ -286,14 +296,14 @@ Node *Parser::parseStruct() {
         ScopeMinNode::Var *v = scope_node->vars[i];
         fs[i - lexlen] = Field::make(v->name_, v->type(), ALIAS++, v->final_);
     }
-    TypeStruct *ts = s->ts_ = TypeStruct::make(typeName, fs.asAry());
+    TypeStruct *ts = s->ts_ = TypeStruct::make(typeName, fs);
     TYPES.put(typeName, TypeMemPtr::make(ts));
     INITS.put(typeName, dynamic_cast<StructNode *>(s->peephole()->keep()));
     // Done with struct/block scope
     require("}");
     require(";");
     scope_node->pop();
-    return ZERO();
+    return ZERO;
 }
 
 
@@ -383,7 +393,7 @@ Node *Parser::liftExpr(Node *expr, Type *t, bool xfinal) {
     expr = ZSMask(expr, t);
     // expr_->type_ and `t` should be interned to be the same.
     // t results in negative hash
-    if (!expr->type_ != Type::BOTTOM() && !expr->type_->shallowISA(t)) {
+    if (expr->type_ != Type::BOTTOM() && !expr->type_->shallowISA(t)) {
         // why are they not the same here
         // they should hash to be the same thing
         error("Type  " + expr->type_->str() + "is not of declared type " + t->str());
@@ -392,7 +402,7 @@ Node *Parser::liftExpr(Node *expr, Type *t, bool xfinal) {
 }
 
 Node *Parser::widenInt(Node *expr, Type *t) {
-    if (dynamic_cast<TypeInteger *>(expr->type_) || expr->type_ = Type::NIL() && dynamic_cast<TypeFloat *>(t)) {
+    if (dynamic_cast<TypeInteger *>(expr->type_) || expr->type_ == Type::NIL() && dynamic_cast<TypeFloat *>(t)) {
         return peep(alloc.new_object<ToFloatNode>(expr));
     }
     return expr;
@@ -717,11 +727,11 @@ Node *Parser::parseTrinary(Node *pred, bool stmt, std::string fside) {
     // "pred ? n*fact(n-1) : 1"
     tScope->balanceIf(fScope);
     // Merge results
-    auto *r = dynamic_cast<RegionNode *>(ctrl(tScope->mergeScopes(fScope)));
+    auto *r = dynamic_cast<RegionNode *>(ctrl(tScope->mergeScopes(fScope, loc())));
     Node *ret = stmt ? r : peep(alloc.new_object<PhiNode>(std::string(), lhs->type_->meet(rhs->type_),
                                                           std::initializer_list < Node * > {r, lhs->unkeep(), rhs}));
-    ParseException err;
-    if (!stmt && (err = ret->err()) != nullptr) throw err;
+
+//    if (!stmt && (err = ret->err()) != nullptr) throw err;
     r->peephole();
     return ret;
 }
@@ -732,7 +742,7 @@ Node *Parser::showGraph() {
 }
 
 
-Type *Parser::typefunPtr() {
+Type *Parser::typeFunPtr() {
     int old = pos();
     match("{");
     Type *t0 = type();
@@ -745,7 +755,7 @@ Type *Parser::typefunPtr() {
             Type *ret = type();
             if (ret == nullptr || !match("}")) return posT(old);
 
-            return TypeFunPtr::make(match(""), TypeTuple::make(ts->asAry()), ret);
+            return TypeFunPtr::make(match(""), TypeTuple::make(ts), ret);
         }
         Type *t1 = type();
         if (t1 == nullptr) return posT(old);
@@ -755,7 +765,7 @@ Type *Parser::typefunPtr() {
 
 bool Parser::isTypeFun() {
     int old = pos();
-    if (typefunPtr() == nullptr) return false;
+    if (typeFunPtr() == nullptr) return false;
     pos(old);
     return true;
 }
@@ -784,7 +794,7 @@ TypeMemPtr *Parser::typeAry(Type *t) {
 Type *Parser::type() {
     int old1 = pos();
     // Only type with a leading `{` is a function pointer...
-    if (peek('{')) return TypeFunPtr();
+    if (peek('{')) return typeFunPtr();
     // Otherwise you get a type name
     std::string tname = lexer->matchId();
     if (tname == "Foo") {
@@ -796,7 +806,8 @@ Type *Parser::type() {
     // No new types as keywords
     if (t0 == nullptr && KEYWORDS.contains(tname)) return posT(old1);
 
-    if (t0 == Type::BOTTOM() || t0 == Type::TOP()) return t0;
+    Type*nptr = *t0;
+    if (nptr == Type::BOTTOM() || nptr == Type::TOP()) return nptr;
 
     Type *t1 = t0 == nullptr ? TypeMemPtr::make(TypeStruct::makeFRef(tname)) : *t0;
     // Nest arrays and '?' as needed
@@ -838,13 +849,11 @@ Type *Parser::type() {
 Node *Parser::parseBlock(ScopeNode::Kind kind) {
     // Enter a new scope
     scope_node->push(kind);
-    Node *last = ZERO();
+    Node *last = ZERO;
 
     Node *n = nullptr;
     while (!(lexer->peek('}')) && !(lexer->isEof())) {
         last = parseStatement();
-        if (n0 != nullptr)
-            n = n0;
     }
     last->keep();
     scope_node->pop();
@@ -880,7 +889,7 @@ Node *Parser::parseDeclarationStatement() {
 Node *Parser::parseDeclaration(Type *t) {
     bool inferType = t == Type::TOP() || t == Type::BOTTOM();
     bool hasBang = match("!");
-    Lexer loc = loc();
+    Lexer* loc_ = loc();
     std::string name = requireId();
     if (name == "s") {
         std::cout << "here";
@@ -896,13 +905,13 @@ Node *Parser::parseDeclaration(Type *t) {
                  (t != Type::BOTTOM() && !hasBang && dynamic_cast<TypeMemPtr *>(t));
         // var/val, then type comes from expression
         if (inferType) {
-            if (expr->type_ == Type::NIL()) throw std::runtime_error("a not-null/non-zero expression")
+            if (expr->type_ == Type::NIL()) throw std::runtime_error("a not-null/non-zero expression");
             t = expr->type_;
             if (!xfinal) t = t->glb();
         }
         auto *tfp = dynamic_cast<TypeFunPtr *>(expr->type_);
 
-        if (dynamic_cast<TypeFunPtr *>(t) && tfp && tf->isConstant()) {
+        if (dynamic_cast<TypeFunPtr *>(t) && tfp && tfp->isConstant()) {
             tfp->setName(name);
         }
     } else {
@@ -911,17 +920,17 @@ Node *Parser::parseDeclaration(Type *t) {
 
         if (auto *tn = dynamic_cast<TypeNil *>(t)) {
             // Nullable pointers get a NIL; not-null get a TOP.
-            expr = tn->nullable() ? NIL() : con(Type::TOP());
+            expr = tn->nullable() ? NIL : con(Type::TOP());
         } else if (auto *ti = dynamic_cast<TypeInteger *>(t)) {
             // Integer types get a ZERO.
-            expr = ZERO();
+            expr = ZERO;
         } else if (auto *tf = dynamic_cast<TypeFloat *>(t)) {
             // Float types get a FZERO.
             expr = con(TypeFloat::FZERO());
         } else if (auto *tt = dynamic_cast<Type *>(t)) {
             // Type::BOTTOM signals type inference.
-            assert(*tt == Type::BOTTOM());
-            expr = con(*tt);
+            assert(tt == Type::BOTTOM());
+            expr = con(tt);
         }
     }
     // Should be TOP not TypeMemPtr
@@ -937,7 +946,7 @@ Node *Parser::parseDeclaration(Type *t) {
 
     if (xfinal && tmp) t = tmp->makeR0();
 
-    if (!lift->type->isa(t)) {
+    if (!lift->type_->isa(t)) {
         lift = peep(alloc.new_object<CastNode>(t, nullptr, lift));
     }
     // Define a new name,
@@ -947,7 +956,7 @@ Node *Parser::parseDeclaration(Type *t) {
 
 Node *Parser::parseReturn() {
     Node *expr = require(parseAsgn(), ";");
-    fun_->addReturn(ctrl(), scope_->mem()->merge(), expr);
+    fun_->addReturn(ctrl(), scope_node->mem()->merge(), expr);
     ctrl(XCTRL); // kill control
     return expr;
 }
@@ -996,8 +1005,8 @@ Node *Parser::parseShift() {
             lhs = (alloc.new_object<SarNode>(loc(), lhs, nullptr));
         } else break;
         lhs->setDef(2, parseAddition());
-        ParserException err;
-        if (err = lhs->err() != nullptr) throw err;
+//        ParserException err;
+//        if (err = lhs->err() != nullptr) throw err;
         lhs = peep(lhs->widen());
     }
     return lhs;
@@ -1105,10 +1114,10 @@ Node *Parser::parseUnary() {
             if (n != nullptr && !(dynamic_cast<TypeMemPtr *>(n->type()))) {
                 if (n->final_) error("Cannot reassign final '" + n->name_ + "'");
                 Node *expr = nullptr;
-                if (auto *tf = dynamic_cast<TypeFloat *>(n.type())) {
-                    expr = peep(new AddFNode(_scope.in(n), con(TypeFloat::constant(delta))));
+                if (auto *tf = dynamic_cast<TypeFloat *>(n->type())) {
+                    expr = peep(alloc.new_object<AddFNode>(scope_node->in(n), con(TypeFloat::constant(delta))));
                 } else {
-                    expr = zsMask(peep(new AddNode(_scope.in(n), con(delta))), n.type());
+                    expr = ZSMask(peep(new AddNode(scope_node->in(n), con(delta))), n->type());
                 }
                 scope_node->update(n, expr);
                 return expr;
@@ -1212,11 +1221,11 @@ Node* Parser::functionCall(Node*expr) {
         Node*arg = parseAsgn();
         if(arg == nullptr) break;
         args.push_back(arg->keep());
-        if(!match(',')) break;
+        if(!match(",")) break;
     }
     // Control & memory after parsing args
-    args.set(0, ctrl()->keep());
-    args.set(1, scope_node->mem()->keep());
+    args[0] = ctrl()->keep();
+    args[1] = scope_node->mem()->keep();
 
     args.push_back(expr);  // Function pointer
     // Unkeep them all
@@ -1224,15 +1233,15 @@ Node* Parser::functionCall(Node*expr) {
         arg->unkeep();
     }
     // Into the call
-    CallNode*call = alloc.new_object<CallNode>(loc(), args.asAry())->peephole();
+    CallNode*call = dynamic_cast<CallNode*>(alloc.new_object<CallNode>(loc(), args)->peephole());
     // Post-call setup
     CallEndNode* cend = dynamic_cast<CallEndNode*>(alloc.new_object<CallEndNode>(call)->peephole());
     // Control from CallEnd
     ctrl(alloc.new_object<CProjNode>(cend, 0, ScopeNode::CTRL)->peephole());
     // Memory from CallEnd
     MergeMemNode* mem = alloc.new_object<MergeMemNode>(true);
-    mem.addDef(nullptr);
-    mem.addDef(alloc.new_object<ProjNode>(cend, 1, ScopeNode::MEM)->peephole());
+    mem->addDef(nullptr);
+    mem->addDef(alloc.new_object<ProjNode>(cend, 1, ScopeNode::MEM0)->peephole());
     scope_node->mem(mem);
     // Call result
     return alloc.new_object<ProjNode>(cend, 2, nullptr)->peephole();
@@ -1241,19 +1250,19 @@ Node *Parser::func() {
     Tomi::Vector<Type *> ts;
     Tomi::Vector<std::string> ids;
     lexer->skipWhiteSpace();
-    Lexer loc = loc();
+    Lexer* loc_ = loc();
     while (true) {
         Type *t = type();
         if (t == nullptr) break;
-        std::stringid = requireId();
+        std::string id = requireId();
         ts.push_back(t);
         ids.push_back(id);
         match(",");
     }
     require("->");
     // Make a concrete function type, with a fidx
-    TypeFunPtr *tfp = TypeFunPtr::makeFun(TypeTuple::make(ts.asAry()), Type::BOTTOM());
-    ReturnNode *ret = parseFunctionBody(tfp, loc, ids.asAry());
+    TypeFunPtr *tfp = TypeFunPtr::makeFun(TypeTuple::make(ts)), Type::BOTTOM());
+    ReturnNode *ret = parseFunctionBody(tfp, loc_, ids);
     return con(ret->fun_->sig());
 }
 

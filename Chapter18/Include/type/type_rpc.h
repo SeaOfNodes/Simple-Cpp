@@ -11,12 +11,12 @@ public:
     bool any_;
     TypeRPC(bool any, Tomi::HashSet<int> rpcs);
 
-    static TypeRPC* make(bool any, Tomi::HashSet<int> rpcs) override;
+    static TypeRPC* make(bool any, Tomi::HashSet<int> rpcs);
     TypeRPC* constant(int cend);
 
-    TypeRPC*BOT();
-    TypeRPC*TEST2();
-    TypeRPC*TEST3();
+    static TypeRPC*BOT();
+    static TypeRPC*TEST2();
+    static TypeRPC*TEST3();
 
     static void gather(Tomi::Vector<Type *> &ts);
 
