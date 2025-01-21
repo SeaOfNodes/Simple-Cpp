@@ -8,25 +8,31 @@
 #include "../../Include/node/mem_op_node.h"
 #include "../../Include/node/phi_node.h"
 
-class LoadNode: public MemOpNode {
+class LoadNode : public MemOpNode {
 public:
     // Load a value from a ptr.field.
-    LoadNode(std::string name, int alias, Type* glb, Node* mem, Node* ptr, Node*off_);
+    LoadNode(Lexer *loc, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off_);
 
-    static bool hoistPtr(Node*ptr, PhiNode* memphi);
+    static bool hoistPtr(Node *ptr, PhiNode *memphi);
 
     std::string label() override;
+
     std::string glabel() override;
-    std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool>& visited) override;
 
-    Type* compute() override;
-    Node* idealize() override;
+    std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) override;
 
-    Node*castR0(Node*rez);
+    Type *compute() override;
+
+    Node *idealize() override;
+
+    Node *castR0(Node *rez);
 
     // Profitable if we find a matching Store on this Phi arm.
-    bool profit(PhiNode* phi, int idx);
-    Node*ld(int idx);
-    static bool neverAlias(Node*ptr1, Node*ptr2);
+    bool profit(PhiNode *phi, int idx);
+
+    Node *ld(int idx);
+
+    static bool neverAlias(Node *ptr1, Node *ptr2);
 };
+
 #endif

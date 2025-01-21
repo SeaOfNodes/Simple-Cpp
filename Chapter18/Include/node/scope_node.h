@@ -104,7 +104,7 @@ public:
      * Create a new name in the current scope
      * Check if name already exists in the current scope
      */
-    bool define(std::string name, Type *declaredType, bool xfinal, Node *n);
+    bool define(std::string name, Type *declaredType, bool xfinal, Node *n, Lexer*loc);
 
     /**
      * If the name is present in any scope, then redefine else null

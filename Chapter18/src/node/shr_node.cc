@@ -2,7 +2,7 @@
 #include "../Include/type/integer_type.h"
 #include "../../Include/parser.h"
 
-ShrNode::ShrNode(Lexer loc, Node *lhs, Node *rhs) : Node(loc, lhs, rhs) {}
+ShrNode::ShrNode(Lexer *loc, Node *lhs, Node *rhs) : LogicalNode(loc, lhs, rhs) {}
 
 std::string ShrNode::label() {
     return "Shr";
@@ -29,9 +29,9 @@ std::ostringstream &ShrNode::print_1(std::ostringstream &builder, Tomi::Vector<b
 }
 
 Type *ShrNode::compute() {
-    Type*t1 = in(1)->type_;
-    Type*t2 = in(2)->type_;
-    if(t1->isHigh() || t2->isHigh()) {
+    Type *t1 = in(1)->type_;
+    Type *t2 = in(2)->type_;
+    if (t1->isHigh() || t2->isHigh()) {
         return TypeInteger::TOP();
     }
 
@@ -39,7 +39,7 @@ Type *ShrNode::compute() {
     auto i2 = dynamic_cast<TypeInteger *>(t2);
 
     if (i1 && i2) {
-        if(i1 == TypeInteger::ZERO()) {
+        if (i1 == TypeInteger::ZERO()) {
             return TypeInteger::ZERO();
         }
         if (i1->isConstant() && i2->isConstant()) {

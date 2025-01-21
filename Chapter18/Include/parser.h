@@ -27,6 +27,7 @@
 #include <unordered_set>
 
 class ParserException;
+
 class TypeFunPtr;
 
 class Lexer {
@@ -35,8 +36,9 @@ public:
 
     Lexer(std::string &source);
 
-    Lexer& operator=(const Lexer& lexer);
-    Lexer(const Lexer& lexer);
+    Lexer &operator=(const Lexer &lexer);
+
+    Lexer(const Lexer &lexer);
 
     ~Lexer();
 
@@ -82,7 +84,7 @@ public:
     // Return +len that ends a long
     // Return -len that ends a double
     int isLongOrDouble();
-    
+
     std::size_t position = 0;
 
     int line_number = 1;
@@ -92,6 +94,7 @@ public:
     bool peekIsId();
 
     char peek();
+
 private:
     std::string input;
 
@@ -114,18 +117,20 @@ public:
     static StartNode *START;
     static bool SCHEDULED;
 
-    static Tomi::Vector<Node*> ALIMP;
+    static Tomi::Vector<Node *> ALIMP;
 
-    Node*peep(Node*n);
+    Node *peep(Node *n);
+
     int pos();
+
     int pos(int p);
 
-    Type* posT(int pos);
+    Type *posT(int pos);
 
     static StopNode *STOP;
-    static ConstantNode* ZERO; // Very common node, cached here
-    static ConstantNode* NIL; // Very common node, cached here
-    static XCtrlNode* XCTRL; // Very common node, cached here
+    static ConstantNode *ZERO; // Very common node, cached here
+    static ConstantNode *NIL; // Very common node, cached here
+    static XCtrlNode *XCTRL; // Very common node, cached here
 
     // Next available memory alias number
     static int ALIAS;
@@ -134,25 +139,27 @@ public:
     ScopeNode *continueScope;
     ScopeNode *breakScope;   // Merge all the while-breaks here
 
-    FunNode*fun_;
-    Node* parseAsgn();
+    FunNode *fun_;
 
-    Node* alloc_();
+    Node *parseAsgn();
+
+    Node *alloc_();
 
     // Look for an unbalanced `)`, skipping balanced
-    Type* skipAsgn();
+    Type *skipAsgn();
 
     /**
  *  Parses a function body, assuming the header is parsed.
  */
-    ReturnNode* parseFunctionBody(TypeFunPtr* sig, Lexer* loc, Tomi::Vector<std::string> ids);
+    ReturnNode *parseFunctionBody(TypeFunPtr *sig, Lexer *loc, Tomi::Vector<std::string> ids);
 
-    Node* parseTrinary(Node*pred, bool stmt, std::string fside);
+    Node *parseTrinary(Node *pred, bool stmt, std::string fside);
 
-    static Node* con(long con);
-    static ConstantNode* con(Type*t);
+    static Node *con(long con);
 
-    Type*typeFunPtr();
+    static ConstantNode *con(Type *t);
+
+    Type *typeFunPtr();
 
     bool isTypeFun();
 
@@ -160,7 +167,7 @@ public:
 
     static Tomi::HashMap<std::string, Type *> TYPES;
     // Mapping from a type name to the constructor for a Type.
-    static Tomi::HashMap<std::string, StructNode*> INITS;
+    static Tomi::HashMap<std::string, StructNode *> INITS;
 
     explicit Parser(std::string source, TypeInteger *arg);
 
@@ -168,26 +175,30 @@ public:
 
     ~Parser();
 
-    Lexer* loc();
-    Node*functionCall(Node*expr);
+    Lexer *loc();
 
-    Node*func();
+    Node *functionCall(Node *expr);
+
+    Node *func();
+
     StopNode *parse();
 
-    Type* type();
-    TypeMemPtr* typeAry(Type* t);
+    Type *type();
+
+    TypeMemPtr *typeAry(Type *t);
 
     StopNode *parse(bool show);
 
-    Node* widenInt(Node*expr, Type*t);
+    Node *widenInt(Node *expr, Type *t);
 
     // Make finals deep; widen ints to floats; narrow wide int types.
     // Early error if types do not match variable.
-    Node* liftExpr(Node*expr, Type*t, bool xfinal);
+    Node *liftExpr(Node *expr, Type *t, bool xfinal);
 
     // zero/sign extend.  "i" is limited to either classic unsigned (min==0) or
     // classic signed (min=minus-power-of-2); max=power-of-2-minus-1.
-    Node* ZSMask(Node* val, Type* t);
+    Node *ZSMask(Node *val, Type *t);
+
     std::string src();
 
     Node *ctrl();
@@ -195,15 +206,18 @@ public:
     Node *ctrl(Node *n);
 
     bool peek(char ch);
+
     bool peekIsId();
 
     static std::string memName(int alias);
 
-    Node* newStruct(TypeStruct* obj, Node* size, int idx, Tomi::Vector<Node*> init);
-    Node* newArray(TypeStruct* ary, Node* len);
+    Node *newStruct(TypeStruct *obj, Node *size, int idx, Tomi::Vector<Node *> init);
 
-    Node* memAlias(int alias);
-    void memAlias(int alias, Node* st);
+    Node *newArray(TypeStruct *ary, Node *len);
+
+    Node *memAlias(int alias);
+
+    void memAlias(int alias, Node *st);
 
 private:
     /**
@@ -212,11 +226,12 @@ private:
 
     // replace this with custom data structure
     const std::unordered_set <std::string> KEYWORDS = {
-            "bool", "break", "byte", "continue", "else", "f32", "f64", "i16", "i32", "i64", "i8", "false", "if", "int", "return", "true", "u1", "u16", "u32", "u8", "while", "null", "new", "struct", "flt"};
+            "bool", "break", "byte", "continue", "else", "f32", "f64", "i16", "i32", "i64", "i8", "false", "if", "int",
+            "return", "true", "u1", "u16", "u32", "u8", "while", "null", "new", "struct", "flt"};
 
     Node *parseStatement();
 
-    ScopeMinNode::Var * requireLookUpId();
+    ScopeMinNode::Var *requireLookUpId();
 
     Node *parseReturn();
 
@@ -224,7 +239,8 @@ private:
 
     Node *parseIf();
 
-    Node* parseDeclaration(Type*t);
+    Node *parseDeclaration(Type *t);
+
     /**
    * Parse a struct declaration, and return the following statement.
    * Only allowed in top level scope.
@@ -244,8 +260,9 @@ private:
 
     Node *parseBreak();
 
-    Node* parseBitWise();
-    Node* parseShift();
+    Node *parseBitWise();
+
+    Node *parseShift();
 
     Node *parseContinue();
 
@@ -259,7 +276,7 @@ private:
 
     Node *parsePrimary();
 
-    Node* parsePostFix(Node* expr);
+    Node *parsePostFix(Node *expr);
 
     Node *parseLiteral();
 
@@ -267,13 +284,13 @@ private:
 
     Node *parseBlock(ScopeNode::Kind kind);
 
-    Node*parseFor();
+    Node *parseFor();
 
     // Shared by `for` and `while`
-    Node* parseLooping(bool doFor);
+    Node *parseLooping(bool doFor);
     // require an exact match
 
-    Parser* require(std::string syntax);
+    Parser *require(std::string syntax);
 
     template<typename N>
     N require(N n, std::string syntax) {
@@ -287,12 +304,13 @@ private:
 
     bool mathcOpx(char c0, char c1);
 
-    Node* parseExpression();
+    Node *parseExpression();
+
     Node *parseExpressionStatement();
 
     void errorSyntax(std::string syntax);
 
-    static ParserException& error(std::string errorMessage);
+    ParserException error(const std::string &errorMessage);
 
     bool match(std::string syntax);
 
@@ -302,9 +320,12 @@ private:
 };
 
 class ParserException : public std::runtime_error {
-    Lexer* loc_;
-    ParserException(const std::string&msg, const Lexer* loc);
+public:
+    Lexer *loc_;
+
+    ParserException(const std::string &msg, Lexer *loc);
 
 
 };
+
 #endif

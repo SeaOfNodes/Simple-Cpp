@@ -1,20 +1,30 @@
 #ifndef RETURN_NODE_H
 #define RETURN_NODE_H
+
 #include "../../Include/node/node.h"
 #include "../../Include/node/scope_node.h"
 
-class ReturnNode: public CFGNode {
+class ReturnNode : public CFGNode {
 public:
-  // ctrl - predecessor control node
-  // data - Data node value
-  ReturnNode(Node* ctrl, Node* data, ScopeNode* scope);
-  Node* ctrl();
-  Node* expr();
-  std::ostringstream& print_1(std::ostringstream& builder, Tomi::Vector<bool>& visited) override;
-  [[nodiscard]] bool isCFG() override;
+    // ctrl - predecessor control node
+    // data - Data node value
+    ReturnNode(Node *ctrl, Node *mem, Node *data, Node *rpc, FunNode *fun);
 
-  std::string label() override;
-  Type*compute() override;
-  Node*idealize() override;
+    FunNode *fun_;
+
+    Node *ctrl();
+
+    Node *expr();
+
+    std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) override;
+
+    [[nodiscard]] bool isCFG() override;
+
+    std::string label() override;
+
+    Type *compute() override;
+
+    Node *idealize() override;
 };
+
 #endif

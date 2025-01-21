@@ -1,6 +1,6 @@
 #include "../../Include/node/logical_node.h"
 
-LogicalNode::LogicalNode(Lexer loc, Node *lhs, Node *rhs): Node({nullptr, lhs, rhs}), loc_(loc) {
+LogicalNode::LogicalNode(Lexer *loc, Node *lhs, Node *rhs) : Node({nullptr, lhs, rhs}), loc_(loc) {
 
 }
 

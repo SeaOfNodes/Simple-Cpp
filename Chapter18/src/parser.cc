@@ -80,9 +80,9 @@ Parser::Parser(std::string source, TypeInteger *arg) {
 
     START = alloc.new_object<StartNode>(arg);
     STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
-    ZERO = dynamic_cast<ConstantNode*>(con(TypeInteger::ZERO())->keep());
+    ZERO = dynamic_cast<ConstantNode *>(con(TypeInteger::ZERO())->keep());
     XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
-    NIL = dynamic_cast<ConstantNode*>(con(Type::NIL())->keep());
+    NIL = dynamic_cast<ConstantNode *>(con(Type::NIL())->keep());
 }
 
 bool Parser::SCHEDULED = false;
@@ -93,9 +93,10 @@ Node *Parser::con(long con) {
     return con == 0 ? ZERO : Parser::con(TypeInteger::constant(con));
 }
 
-Lexer* Parser::loc() {
-    return alloc.new_object<Lexer>(lexer);
+Lexer *Parser::loc() {
+    return alloc.new_object<Lexer>();
 }
+
 Parser::~Parser() {
     delete lexer;
     delete scope_node;
@@ -112,17 +113,17 @@ StopNode *Parser::parse(bool show) {
     mem->addDef(nullptr);
 
     scope_node->define(ScopeNode::CTRL, Type::CONTROL(), false,
-                       (alloc.new_object<CProjNode>(START, 0, ScopeNode::CTRL))->peephole());
+                       (alloc.new_object<CProjNode>(START, 0, ScopeNode::CTRL))->peephole(), lexer);
 
     mem->addDef(alloc.new_object<ProjNode>(START, 1, ScopeNode::MEM0)->peephole());
-    scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, mem->peephole());
+    scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, mem->peephole(), lexer);
 
     scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(), false,
-                       (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole());
+                       (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole(), lexer);
     ctrl(XCTRL);
     scope_node->mem(alloc.new_object<MergeMemNode>(false));
     //      // Parse whole program, as-if function header "{ int arg -> body }"
-    parseFunctionBody(TypeFunPtr::MAIN(), loc(), std::initializer_list<std::string>{"arg"});
+    parseFunctionBody(TypeFunPtr::MAIN(), loc(), std::initializer_list < std::string > {"arg"});
     if (lexer->isEof()) throw std::runtime_error("unexpected");
     // Clean up and reset
     xScopes.pop_back();
@@ -139,29 +140,32 @@ StopNode *Parser::parse(bool show) {
     return STOP;
 }
 
-ReturnNode *Parser::parseFunctionBody(TypeFunPtr* sig, Lexer* loc_, Tomi::Vector<std::string> ids) {
+ReturnNode *Parser::parseFunctionBody(TypeFunPtr *sig, Lexer *loc_, Tomi::Vector<std::string> ids) {
     // Stack parser state on the local Java stack, and unstack it later
     Node *oldctrl = ctrl()->keep();
     Node *oldmem = scope_node->mem()->keep();
     FunNode *oldfun = fun_;
     ScopeNode *breakScope_ = breakScope;
     ScopeNode *continueScope_ = continueScope;
-    FunNode* bpeep = alloc.new_object<FunNode>(loc(), START, sig);
-    FunNode *fun = fun_ = dynamic_cast<FunNode*>(peep(bpeep));
+    FunNode *bpeep = alloc.new_object<FunNode>(loc(), START, sig);
+    FunNode *fun = fun_ = dynamic_cast<FunNode *>(peep(bpeep));
     // Once the function header is available, install in linker table -
     // allowing recursive functions.  Linker matches on declared args and
     // exact fidx, and ignores the return (because the fidx will only match
     // the exact single function).
     CodeGen::CODE->link(fun);
 
-    Node *rpc = alloc.new_object<ParmNode>("$rpc", 0, TypeRPC::BOT(), fun, con(TypeRPC::BOT())->peephole());
+    Node *rpc = alloc.new_object<ParmNode>("$rpc", 0, TypeRPC::BOT(),
+                                           std::initializer_list < Node * > {fun, con(TypeRPC::BOT())->peephole()});
 
     // Build a multi-exit return point for all function returns
-    RegionNode *r = alloc.new_object<RegionNode>(nullptr, nullptr);
-    PhiNode *rmem = alloc.new_object<PhiNode>(ScopeNode::MEM0, TypeMem::BOT(), std::initializer_list<Node*>{r, nullptr})->init<PhiNode>();
-    PhiNode * rrez = alloc.new_object<PhiNode>(ScopeNode::ARG0, Type::BOTTOM(), std::initializer_list<Node*>{r, nullptr})->init<PhiNode>();
-    ReturnNode*ret = alloc.new_object<ReturnNode>(r, rmem, rrez, rpc, fun)->init<ReturnNode>();
-   fun->setRet(ret);
+    RegionNode *r = alloc.new_object<RegionNode>(nullptr, std::initializer_list < Node * > {nullptr, nullptr});
+    PhiNode *rmem = alloc.new_object<PhiNode>(ScopeNode::MEM0, TypeMem::BOT(),
+                                              std::initializer_list < Node * > {r, nullptr})->init<PhiNode>();
+    PhiNode *rrez = alloc.new_object<PhiNode>(ScopeNode::ARG0, Type::BOTTOM(),
+                                              std::initializer_list < Node * > {r, nullptr})->init<PhiNode>();
+    ReturnNode *ret = alloc.new_object<ReturnNode>(r, rmem, rrez, rpc, fun)->init<ReturnNode>();
+    fun->setRet(ret);
     STOP->addDef(ret);
     // Pre-call the function from Start, with worse-case arguments.  This
     // represents all the future, yet-to-be-parsed functions calls and
@@ -175,7 +179,9 @@ ReturnNode *Parser::parseFunctionBody(TypeFunPtr* sig, Lexer* loc_, Tomi::Vector
     // All args, "as-if" called externally
     for (int i = 0; i < ids.size(); i++) {
         Type *t = sig->arg(i);
-        scope_node->define(ids[i], t, false, alloc.new_object<ParmNode>(ids[i], i + 2, t, fun, con(t)->peephole(), loc()));
+        scope_node->define(ids[i], t, false, alloc.new_object<ParmNode>(ids[i], i + 2, t,
+                                                                        std::initializer_list < Node * >
+                                                                        {fun, con(t)->peephole()}), loc_);
     }
 
     // Parse the body
@@ -197,7 +203,7 @@ ReturnNode *Parser::parseFunctionBody(TypeFunPtr* sig, Lexer* loc_, Tomi::Vector
     ret->setDef(1, rmem->peephole());
     ret->setDef(2, rrez->peephole());
     ret->setDef(0, r->peephole());
-    ret = dynamic_cast<ReturnNode*>(ret->peephole());
+    ret = dynamic_cast<ReturnNode *>(ret->peephole());
 
     // Function scope ends
     scope_node->pop();
@@ -806,7 +812,7 @@ Type *Parser::type() {
     // No new types as keywords
     if (t0 == nullptr && KEYWORDS.contains(tname)) return posT(old1);
 
-    Type*nptr = *t0;
+    Type *nptr = *t0;
     if (nptr == Type::BOTTOM() || nptr == Type::TOP()) return nptr;
 
     Type *t1 = t0 == nullptr ? TypeMemPtr::make(TypeStruct::makeFRef(tname)) : *t0;
@@ -889,7 +895,7 @@ Node *Parser::parseDeclarationStatement() {
 Node *Parser::parseDeclaration(Type *t) {
     bool inferType = t == Type::TOP() || t == Type::BOTTOM();
     bool hasBang = match("!");
-    Lexer* loc_ = loc();
+    Lexer *loc_ = loc();
     std::string name = requireId();
     if (name == "s") {
         std::cout << "here";
@@ -950,7 +956,7 @@ Node *Parser::parseDeclaration(Type *t) {
         lift = peep(alloc.new_object<CastNode>(t, nullptr, lift));
     }
     // Define a new name,
-    if (!scope_node->define(name, t, xfinal, lift)) error("Redefining name '" + name + "'");
+    if (!scope_node->define(name, t, xfinal, lift, loc_)) error("Redefining name '" + name + "'");
     return lift;
 }
 
@@ -983,7 +989,7 @@ Node *Parser::parseBitWise() {
         else if (match("&")) {
             lhs = (alloc.new_object<AndNode>(loc(), lhs, nullptr));
         } else if (match("|")) {
-            lhs = (alloc.new_object<OrNode>(loc(), lhs, nullptr));
+            lhs = (alloc.new_object<OrNode>(loc(), lhs, (Node *) nullptr));
         } else if (match("^")) {
             lhs = (alloc.new_object<XorNode>(loc(), lhs, nullptr));
         } else break;
@@ -1206,22 +1212,22 @@ Node *Parser::ZSMask(Node *val, Type *t) {
                                           shf->unkeep()));
 }
 
-Node* Parser::functionCall(Node*expr) {
-    if(expr->type_ == Type::NIL()) {
+Node *Parser::functionCall(Node *expr) {
+    if (expr->type_ == Type::NIL()) {
         throw error("Calling a nul function pointer");
     }
-    if(!dynamic_cast<FRefNode*>(expr) && !expr->type_->isa(TypeFunPtr::BOT())) {
+    if (!dynamic_cast<FRefNode *>(expr) && !expr->type_->isa(TypeFunPtr::BOT())) {
         throw error("Expected a function but got " + expr->type_->glb()->str());
     }
     expr->keep();
-    Tomi::Vector<Node*> args;
+    Tomi::Vector<Node *> args;
     args.push_back(nullptr);  // Space for ctrl,mem
     args.push_back(nullptr);
-    while(!peek(')')) {
-        Node*arg = parseAsgn();
-        if(arg == nullptr) break;
+    while (!peek(')')) {
+        Node *arg = parseAsgn();
+        if (arg == nullptr) break;
         args.push_back(arg->keep());
-        if(!match(",")) break;
+        if (!match(",")) break;
     }
     // Control & memory after parsing args
     args[0] = ctrl()->keep();
@@ -1229,28 +1235,29 @@ Node* Parser::functionCall(Node*expr) {
 
     args.push_back(expr);  // Function pointer
     // Unkeep them all
-    for(Node*arg : args) {
+    for (Node *arg: args) {
         arg->unkeep();
     }
     // Into the call
-    CallNode*call = dynamic_cast<CallNode*>(alloc.new_object<CallNode>(loc(), args)->peephole());
+    CallNode *call = dynamic_cast<CallNode *>(alloc.new_object<CallNode>(loc(), args)->peephole());
     // Post-call setup
-    CallEndNode* cend = dynamic_cast<CallEndNode*>(alloc.new_object<CallEndNode>(call)->peephole());
+    CallEndNode *cend = dynamic_cast<CallEndNode *>(alloc.new_object<CallEndNode>(call)->peephole());
     // Control from CallEnd
     ctrl(alloc.new_object<CProjNode>(cend, 0, ScopeNode::CTRL)->peephole());
     // Memory from CallEnd
-    MergeMemNode* mem = alloc.new_object<MergeMemNode>(true);
+    MergeMemNode *mem = alloc.new_object<MergeMemNode>(true);
     mem->addDef(nullptr);
     mem->addDef(alloc.new_object<ProjNode>(cend, 1, ScopeNode::MEM0)->peephole());
     scope_node->mem(mem);
     // Call result
-    return alloc.new_object<ProjNode>(cend, 2, nullptr)->peephole();
+    return alloc.new_object<ProjNode>(cend, 2, "")->peephole();
 }
+
 Node *Parser::func() {
     Tomi::Vector<Type *> ts;
     Tomi::Vector<std::string> ids;
     lexer->skipWhiteSpace();
-    Lexer* loc_ = loc();
+    Lexer *loc_ = loc();
     while (true) {
         Type *t = type();
         if (t == nullptr) break;
@@ -1261,7 +1268,7 @@ Node *Parser::func() {
     }
     require("->");
     // Make a concrete function type, with a fidx
-    TypeFunPtr *tfp = TypeFunPtr::makeFun(TypeTuple::make(ts)), Type::BOTTOM());
+    TypeFunPtr *tfp = TypeFunPtr::makeFun(TypeTuple::make(ts), Type::BOTTOM());
     ReturnNode *ret = parseFunctionBody(tfp, loc_, ids);
     return con(ret->fun_->sig());
 }
@@ -1298,9 +1305,8 @@ Node *Parser::parsePostFix(Node *expr) {
     else if (match("[")) name = "[]";
     else if (match("(")) return parsePostFix(require(functionCall(expr), ")"));
     else return expr;
-    else return expr;
 
-    if (expr->type_ == Type::NIL()) error("Accessing unknown field ' + name + ' from 'null'")
+    if (expr->type_ == Type::NIL()) error("Accessing unknown field ' + name + ' from 'null'");
     // Sanity check expr for being a reference
     auto *ptr = dynamic_cast<TypeMemPtr *>(expr->type_);
     if (!ptr) {
@@ -1394,10 +1400,10 @@ Node *Parser::parsePostFix(Node *expr) {
         load->keep();
         int delta = lexer->peek(-1) == '+' ? 1 : -1; // Pre vs post
         Node *val = nullptr;
-        if (auto *typeFloat = dynamic_cast<TypeFloat *>(type)) {
+        if (auto *typeFloat = dynamic_cast<TypeFloat *>(f->type_)) {
             val = peep(new AddFNode(load, con(TypeFloat::constant(delta))));
         } else {
-            val = zsMask(peep(new AddNode(load, con(delta))), type);
+            val = ZSMask(peep(new AddNode(load, con(delta))), f->type_);
         }
         Node *st = alloc.new_object<StoreNode>(loc(), name, f->alias_, tf, memAlias(f->alias_), expr->unkeep(), off,
                                                val, false);
@@ -1419,7 +1425,7 @@ Node *Parser::newArray(TypeStruct *ary, Node *len) {
     int base = ary->aryBase();
     int scale = ary->aryScale();
     Node *size = peep(alloc.new_object<AddNode>(con(base),
-                                                peep(alloc.new_object<ShlNode>(len->keep(), con(scale)))));
+                                                peep(alloc.new_object<ShlNode>(nullptr, len->keep(), con(scale)))));
 
     ALIMP.clear();
     ALIMP.push_back(len->unkeep());
@@ -1466,7 +1472,7 @@ Node *Parser::parsePrimary() {
 ////        return newStruct(obj);
 //    }
     // Expect an identifier now
-    ScopeMinNode::Var *n = requireLookUpId("an identifier or expression");
+    ScopeMinNode::Var *n = requireLookUpId();
     Node *rvalue = scope_node->in(n);
     if (rvalue->type_ == Type::BOTTOM()) {
         if (dynamic_cast<FRefNode *>(rvalue)) return rvalue;
@@ -1543,7 +1549,7 @@ ScopeMinNode::Var *Parser::requireLookUpId() {
             // No closures, so this has to be a final constant (which
             // includes forward refs)
             Node *def = scope_node->in(n->idx_);
-            if (!dynamic_cast<FreFNode *>(def) && !(n->final_ && def->type_->isConstant())) {
+            if (!dynamic_cast<FRefNode *>(def) && !(n->final_ && def->type_->isConstant())) {
                 throw error("Variable" + n->name_ + " is out of function scope and must be a final constant");
             }
         }
@@ -1587,13 +1593,12 @@ Node *Parser::alloc_() {
         idx = static_cast<int>(scope_node->nIns());
         // Push a scope, and pre-assign all struct fields.
         scope_node->push(ScopeNode::Kind::Block);
-        Lexer loc = loc();
+        Lexer *loc_ = loc();
         for (int i = 0; i < fs.size(); i++) {
             scope_node->define(fs[i]->fname_, fs[i]->type_, fs[i]->final_,
-                               nptr->in(i)->type_ == Type::TOP() ? con(Type::BOTTOM()) : loc);
+                               nptr->in(i)->type_ == Type::TOP() ? con(Type::BOTTOM()) : nptr->in(i), loc_);
         }
         // Parse the constructor body
-        parseBlock(true);
         require(parseBlock(ScopeNode::Kind::Constructor), "}");
         init = scope_node->inputs;
     }
@@ -1643,15 +1648,14 @@ void Parser::errorSyntax(std::string syntax) {
     error("Syntax error, expected " + syntax + ": " + lexer->getAnyNextToken());
 }
 
-void Parser::error(std::string errorMessage) {
-    return alloc.new_object<ParserException>(msg, loc);
-}
+//void Parser::error(std::string errorMessage) {
+//    return alloc.new_object<ParserException>(msg, loc);
+//}
 
 bool Parser::match(std::string syntax) { return lexer->match(syntax); }
 
 bool Parser::matchx(std::string syntax) { return lexer->matchx(syntax); }
 
-void error(std::string errorMessage) { throw std::runtime_error(errorMessage); }
 
 // Lexer
 Lexer::Lexer(std::string &source) : input(source) {}
@@ -1667,6 +1671,10 @@ char Lexer::nextChar() {
 }
 
 Lexer::~Lexer() {
+
+}
+
+Lexer &Lexer::operator=(const Lexer &lexer) {
     if (this != &lexer) {
         input = lexer.input;
         position = lexer.position;
@@ -1675,21 +1683,19 @@ Lexer::~Lexer() {
     }
     return *this;
 }
-Lexer &Lexer::operator=(const Lexer &lexer) {
-
-}
 
 void Lexer::inc() {
-    if(position++ < input.length() && input[position] == '\n') {
+    if (position++ < input.length() && input[position] == '\n') {
         line_number++;
         line_start = position + 1;
     }
 }
-Lexer::Lexer(Lexer& lexer) {
-input = lexer.input;
-position = lexer.position;
-line_number = lexer.line_number;
-line_start = lexer.line_start;
+
+Lexer::Lexer(const Lexer &lexer) {
+    input = lexer.input;
+    position = lexer.position;
+    line_number = lexer.line_number;
+    line_start = lexer.line_start;
 }
 
 bool Lexer::isIdStart(char ch) { return (isalpha(ch) != 0) || ch == '_'; }
@@ -1822,17 +1828,19 @@ void Lexer::skipWhiteSpace() {
         else if (position + 2 < input.length() &&
                  input[position] == '/' &&
                  input[position + 1] == '/') {
-            inc(); inc();
+            inc();
+            inc();
             while (!isEof() && input[position] != '\n') position++;
         } else break;
     }
     while (isWhiteSpace())
         position++;
 }
-ParserException::ParserException(const std::string &msg, const Lexer *loc) : std::runtime_error(msg), loc_(loc){
+
+ParserException::ParserException(const std::string &msg, Lexer *loc) : std::runtime_error(msg), loc_(loc) {
 
 }
 
-ParserException ParserException::error(const std::string &msg, const Lexer *loc) {
-    return ParserException(msg, loc);
+ParserException Parser::error(const std::string &msg) {
+    return ParserException(msg, lexer);
 }

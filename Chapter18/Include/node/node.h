@@ -92,12 +92,13 @@ public:
 
     static int UID();
 
-    virtual Node* copyF();
+    virtual Node *copyF();
 
     // Semantic change to the graph (so NOT a peephole), used by the Parser.
     // If any input is a float, flip to a float-flavored opcode and widen any
     // non-float input.
-    Node* widen();
+    Node *widen();
+
     bool hasFloatInput();
 
 private:
@@ -120,9 +121,10 @@ public:
 
     Node(Tomi::Vector<Node *> inputs);
 
-    template <typename T>
-    T*init() {
-        return this;
+    template<typename T>
+    T *init() {
+        type_ = compute();
+        return dynamic_cast<T *>(this);
     }
 
     bool operator==(Node &);
@@ -159,7 +161,7 @@ public:
     virtual std::ostringstream &print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &) = 0;
 
-    Node*insertDef(int idx, Node* new_def);
+    Node *insertDef(int idx, Node *new_def);
 
     virtual int hash();
 
@@ -289,7 +291,8 @@ public:
     template<typename T>
     T walk_(const std::function<T(Node *)> &pred) {
         if (WVISIT.test(nid)) {
-            if constexpr (std::is_pointer<T>::value) {
+            if constexpr(std::is_pointer<T>::value)
+            {
                 return nullptr;
             }
             return T();
@@ -297,7 +300,8 @@ public:
         WVISIT.set(nid);
         // call pred here on each node
         T x = pred(this);
-        if constexpr (std::is_pointer<T>::value) {
+        if constexpr(std::is_pointer<T>::value)
+        {
             if (x != nullptr) return x;
         } else {
             if (x != T()) return x;
@@ -306,7 +310,8 @@ public:
         for (auto *def: inputs) {
             if (def != nullptr) {
                 T result = def->walk_(pred);
-                if constexpr (std::is_pointer<T>::value) {
+                if constexpr(std::is_pointer<T>::value)
+                {
                     if (result != nullptr) return result;
                 } else {
                     if (result != T()) return result;
@@ -318,14 +323,16 @@ public:
         for (Node *use: outputs) {
             if (use != nullptr) {
                 T result = use->walk_(pred);
-                if constexpr (std::is_pointer<T>::value) {
+                if constexpr(std::is_pointer<T>::value)
+                {
                     if (result != nullptr) return result;
                 } else {
                     if (result != T()) return result;
                 }
             }
         }
-        if constexpr (std::is_pointer<T>::value) {
+        if constexpr(std::is_pointer<T>::value)
+        {
             return nullptr;
         }
         return T();

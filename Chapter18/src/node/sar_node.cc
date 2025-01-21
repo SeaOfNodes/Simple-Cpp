@@ -1,9 +1,13 @@
 #include "../../Include/node/sar_node.h"
 #include "../../Include/type/integer_type.h"
 
-SarNode::SarNode(Node *lhs, Node *rhs) :Node{nullptr, lhs, rhs}{}
+SarNode::SarNode(Lexer *loc, Node *lhs, Node *rhs) : LogicalNode(loc, lhs, rhs) {}
+
 std::string SarNode::label() { return "Sar"; }
-std::string SarNode::glabel() { return ">>"; }
+
+std::string SarNode::glabel() { return "&gt;&gt;"; }
+
+std::string SarNode::op() { return ">>"; }
 
 std::ostringstream &SarNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     builder << "(";
@@ -17,22 +21,22 @@ std::ostringstream &SarNode::print_1(std::ostringstream &builder, Tomi::Vector<b
     return builder;
 }
 
-Type*SarNode::compute() {
-    Type*t1 = in(1)->type_;
-    Type*t2 = in(2)->type_;
+Type *SarNode::compute() {
+    Type *t1 = in(1)->type_;
+    Type *t2 = in(2)->type_;
 
-if(t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
+    if (t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
 
     auto i1 = dynamic_cast<TypeInteger *>(t1);
     auto i2 = dynamic_cast<TypeInteger *>(t2);
-    if(i1 && i2) {
-        if(i1 == TypeInteger::ZERO()) {
+    if (i1 && i2) {
+        if (i1 == TypeInteger::ZERO()) {
             return TypeInteger::ZERO();
         }
-        if(i1->isConstant() && i2->isConstant()) {
+        if (i1->isConstant() && i2->isConstant()) {
             return TypeInteger::constant(i1->value() >> i2->value());
         }
-        if(i2->isConstant()) {
+        if (i2->isConstant()) {
             int log = static_cast<long>(i2->value());
             return TypeInteger::make(static_cast<long>(-1LL << (63 - log)), static_cast<long>((1LL << (63 - log)) - 1));
         }
@@ -42,14 +46,14 @@ if(t1->isHigh() || t2->isHigh()) return TypeInteger::TOP();
 
 }
 
-Node* SarNode::idealize() {
-    Node*lhs = in(1);
-    Node*rhs = in(2);
-    Type*t2 = rhs->type_;
+Node *SarNode::idealize() {
+    Node *lhs = in(1);
+    Node *rhs = in(2);
+    Type *t2 = rhs->type_;
 
     // Sar of 0
-    auto*i = dynamic_cast<TypeInteger*>(t2);
-    if(t2->isConstant() && i && (i->value() & 63) == 0) return lhs;
+    auto *i = dynamic_cast<TypeInteger *>(t2);
+    if (t2->isConstant() && i && (i->value() & 63) == 0) return lhs;
 
 
     // TODO: x >> 3 >> (y ? 1 : 2) ==> x >> (y ? 4 : 5)
@@ -61,7 +65,7 @@ Node *SarNode::copy(Node *lhs, Node *rhs) {
 }
 
 std::string SarNode::err() {
-    if(!dynamic_cast<TypeInteger*>(in(1)->type_))  return "Cannot '>>' " + in(1)->type_->str();
-    if(!dynamic_cast<TypeInteger*>(in(2)->type_)) return "Cannot '>>' " + in(2)->type_->str();
+    if (!dynamic_cast<TypeInteger *>(in(1)->type_)) return "Cannot '>>' " + in(1)->type_->str();
+    if (!dynamic_cast<TypeInteger *>(in(2)->type_)) return "Cannot '>>' " + in(2)->type_->str();
     return "";
 }
