@@ -3,6 +3,7 @@
 #include "../Include/node/store_node.h"
 #include "../Include/node/never_node.h"
 #include "../Include/node/call_node.h"
+#include "../Include/node/new_node.h"
 #include "../Include/node/fun_node.h"
 #include "../Include/Iter_peeps.h"
 #include <cassert>
@@ -13,7 +14,7 @@ void GlobalCodeMotion::buildCFG(StartNode *start, StopNode*stop) {
     schedLate(stop);
 }
 
-void GlobalCodeMotion::schedEarly() {
+void GlobalCodeMotion::schedEarly(StartNode* start) {
     Tomi::Vector<CFGNode *> rpo;
     Tomi::BitArray<10> visit;
     rpo_cfg(nullptr, start, visit, rpo);
@@ -62,7 +63,7 @@ void GlobalCodeMotion::schedEarly() {
     }
 }
 
-void GlobalCodeMotion::rpo_cfg(CfgNode *n,Node*use, Tomi::BitArray<10> &visited, Tomi::Vector<CFGNode *> &rpo) {
+void GlobalCodeMotion::rpo_cfg(CFGNode *def,Node*use, Tomi::BitArray<10> &visited, Tomi::Vector<CFGNode *> &rpo) {
     auto *cfg = dynamic_cast<CFGNode *>(use);
     if (!cfg || visited.test(cfg->nid)) {
         return;
@@ -93,7 +94,7 @@ void GlobalCodeMotion::schedEarly_(Node *n, Tomi::BitArray<10> &visit) {
         // Schedule at deepest input
         CFGNode *early = Parser::START;
         for (int i = 1; i < n->nIns(); i++) {
-            if (n.in(1) != nullptr && n->in(i)->cfg0()->idepth() > early->idepth()) {
+            if (n->in(1) != nullptr && n->in(i)->cfg0()->idepth() > early->idepth()) {
                 early = n->in(i)->cfg0();
             }
         }
@@ -127,12 +128,12 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
             // Loads need their memory inputs' uses also done
             if (auto *ld = dynamic_cast<LoadNode *>(n)) {
                 for (Node *memuse: ld->mem()->outputs) {
-                    if (late[memuse->getId()] == nullptr &&
+                    if (late[memuse->nid] == nullptr &&
                         !dynamic_cast<NewNode*>(memuse) &&
-                        (dynamic_cast<TypeMem*>(memuse->_type) ||
-                         (dynamic_cast<TypeTuple*>(memuse->_type) &&
+                        (dynamic_cast<TypeMem*>(memuse->type_) ||
+                         (dynamic_cast<TypeTuple*>(memuse->type_) &&
                           dynamic_cast<TypeMem*>(
-                                  dynamic_cast<TypeTuple*>(memuse->_type)->_types[ld->_alias].get())))) {
+                                  dynamic_cast<TypeTuple*>(memuse->type_)->types_[ld->alias_])))) {
                         continue; // Simulating `continue outer`
                     }
                 }
@@ -155,7 +156,7 @@ void GlobalCodeMotion::breadth(Node *stop, Tomi::Vector<Node *> &ns, Tomi::Vecto
     }
 }
 
-void GlobalCodeMotion::schedLate(StartNode *start) {
+void GlobalCodeMotion::schedLate(StopNode *start) {
     Tomi::Vector<CFGNode *> late(Node::UID(), nullptr);
     Tomi::Vector<Node *> ns(Node::UID(), nullptr);
     // Breadth first scheduling
@@ -219,7 +220,7 @@ CFGNode *GlobalCodeMotion::use_block(Node *n, Node *use, Tomi::Vector<CFGNode *>
     CFGNode *found = nullptr;
     for (int i = 1; i < phi->nIns(); i++) {
         if (phi->in(i) == n) {
-            if (found == nullptr) found = phi->region()->cfg(i)->idom_();
+            if (found == nullptr) found = phi->region()->cfg(i)->idom();
         }
     }
     assert(found != nullptr);

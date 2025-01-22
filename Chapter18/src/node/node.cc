@@ -427,29 +427,11 @@ bool Node::isDead() { return isUnused() && nIns() == 0 && type_ == nullptr; }
 
 bool Node::disablePeephole = false;
 
-Node *Node::find(Tomi::Vector<bool> visit, int nid_) {
-    if (nid == nid_)
-        return this;
-    if (visit[nid])
-        return nullptr;
-    visit[nid] = true;
 
-    // Traverse inputs
-    for (Node *def: inputs) {
-        if (def != nullptr) {
-            Node *rez = def->find(visit, nid);
-            if (rez != nullptr)
-                return rez;
-        }
-    }
-
-    // Traverse outputs
-    for (Node *use: outputs) {
-        Node *rez = use->find(visit, nid);
-        if (rez != nullptr)
-            return rez;
-    }
-    return nullptr;
+// Todo: find a nice way to do it in c++.
+Node *Node::find(int nid_) {
+    // continue from here
+ return walk()
 }
 
 bool Node::eq(Node *n) { return true; }

@@ -271,7 +271,7 @@ public:
 
     virtual Node *copy(Node *lhs, Node *rhs);
 
-    Node *find(Tomi::Vector<bool> visit, int nid_);
+    Node *find(int nid_);
 
     // Move the dependents onto a worklist, and clear for future dependents.
     void moveDepsToWorkList();

@@ -50,8 +50,8 @@ public:
 
     CodeGen* localSched();
 
-    FunNode* link(FunNode* tfp);
-
+    FunNode* link(TypeFunPtr* tfp);
+    void link(FunNode* fun);
     Node*ctrl();
     Node*expr();
     std::string print();

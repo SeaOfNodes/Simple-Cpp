@@ -92,7 +92,7 @@ Node *ScopeMinNode::mem_(int alias_, Node *st) {
     // then it must be START.proj(1)
     Node *old = alias(alias_);
     if (auto *loop = dynamic_cast<ScopeNode *>(old)) {
-        ScopeMinNode *loopmem = loop->mem();
+        MergeMemNode *loopmem = loop->mem();
         Node *memdef = loopmem->alias(alias_);
         // Lazy phi!
 

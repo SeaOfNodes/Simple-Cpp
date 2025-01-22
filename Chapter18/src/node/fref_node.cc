@@ -1,33 +1,35 @@
 #include "../../Include/node/fref_node.h"
+#include "../../Include/parser.h"
 
-FRefNode::FREF_TYPE = Type::BOTTOM();
+Type* FRefNode::FREF_TYPE = Type::BOTTOM();
 
-FRefNode::FRefNode(ScopeMinNode::Var *n) : n_(n), FrefNode(FREF_TYPE) {
+FRefNode::FRefNode(ScopeMinNode::Var *n) : n_(n), ConstantNode(FREF_TYPE, Parser::START) {
     type_ = FREF_TYPE;
 }
 
-std::string FrefNode::label() {
-    return "FRef" + n_;
+std::string FRefNode::label() {
+    std::ostringstream os;
+    return "FRef" + con_->print_1(os).str();
 }
 
-std::string FrefNode::uniqueName() {
+std::string FRefNode::uniqueName() {
     return "FRef_" + nid;
 }
 
-std::ostringstream &print_1(std::ostringstream &os, Tomi::BitArray<10> &visited) {
-    os << "FRef_" << n_;
+std::ostringstream &FRefNode::print_1(std::ostringstream &os, Tomi::Vector<bool> &visited) {
+    os << con_->print_1(os).str();
     return os;
 }
 
-Node *FrefNode::idealize() {
+Node *FRefNode::idealize() {
     // When FRef finds its definition, idealize to it
     return nIns() == 1 ? nullptr : in(1);
 }
 
-bool FrefNode::eq(Node *n) {
+bool FRefNode::eq(Node *n) {
     return this == n;
 }
 
-int FrefNode::hash() {
-    return n_->idx_:
+int FRefNode::hash() {
+    return n_->idx_;
 }

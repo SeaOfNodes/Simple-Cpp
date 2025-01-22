@@ -2,6 +2,9 @@
 #include "../Include/parser.h"
 #include "../Include/globalCodeMotion.h"
 #include "../Include/list_scheduler.h"
+#include "../Include/type/type_fun_ptr.h"
+#include "../Include/node/fun_node.h"
+
 CodeGen::CodeGen(std::string src, TypeInteger* arg) : phase_(nullptr), src_(src), arg_(arg), CODE(this)  {
 
 }
@@ -70,11 +73,14 @@ CodeGen* CodeGen::localSched() {
     ListScheduler::sched(this);
     return this;
 }
-FunNode* CodeGen::link(FunNode* tfp) {
-    return linker_.get(tfp->makeFrom(Type::BOTTOM()));
+FunNode* CodeGen::link(TypeFunPtr* tfp) {
+    if(auto fun = linker_.get(tfp->make_from(Type::BOTTOM()))) {
+        return *fun;
+    }
+    return nullptr;
 }
 void CodeGen::link(FunNode* fun) {
-    linker_->put(fun()->sig().makeFrom(Type::BOTTOM()), fun);
+    linker_.put(fun->sig()->make_from(Type::BOTTOM()), fun);
 }
 
 Node *CodeGen::ctrl() {
@@ -84,7 +90,8 @@ Node* CodeGen::expr() {
     return stop_->ret()->expr();
 }
 std::string CodeGen::print() {
-    return stop_->ret()->print();
+    std::ostringstream b;
+    return stop_->print(b).str();
 }
 
 std::string CodeGen::ToString() {

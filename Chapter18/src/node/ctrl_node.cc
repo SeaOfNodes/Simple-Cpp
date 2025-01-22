@@ -1,7 +1,7 @@
 #include "../../Include/node/ctrl_node.h"
 #include "../../Include/parser.h"
 
-CtrlNode::CtrlNode() : CFGNode(Parser::START()) {
+CtrlNode::CtrlNode() : CFGNode(std::initializer_list<Node*>{Parser::START}) {
 }
 
 std::string CtrlNode::label() {
@@ -18,7 +18,7 @@ bool CtrlNode::isConst() {
 }
 
 Type *CtrlNode::compute() {
-    return Type::CONTROL;
+    return Type::CONTROL();
 }
 
 Node *CtrlNode::idealize() {

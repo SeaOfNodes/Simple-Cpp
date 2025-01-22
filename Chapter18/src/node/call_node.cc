@@ -1,6 +1,10 @@
 // CallEndNode first
+
 #include "../../Include/node/call_node.h"
+#include "../../Include/node/fun_node.h"
 #include "../../Include/node/call_end_node.h"
+#include "../../Include/type/type_fun_ptr.h"
+#include "../../Include/codegen.h"
 #include <bit>
 
 CallNode::CallNode(Lexer *loc, std::initializer_list<Node *> inputs) : loc_(loc), CFGNode(inputs) {
@@ -18,10 +22,11 @@ std::string CallNode::label() {
 
 std::ostringstream &CallNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     std::string fname;
-    if (auto *tfp = dynamic_cast<TypeFunPtr *>(fptr->type_); tfp->isConstant()) {
+    Node*fptr_ = fptr();
+    if (auto *tfp = dynamic_cast<TypeFunPtr *>(fptr_->type_); tfp->isConstant()) {
         fname = tfp->name_;
     }
-    if (fname.empty()) fptr->print_0(builder, visited);
+    if (fname.empty()) fptr_->print_0(builder, visited);
     else builder << fname;
 
     builder << "(";
@@ -85,20 +90,20 @@ Type *CallNode::compute() {
 }
 
 Node *CallNode::idealize() {
-    CallEndNode *cend = cend();
-    if (cend == nullptr) return nullptr; // Still building
+    CallEndNode *cend_ = cend();
+    if (cend_ == nullptr) return nullptr; // Still building
     // Link: call calls target function.  Linking makes the target FunNode
     // point to this Call, and all his Parms point to the call arguments;
     // also the CallEnd points to the Return.
-    if (auto *tfp = dynamic_cast<TypeFunPtr *>(fptr()->_type); tfp && tfp->nargs() == nargs()) {
+    if (auto *tfp = dynamic_cast<TypeFunPtr *>(fptr()->type_); tfp && tfp->nargs() == nargs()) {
         // If fidxs is negative, then infinite unknown functions
         long fidxs = tfp->fidxs();
         if (fidxs > 0) {
             // Wipe out the return which matching in the linker table
             // Walk the (63 max) bits and link
-            for (; fidxs != 0; fidxs = TypeFunPtr->nextFIDX(fidxs)) {
+            for (; fidxs != 0; fidxs = TypeFunPtr::nextFIDX(fidxs)) {
                 int fidx = std::countr_zero(fidxs);
-                TypeFunPtr *tfp0 = tfp->makeFrom(fidx);
+                TypeFunPtr *tfp0 = tfp->make_from(fidx);
                 FunNode *fun = CodeGen::CODE->link(tfp0);
                 if (fun != nullptr && !fun->folding_ && !linked(fun)) {
                     link(fun);
@@ -110,7 +115,7 @@ Node *CallNode::idealize() {
 }
 
 bool CallNode::linked(FunNode *fun) {
-    for (Node *n: fun->inputs_) {
+    for (Node *n: fun->inputs) {
         if (n == this) {
             return true;
         }

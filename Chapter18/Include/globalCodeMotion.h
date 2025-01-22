@@ -30,7 +30,7 @@ public:
 
     static void rpo_cfg(CFGNode* n, Node*use, Tomi::BitArray<10>& visited, Tomi::Vector<CFGNode*>& rpo);
     static void schedEarly_(Node* n, Tomi::BitArray<10>& visit);
-    static void schedLate(StartNode* start);
+    static void schedLate(StopNode* start);
     // Forwards post-order pass.  Schedule all outputs first, then draw an
     // idom-tree line from the LCA of uses to the early schedule.  Schedule is
     // legal anywhere on this line; pick the most control-dependent (largest

@@ -1,7 +1,11 @@
 #include "../../Include/node/mem_merge_node.h"
 #include "../../Include/type/type_mem.h"
+#include "../../Include/parser.h"
+#include "../../Include/node/scope_node.h"
 
-MergeMemNode::MergeMemNode(bool inProgress) : type_(TypeMem::BOT()), inProgress_(inProgress){}
+MergeMemNode::MergeMemNode(bool inProgress) : inProgress_(inProgress){
+    type_ = TypeMem::BOT();
+}
 bool MergeMemNode::inProgress() { return inProgress_; }
 
 std::string MergeMemNode::label() {
@@ -54,7 +58,7 @@ Node* MergeMemNode::idealize() {
 }
 
 Node* MergeMemNode::in(ScopeMinNode::Var *v) {
-    return in(v->idx());
+    return in(v->idx_);
 }
 Node* MergeMemNode::alias(int alias) {
     return in(alias<nIns() && in(alias) != nullptr ? alias : 1);
@@ -63,27 +67,27 @@ Node*MergeMemNode::alias(int alias, Node*st) {
     while(alias >= nIns()) addDef(nullptr);
     return setDef(alias, st);
 }
-Node*MergeMemNode::mem_(int alias, Node*st) {
+Node*MergeMemNode::mem_(int alias_, Node*st) {
     // Memory projections are made lazily; if one does not exist
     // then it must be START.proj(1)
-    Node*old = alias(alias);
+    Node*old = alias(alias_);
     auto*loop = dynamic_cast<ScopeNode*>(old);
     if(loop) {
         MergeMemNode* loopmem = loop->mem();
-        Node*memdef = loopmem->alias(alias);
+        Node*memdef = loopmem->alias(alias_);
         // Lazy phi!
         auto*phi = dynamic_cast<PhiNode*>(memdef);
         if(phi && loop->ctrl() == phi->region()) {
             old = memdef;
         } else {
-            old = loopmem->alias(alias, alloc.new_object<PhiNode>(Parser::memName(alias), TypeMem::BOT(), loop->ctrl(), loopmem->mem_(alias,nullptr), nullptr)->peephole());
+            old = loopmem->alias(alias_, alloc.new_object<PhiNode>(Parser::memName(alias_), TypeMem::BOT(), std::initializer_list<Node*>{loop->ctrl(), loopmem->mem_(alias_,nullptr), nullptr})->peephole());
 
         }
     }
     // Memory projections are made lazily; expand as needed
-    return st == nullptr ? old :
+    return st == nullptr ? old : alias(alias_, st);
 }
-void MergeMemNode::merge_(MemMergeNode*that, RegionNode*r){
+void MergeMemNode::merge_(MergeMemNode*that, RegionNode*r){
     int len = std::max(nIns(), that->nIns());
     for(int i =2; i < len; i++) {
         if(alias(i) != that->alias(i)) {
@@ -91,12 +95,12 @@ void MergeMemNode::merge_(MemMergeNode*that, RegionNode*r){
             // by alias as it will trigger a phi creation
             Node*lhs = mem_(i, nullptr);
             Node*rhs = that->mem_(i, nullptr);
-            alias(i, alloc.new_object<PhiNode>(Parser::memName(i), lhs->type_->glb()->meet(rhs->type_->glb()), r, lhs, rhs)->peephole());
+            alias(i, alloc.new_object<PhiNode>(Parser::memName(i), lhs->type_->glb()->meet(rhs->type_->glb()), std::initializer_list<Node*>{r, lhs, rhs})->peephole());
         }
     }
 }
 
-void MergeMemNode::endLoopMem_(ScopeNode *scope, MergeMemNode *back, int *exit) {
+void MergeMemNode::endLoopMem_(ScopeNode *scope, MergeMemNode *back,MergeMemNode *exit) {
     Node*exit_def = exit->alias(1);
     for(int i = 1; i < nIns(); i++) {
         auto*phi = dynamic_cast<PhiNode*>(in(i));
@@ -113,7 +117,7 @@ void MergeMemNode::useless_() {
     for(int i = 2; i < nIns(); i++) {
         auto*phi = dynamic_cast<PhiNode*>(in(i));
         if(phi) {
-            Node*phi = phi->peephole();
+            Node*in = phi->peephole();
             IterPeeps::addAll(phi->outputs);
             phi->moveDepsToWorkList();
             if(in != phi) {

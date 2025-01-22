@@ -13,7 +13,7 @@ public:
     TypeNil(unsigned int t, unsigned int nil);
     static void gather(Tomi::Vector<Type *> &ts);
 
-    virtual TypeNil* makeFrom(unsigned int nil);
+    virtual TypeNil* make_from(unsigned int nil);
 
     unsigned int xmeet0(TypeNil* that);
     unsigned int dual0();
