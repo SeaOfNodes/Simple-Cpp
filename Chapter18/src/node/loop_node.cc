@@ -5,6 +5,7 @@
 #include "../../Include/node/return_node.h"
 #include "../../Include/node/stop_node.h"
 #include "../../Include/parser.h"
+#include "../../Include/node/fun_node.h"
 
 LoopNode::LoopNode(Lexer *loc, Node *entry) : RegionNode(loc, {nullptr, entry, nullptr}) {}
 
@@ -26,7 +27,7 @@ int LoopNode::idepth() { return idepth_ == 0 ? (idepth_ = CFGNode::idom()->idept
 
 CFGNode *LoopNode::idom(Node *dep) { return entry(); }
 
-StopNode *LoopNode::forceExit(StopNode *stop) {
+StopNode *LoopNode::forceExit(FunNode *fun, StopNode *stop) {
     // Walk the backedge, then immediate dominator tree util we hit this
     // Loop again.  If we ever hit a CProj from an If (as opposed to
     // directly on the If) we found our exit.
@@ -54,6 +55,41 @@ StopNode *LoopNode::forceExit(StopNode *stop) {
     CProjNode *f = alloc.new_object<CProjNode>(iff, 1, "False");
 
     setDef(2, f);
-    stop->addDef(alloc.new_object<ReturnNode>(t, Parser::ZERO, nullptr));
+
+
+    // Now fold control into the exit.  Might have 1 valid exit, or an
+    // XCtrl or a bunch of prior NeverNode exits.
+
+    Node *top = alloc.new_object<ConstantNode>(Type::TOP(), Parser::START)->peephole();
+    ReturnNode *ret = fun->ret();
+    Node *ctrl = ret->ctrl();
+    Node *mem_ = ret->mem();
+    Node *expr = ret->expr();
+    if (ctrl->type_ != Type::XCONTROL()) {
+        // Check for perfect aligned exit
+        auto r = dynamic_cast<RegionNode *>(ctrl);
+        auto pmem = dynamic_cast<PhiNode *>(mem_);
+        auto prez = dynamic_cast<PhiNode *>(expr);
+
+        if (!r || !pmem || !prez || pmem->region() != r || prez->region() != r) {
+            // Insert an aligned exit layer
+            ctrl = alloc.new_object<RegionNode>(loc_, std::initializer_list<Node *>{nullptr, ctrl})->init<RegionNode>();
+
+            //Todo: continue from here
+            mem_ = alloc.new_object<PhiNode>(dynamic_cast<RegionNode *>(ctrl), mem_)->init<PhiNode>();
+            expr = alloc.new_object<PhiNode>(dynamic_cast<RegionNode *>(ctrl), expr)->init<PhiNode>();
+        }
+        // Append new Never exit
+        ctrl->addDef(t);
+        mem_->addDef(top);
+        expr->addDef(top);
+    } else {
+        ctrl = t;
+        mem_ = top;
+        expr = top;
+    }
+    ret->setDef(0, ctrl);
+    ret->setDef(1, mem_);
+    ret->setDef(2, expr);
     return stop;
 }

@@ -14,6 +14,8 @@ public:
 
     Node *ctrl();
 
+    Node *mem();
+
     Node *expr();
 
     std::ostringstream &print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) override;

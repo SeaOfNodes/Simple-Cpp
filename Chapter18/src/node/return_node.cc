@@ -6,11 +6,6 @@ ReturnNode::ReturnNode(Node *ctrl, Node *mem, Node *data, Node *rpc, FunNode *fu
     // We lookup memory slices by the naming convention that they start with $
     // We could also use implicit knowledge that all memory projects are at offset >= 2
     // Add memory slices to Return, so all memory updates are live-on-exit.
-    if (scope != nullptr) {
-        for (int i = 2; i < scope->mem()->nIns(); i++) {
-            addDef(scope->mem()->in(i));
-        }
-    }
 }
 
 [[nodiscard]] Node *ReturnNode::ctrl() { return in(0); }
@@ -18,6 +13,10 @@ ReturnNode::ReturnNode(Node *ctrl, Node *mem, Node *data, Node *rpc, FunNode *fu
 [[nodiscard]] Node *ReturnNode::expr() { return in(1); }
 
 bool ReturnNode::isCFG() { return true; }
+
+Node *ReturnNode::mem() {
+    return in(1);
+}
 
 std::ostringstream &ReturnNode::print_1(std::ostringstream &builder,
                                         Tomi::Vector<bool> &visited) {

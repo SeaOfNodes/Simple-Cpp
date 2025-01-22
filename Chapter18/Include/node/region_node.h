@@ -61,7 +61,7 @@ public:
 
     CFGNode *idom(Node *dep) override;
 
-    StopNode *forceExit(StopNode *stop);
+    StopNode *forceExit(FunNode *fun, StopNode *stop);
 
     int idepth() override;
 };

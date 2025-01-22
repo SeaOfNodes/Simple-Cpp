@@ -6,26 +6,37 @@
  */
 #include "node.h"
 
+class Lexer;
+
 class MemOpNode : public Node {
 public:
     MemOpNode() = default;
+
     std::string name_;
-    Type* declaredType;
+    Type *declaredType;
     int alias_{};
+    Lexer *loc_;
+
     //  // Declared type; not final because it might be a forward-reference
     //    // which will be lazily improved when the reference is declared.
-    MemOpNode(std::string name, int alias, Type*glb, Node* mem, Node*ptr, Node*off);
-    MemOpNode(std::string name, int alias, Type*glb, Node*mem, Node*ptr, Node*off, Node*val);
+    MemOpNode(Lexer *, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off);
 
-    Node* mem();
-    Node* ptr();
-    Node* off();
+    MemOpNode(Lexer *, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off, Node *val);
+
+    Node *mem();
+
+    Node *ptr();
+
+    Node *off();
 
     static std::string mlabel(std::string name);
+
     std::string mlabel();
 
-    bool eq(Node* n) override;
+    bool eq(Node *n) override;
+
     int hash() override;
+
     std::string err() override;
 };
 

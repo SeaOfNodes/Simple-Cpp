@@ -4,9 +4,18 @@
 #include "../../Include/node/if_node.h"
 #include "../../Include/node/cproj_node.h"
 #include "../../Include/node/mem_op_node.h"
+#include "../../Include/node/region_node.h"
 
 PhiNode::PhiNode(std::string label, Type *type_, std::initializer_list<Node *> inputs)
         : Node(inputs), declaredType(type_), label_(label) {
+}
+
+PhiNode::PhiNode(RegionNode *r, Node *sample) {
+    label_ = "";
+    declaredType = sample->type_;
+    while (nIns() < r->nIns()) {
+        addDef(sample);
+    }
 }
 
 std::string PhiNode::label() { return "Phi_" + MemOpNode::mlabel(label_); }
@@ -41,7 +50,7 @@ Type *PhiNode::compute() {
     auto *r = dynamic_cast<RegionNode *>(region());
     if (!r) {
         if (region()->type_ == Type::XCONTROL()) {
-            if(dynamic_cast<TypeMem*>(type_)) {
+            if (dynamic_cast<TypeMem *>(type_)) {
                 return TypeMem::TOP();
             } else {
                 return Type::TOP();
@@ -147,7 +156,9 @@ Node *PhiNode::idealize() {
         if (in(2)->type_ == in(2)->type_->makeInit()) nullx = 2;
         if (nullx != -1) {
             Node *val = in(3 - nullx);
-            if (auto *iff = dynamic_cast<IfNode *>(region()->idom(this)->addDep(this)); iff && iff->pred()->addDep(this) == val) {
+            if (auto *iff = dynamic_cast<IfNode *>(region()->idom(this)->addDep(this)); iff &&
+                                                                                        iff->pred()->addDep(this) ==
+                                                                                        val) {
                 // Must walk the idom on the null side to make sure we hit False.
                 CFGNode *idom = (CFGNode *) region()->in(nullx);
                 while (idom->nIns() > 0 && idom->in(0) != iff) idom = idom->idom();
@@ -179,7 +190,7 @@ bool PhiNode::same_op() {
             return false;
     }
     // Load merging needs anti-dep check.
-    if(dynamic_cast<MemOpNode*>(in(1))) return false;
+    if (dynamic_cast<MemOpNode *>(in(1))) return false;
     return true;
 }
 

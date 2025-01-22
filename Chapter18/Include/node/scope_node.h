@@ -33,40 +33,45 @@ public:
 
 
     // All active/live variables in all nested scopes, all run together
-    Tomi::Vector<ScopeMinNode::Var*> vars;
+    Tomi::Vector<ScopeMinNode::Var *> vars;
 
     // Read from memory
     MergeMemNode *mem();
+
     // Write to memory
-    Node* mem(int alias);
+    Node *mem(int alias);
 
-    Node* mem(Node*n);
-    void mem(int alias, Node*st);
+    Node *mem(Node *n);
 
-    bool outOfDefinition(ScopeMinNode::Var*v);
+    void mem(int alias, Node *st);
+
+    bool outOfFunction(ScopeMinNode::Var *v);
 
     // Look for forward references in the last lexical scope and promote to the
     // next outer lexical scope.  At the last scope declare them an error.
     void promote();
+
     // Size of each nested lexical scope
     Tomi::Vector<int> lexSize;
 
-    enum Kind{Block, Constructor, Function};
+    enum Kind {
+        Block, Constructor, Function
+    };
     Tomi::Vector<Kind> kinds_;
 
 
-
     // Extra guards; tested predicates and casted results
-    Tomi::Vector<Node*> _guards;
+    Tomi::Vector<Node *> _guards;
 
-    void merge_(ScopeNode* that, RegionNode* r);
+    void merge_(ScopeNode *that, RegionNode *r);
 
     // Find name in reverse, return an index into _vars or -1.  Linear scan
     // instead of hashtable, but probably doesn't matter until the scan
     // typically hits many dozens of variables.
     int find(std::string name);
 
-    void balanceIf(ScopeNode* scope);
+    void balanceIf(ScopeNode *scope);
+
 //  Tomi::Vector<Tomi::HashMap<std::string, int>> idxs;
     Tomi::Vector<std::string> keys;
 
@@ -81,7 +86,7 @@ public:
     // This Scope looks for direct variable uses, or certain simple
     // combinations, and replaces the variable with the upcast variant.
 
-    Node *upcast(Node *ctrl, Node *pred, bool invert);
+//    Node *upcast(Node *ctrl, Node *pred, bool invert);
 
     std::string label() override;
 
@@ -94,7 +99,7 @@ public:
     /*
    * * Lookup a name in all scopes starting from most deeply nested.
    * */
-    ScopeMinNode::Var* lookup(std::string name);
+    ScopeMinNode::Var *lookup(std::string name);
 
     Type *lookUpDeclaredType(std::string name);
 
@@ -104,7 +109,7 @@ public:
      * Create a new name in the current scope
      * Check if name already exists in the current scope
      */
-    bool define(std::string name, Type *declaredType, bool xfinal, Node *n, Lexer*loc);
+    bool define(std::string name, Type *declaredType, bool xfinal, Node *n, Lexer *loc);
 
     /**
      * If the name is present in any scope, then redefine else null
@@ -115,7 +120,7 @@ public:
      */
     void update(std::string name, Node *n);
 
-    ScopeMinNode::Var* update(ScopeMinNode::Var* v, Node*st);
+    ScopeMinNode::Var *update(ScopeMinNode::Var *v, Node *st);
     /**
      * Both recursive lookup and update.
      * <p>
@@ -169,19 +174,22 @@ public:
      * @param that The ScopeNode to be merged into this
      * @return A new node representing the merge point
      */
-    RegionNode *mergeScopes(ScopeNode *that, Lexer* loc);
+    RegionNode *mergeScopes(ScopeNode *that, Lexer *loc);
 
-    void addGuards(Node* ctlr, Node* pred, bool invert);
+    void addGuards(Node *ctlr, Node *pred, bool invert);
 
     // Remove matching pred/cast pairs from this guarded region.
-    void removeGuards(Node* ctrl);
+    void removeGuards(Node *ctrl);
 
-    Node* upcastGuard(Node* pred);
+    Node *upcastGuard(Node *pred);
+
     void kill();
+
     // Merge the backedge scope into this loop head scope
     // We set the second input to the phi from the back edge (i.e. loop body)
     void endLoop(ScopeNode *back, ScopeNode *exit);
-    void endLoopMem_(ScopeNode*scope, Node*back, Node*exit);
+
+    void endLoopMem_(ScopeNode *scope, Node *back, Node *exit);
 
     /**
    * The ctrl of a ScopeNode is always bound to the currently active
@@ -195,9 +203,12 @@ public:
    */
     Node *ctrl(Node *n);
 
-    void push();
+    void push(Kind kind);
+
     bool inCon();
+
     void push(bool InCon);
+
     void pop();
 };
 

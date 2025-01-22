@@ -2,11 +2,22 @@
 #include "../../Include/type/type_mem.h"
 #include "../../Include/parser.h"
 
-ScopeMinNode::Var::Var(int idx, std::string name, Type *type, bool final) {
+ScopeMinNode::Var::Var(int idx, std::string name, Type *type, bool final, Lexer *loc) : Var(idx, name, type, final, loc,
+                                                                                            false) {
+
+}
+
+ScopeMinNode::Var::Var(int idx, std::string name, Type *type, bool final, Lexer *loc, bool fref) {
     idx_ = idx;
     name_ = name;
     type_ = type;
     final_ = final;
+    loc_ = loc;
+    fref_ = fref;
+}
+
+bool ScopeMinNode::Var::isFref() {
+    return fref_;
 }
 
 ScopeMinNode::ScopeMinNode() {
@@ -17,25 +28,27 @@ std::string ScopeMinNode::label() {
     return "MEM";
 }
 
-Type* ScopeMinNode::Var::type() {
-   if(!type_->isFRef()) return type_;
+Type *ScopeMinNode::Var::type() {
+    if (!type_->isFRef()) return type_;
     // Update self to no longer use the forward ref type
-    Type**def = Parser::TYPES.get(dynamic_cast<TypeMemPtr*>(type_)->obj_->name_);
+    Type **def = Parser::TYPES.get(dynamic_cast<TypeMemPtr *>(type_)->obj_->name_);
     type_ = type_->meet(*def);
     return type_;
 }
 
-Type* ScopeMinNode::Var::lazyGLB() {
-    Type*t = type();
-    if(dynamic_cast<TypeMemPtr*>(t)) {
+Type *ScopeMinNode::Var::lazyGLB() {
+    Type *t = type();
+    if (dynamic_cast<TypeMemPtr *>(t)) {
         return t;
     }
     return t->glb();
 }
+
 std::string ScopeMinNode::Var::ToString() {
-    return type_->ToString() + (final_ ? " ": " ! ") + name_;
+    return type_->ToString() + (final_ ? " " : " ! ") + name_;
 
 }
+
 std::ostringstream &ScopeMinNode::print_1(std::ostringstream &builder, Tomi::Vector<bool> &visited) {
     builder << "MEM[ ";
     for (int j = 2; j < nIns(); j++) {
@@ -87,7 +100,11 @@ Node *ScopeMinNode::mem_(int alias_, Node *st) {
         if (phi && loop->ctrl() == phi->region()) {
             old = memdef;
         } else {
-            old = loopmem->alias(alias_, alloc.new_object<PhiNode>(Parser::memName(alias_), TypeMem::BOT(), std::initializer_list<Node*>{loop->ctrl(), loopmem->mem_(alias_, nullptr), nullptr})->peephole());
+            old = loopmem->alias(alias_, alloc.new_object<PhiNode>(Parser::memName(alias_), TypeMem::BOT(),
+                                                                   std::initializer_list<Node *>{loop->ctrl(),
+                                                                                                 loopmem->mem_(alias_,
+                                                                                                               nullptr),
+                                                                                                 nullptr})->peephole());
         }
         alias(alias_, old);
     }
@@ -105,26 +122,26 @@ void ScopeMinNode::merge_(ScopeMinNode *that, RegionNode *r) {
 
             Node *lhs = mem_(i, nullptr);
             Node *rhs = that->mem_(i, nullptr);
-            alias(i, alloc.new_object<PhiNode>(Parser::memName(i), TypeMem::BOT(), std::initializer_list<Node*>{r, lhs, rhs})->peephole());
+            alias(i, alloc.new_object<PhiNode>(Parser::memName(i), TypeMem::BOT(),
+                                               std::initializer_list<Node *>{r, lhs, rhs})->peephole());
         }
     }
 }
 
 void ScopeMinNode::endLoopMem_(ScopeNode
-* scope, ScopeMinNode *back, ScopeMinNode * exit)
-{
-    for (int i = 2; i<back->nIns(); i++) {
-        if (back->in(i)!= scope) {
+                               *scope, ScopeMinNode *back, ScopeMinNode *exit) {
+    for (int i = 2; i < back->nIns(); i++) {
+        if (back->in(i) != scope) {
             PhiNode *phi = dynamic_cast<PhiNode *>(in(i));
             phi->setDef(2, back->
-            in(i)
-        );  // Fill backedge
+                    in(i)
+            );  // Fill backedge
+        }
+        if (exit->alias(i) == scope) {
+            exit->alias(i, in(i)
+            );
+        }
     }
-    if (exit->alias(i)== scope) {
-        exit->alias(i, in(i)
-);
-    }
-}
 }
 
 // Now one-time do a useless-phi removal

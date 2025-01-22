@@ -219,13 +219,18 @@ public:
 
     void memAlias(int alias, Node *st);
 
+    ParserException *error(const std::string &errorMessage);
+
+    static ParserException *error(const std::string &errorMessage, Lexer *loc);
+
+
 private:
     /**
      LIst of keywords disallowed as identifiers
      */
 
     // replace this with custom data structure
-    const std::unordered_set <std::string> KEYWORDS = {
+    const std::unordered_set<std::string> KEYWORDS = {
             "bool", "break", "byte", "continue", "else", "f32", "f64", "i16", "i32", "i64", "i8", "false", "if", "int",
             "return", "true", "u1", "u16", "u32", "u8", "while", "null", "new", "struct", "flt"};
 
@@ -309,8 +314,6 @@ private:
     Node *parseExpressionStatement();
 
     void errorSyntax(std::string syntax);
-
-    ParserException error(const std::string &errorMessage);
 
     bool match(std::string syntax);
 

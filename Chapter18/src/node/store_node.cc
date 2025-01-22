@@ -5,7 +5,7 @@
 #include "../../Include/node/new_node.h"
 #include "../../Include/parser.h"
 
-StoreNode::StoreNode(Lexer loc_, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off, Node *value,
+StoreNode::StoreNode(Lexer *loc_, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off, Node *value,
                      bool init_) : MemOpNode(loc_, name, alias,
                                              glb, mem, ptr,
                                              off,
@@ -29,7 +29,7 @@ std::ostringstream &StoreNode::print_1(std::ostringstream &builder, Tomi::Vector
 Type *StoreNode::compute() {
     Type *val_ = val()->type_;
     auto *mem1 = dynamic_cast<TypeMem *>(mem()->type_);
-    if (mem == TypeMem::TOP()) return TypeMem::TOP();
+    if (mem1 == TypeMem::TOP()) return TypeMem::TOP();
     Type *t = Type::BOTTOM();      // No idea on field contents
     // Same alias, lift val to the declared type and then meet into other fields
     if (mem1->alias_ == alias_) {

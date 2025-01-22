@@ -79,7 +79,7 @@ Parser::Parser(std::string source, TypeInteger *arg) {
     breakScope = nullptr;
 
     START = alloc.new_object<StartNode>(arg);
-    STOP = alloc.new_object<StopNode>(std::initializer_list < Node * > {});
+    STOP = alloc.new_object<StopNode>(std::initializer_list<Node *>{});
     ZERO = dynamic_cast<ConstantNode *>(con(TypeInteger::ZERO())->keep());
     XCTRL = dynamic_cast<XCtrlNode *>((alloc.new_object<XCtrlNode>())->peephole()->keep());
     NIL = dynamic_cast<ConstantNode *>(con(Type::NIL())->keep());
@@ -108,22 +108,19 @@ StopNode *Parser::parse() { return parse(true); }
 
 StopNode *Parser::parse(bool show) {
     xScopes.push_back(scope_node);
-    scope_node->push();
-    ScopeMinNode *mem = alloc.new_object<ScopeMinNode>();
-    mem->addDef(nullptr);
+
 
     scope_node->define(ScopeNode::CTRL, Type::CONTROL(), false,
                        (alloc.new_object<CProjNode>(START, 0, ScopeNode::CTRL))->peephole(), lexer);
 
-    mem->addDef(alloc.new_object<ProjNode>(START, 1, ScopeNode::MEM0)->peephole());
-    scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, mem->peephole(), lexer);
+    scope_node->define(ScopeNode::MEM0, TypeMem::TOP(), false, nullptr, lexer);
 
     scope_node->define(ScopeNode::ARG0, TypeInteger::BOT(), false,
                        (alloc.new_object<ProjNode>(START, 2, ScopeNode::ARG0))->peephole(), lexer);
     ctrl(XCTRL);
     scope_node->mem(alloc.new_object<MergeMemNode>(false));
     //      // Parse whole program, as-if function header "{ int arg -> body }"
-    parseFunctionBody(TypeFunPtr::MAIN(), loc(), std::initializer_list < std::string > {"arg"});
+    parseFunctionBody(TypeFunPtr::MAIN(), loc(), std::initializer_list<std::string>{"arg"});
     if (lexer->isEof()) throw std::runtime_error("unexpected");
     // Clean up and reset
     xScopes.pop_back();
@@ -156,14 +153,14 @@ ReturnNode *Parser::parseFunctionBody(TypeFunPtr *sig, Lexer *loc_, Tomi::Vector
     CodeGen::CODE->link(fun);
 
     Node *rpc = alloc.new_object<ParmNode>("$rpc", 0, TypeRPC::BOT(),
-                                           std::initializer_list < Node * > {fun, con(TypeRPC::BOT())->peephole()});
+                                           std::initializer_list<Node *>{fun, con(TypeRPC::BOT())->peephole()});
 
     // Build a multi-exit return point for all function returns
-    RegionNode *r = alloc.new_object<RegionNode>(nullptr, std::initializer_list < Node * > {nullptr, nullptr});
+    RegionNode *r = alloc.new_object<RegionNode>(nullptr, std::initializer_list<Node *>{nullptr, nullptr});
     PhiNode *rmem = alloc.new_object<PhiNode>(ScopeNode::MEM0, TypeMem::BOT(),
-                                              std::initializer_list < Node * > {r, nullptr})->init<PhiNode>();
+                                              std::initializer_list<Node *>{r, nullptr})->init<PhiNode>();
     PhiNode *rrez = alloc.new_object<PhiNode>(ScopeNode::ARG0, Type::BOTTOM(),
-                                              std::initializer_list < Node * > {r, nullptr})->init<PhiNode>();
+                                              std::initializer_list<Node *>{r, nullptr})->init<PhiNode>();
     ReturnNode *ret = alloc.new_object<ReturnNode>(r, rmem, rrez, rpc, fun)->init<ReturnNode>();
     fun->setRet(ret);
     STOP->addDef(ret);
@@ -180,8 +177,8 @@ ReturnNode *Parser::parseFunctionBody(TypeFunPtr *sig, Lexer *loc_, Tomi::Vector
     for (int i = 0; i < ids.size(); i++) {
         Type *t = sig->arg(i);
         scope_node->define(ids[i], t, false, alloc.new_object<ParmNode>(ids[i], i + 2, t,
-                                                                        std::initializer_list < Node * >
-                                                                        {fun, con(t)->peephole()}), loc_);
+                                                                        std::initializer_list<Node *>
+                                                                                {fun, con(t)->peephole()}), loc_);
     }
 
     // Parse the body
@@ -735,7 +732,7 @@ Node *Parser::parseTrinary(Node *pred, bool stmt, std::string fside) {
     // Merge results
     auto *r = dynamic_cast<RegionNode *>(ctrl(tScope->mergeScopes(fScope, loc())));
     Node *ret = stmt ? r : peep(alloc.new_object<PhiNode>(std::string(), lhs->type_->meet(rhs->type_),
-                                                          std::initializer_list < Node * > {r, lhs->unkeep(), rhs}));
+                                                          std::initializer_list<Node *>{r, lhs->unkeep(), rhs}));
 
 //    if (!stmt && (err = ret->err()) != nullptr) throw err;
     r->peephole();
@@ -1545,7 +1542,7 @@ ScopeMinNode::Var *Parser::requireLookUpId() {
         n = scope_node->lookup(id);
     } else {
         // Lookup worked on an out-of-function value.
-        if (scope_node->outOfDefinition(n)) {
+        if (scope_node->outOfFunction(n)) {
             // No closures, so this has to be a final constant (which
             // includes forward refs)
             Node *def = scope_node->in(n->idx_);
@@ -1841,6 +1838,10 @@ ParserException::ParserException(const std::string &msg, Lexer *loc) : std::runt
 
 }
 
-ParserException Parser::error(const std::string &msg) {
-    return ParserException(msg, lexer);
+ParserException *Parser::error(const std::string &msg) {
+    return alloc.new_object<ParserException>(msg, lexer);
+}
+
+ParserException *Parser::error(const std::string &msg, Lexer *loc) {
+    return alloc.new_object<ParserException>(msg, loc);
 }

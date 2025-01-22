@@ -8,7 +8,7 @@
 #include <cassert>
 
 // Todo: MemMergeNode first
-ScopeNode::ScopeNode() : MemMergeNode(true) {
+ScopeNode::ScopeNode() : MergeMemNode(true) {
 
 }
 
@@ -29,24 +29,19 @@ void ScopeNode::promote() {
     int n = lexSize.back();
     for (int i = n; i < nIns(); i++) {
         ScopeMinNode::Var *v = vars[i];
-        if (!v->isFRef()) continue;
-        if (lexSize.len_ == 1) {
-            throw std::runtime_error("Undefined name '" + v->name_ + "'", v->loc_);
+        if (!v->isFref()) continue;
+        if (lexSize.size() == 1) {
+            throw Parser::error("Undefined name '" + v->name_ + "'", v->loc_);
         }
-        vars.swap(n, i);
-        inputs_.swap(n, i);
+        // Todo: swap for Vector
+        std::swap(vars[n], vars[i]);
+        std::swap(inputs[n], inputs[i]);
         v->idx_ = n;
         n++;
-        lexSize[lexSize.size() = 1] = n;
+        lexSize[lexSize.size() - 1] = n;
     }
 }
 
-void ScopeNode::push(bool InCon) {
-    lexSize.push_back(vars.size());
-    _inCons.push_back(InCon);
-    //idxs.emplace_back();
-    //if(InCon) decls.emplace_back();
-}
 
 void ScopeNode::pop() {
     promote();
@@ -63,45 +58,45 @@ void ScopeNode::pop() {
 //    decls.pop_back();
 }
 
-Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
-    if (ctrl->type_ == Type::XCONTROL()) return nullptr;
-    // Invert the If conditional
-    if (invert) {
-        auto *notNode = dynamic_cast<NotNode *>(pred);
-        if (notNode) {
-            pred = notNode->in(1);
-        } else {
-            pred = IterPeeps::add((new NotNode(pred))->peephole());
-        }
-    }
-    // Direct use of a value as predicate.  This is a zero/null test.
-    auto *it = std::find(inputs.begin(), inputs.end(), pred);
-    if (it != inputs.end()) {
-        auto *tmp = dynamic_cast<TypeMemPtr *>(pred->type_);
-        if (!tmp) {
-            // Must be an `int`, since int and ptr are the only two value types
-            // being tested. No representation for a generic not-null int, so no upcast.
-            return nullptr;
-        }
-        if (tmp->isa(TypeMemPtr::VOIDPTR())) {
-            return nullptr;  // Already not-null, no reason to upcast
-
-        }
-        // Upcast the ptr to not-null ptr, and replace in scope
-        return replace(pred, (alloc.new_object<CastNode>(TypeMemPtr::VOIDPTR(), ctrl, pred))->peephole());
-
-    }
-    if (auto *NOT = dynamic_cast<NotNode *>(pred)) {
-        // Direct use of a !value as predicate.  This is a zero/null test.
-        auto *it = std::find(inputs.begin(), inputs.end(), NOT->in(1));
-        if (it != inputs.end()) {
-            Type *tinit = NOT->in(1)->type_->makeInit();
-            if (NOT->in(1)->type_->isa(tinit)) return nullptr;
-            return replace(NOT->in(1), (alloc.new_object<ConstantNode>(tinit, Parser::START))->peephole());
-        }
-    }
-    return nullptr;
-}
+//Node *ScopeNode::upcast(Node *ctrl, Node *pred, bool invert) {
+//    if (ctrl->type_ == Type::XCONTROL()) return nullptr;
+//    // Invert the If conditional
+//    if (invert) {
+//        auto *notNode = dynamic_cast<NotNode *>(pred);
+//        if (notNode) {
+//            pred = notNode->in(1);
+//        } else {
+//            pred = IterPeeps::add((new NotNode(pred))->peephole());
+//        }
+//    }
+//    // Direct use of a value as predicate.  This is a zero/null test.
+//    auto *it = std::find(inputs.begin(), inputs.end(), pred);
+//    if (it != inputs.end()) {
+//        auto *tmp = dynamic_cast<TypeMemPtr *>(pred->type_);
+//        if (!tmp) {
+//            // Must be an `int`, since int and ptr are the only two value types
+//            // being tested. No representation for a generic not-null int, so no upcast.
+//            return nullptr;
+//        }
+//        if (tmp->isa(TypeMemPtr::VO())) {
+//            return nullptr;  // Already not-null, no reason to upcast
+//
+//        }
+//        // Upcast the ptr to not-null ptr, and replace in scope
+//        return replace(pred, (alloc.new_object<CastNode>(TypeMemPtr::VOIDPTR(), ctrl, pred))->peephole());
+//
+//    }
+//    if (auto *NOT = dynamic_cast<NotNode *>(pred)) {
+//        // Direct use of a !value as predicate.  This is a zero/null test.
+//        auto *it = std::find(inputs.begin(), inputs.end(), NOT->in(1));
+//        if (it != inputs.end()) {
+//            Type *tinit = NOT->in(1)->type_->makeInit();
+//            if (NOT->in(1)->type_->isa(tinit)) return nullptr;
+//            return replace(NOT->in(1), (alloc.new_object<ConstantNode>(tinit, Parser::START))->peephole());
+//        }
+//    }
+//    return nullptr;
+//}
 
 int ScopeNode::find(std::string name) {
     for (int i = vars.size() - 1; i >= 0; i--) {
@@ -125,23 +120,23 @@ bool ScopeNode::define(std::string name, Type *declaredType, bool xfinal, Node *
         for (int i = vars.size() - 1; i >= lexSize.back(); i--) {
             ScopeMinNode::Var *n = vars[i];
             if (n->name_ == name) {
-                if (!n->isFRef()) return false;
+                if (!n->isFref()) return false;
                 // FrefNode here
             }
             if (vars[i]->name_ == name) return false;
         }
     }
-    vars.push_back(alloc.new_object<ScopeMinNode::Var>(nIns(), name, declaredType, xfinal));
+    vars.push_back(alloc.new_object<ScopeMinNode::Var>(nIns(), name, declaredType, xfinal, loc, init == Parser::XCTRL));
     addDef(init);
     return true;
 }
 
-Node **ScopeNode::mem(Node *n) {
-    return setDef(1, n);
-}
+//Node **ScopeNode::mem(Node *n) {
+//    return setDef(1, n);
+//}
 
 bool ScopeNode::inCon() {
-    return kinds_.last() == Kind::Constructor;
+    return kinds_.back() == Kind::Constructor;
 }
 
 Node *ScopeNode::mem(int alias) {
@@ -182,10 +177,10 @@ ScopeMinNode::Var *ScopeNode::update(ScopeMinNode::Var *v, Node *st) {
             old = def;
         } else {
             Node *new_node = (alloc.new_object<PhiNode>(v->name_, v->lazyGLB(),
-                                                        std::initializer_list < Node * > {loop->ctrl(),
-                                                                                          loop->in(loop->update(v,
-                                                                                                                nullptr)->idx_),
-                                                                                          nullptr}))->peephole();
+                                                        std::initializer_list<Node *>{loop->ctrl(),
+                                                                                      loop->in(loop->update(v,
+                                                                                                            nullptr)->idx_),
+                                                                                      nullptr}))->peephole();
 
             old = loop->setDef(
                     v->idx_, new_node);
@@ -255,8 +250,8 @@ std::ostringstream &ScopeNode::print_1(std::ostringstream &builder,
 RegionNode *ScopeNode::mergeScopes(ScopeNode *that, Lexer *loc) {
     // not called with keep here
     RegionNode *r = dynamic_cast<RegionNode *>(
-            ctrl((alloc.new_object<RegionNode>(
-                    std::initializer_list < Node * > {nullptr, ctrl(), that->ctrl()}))->keep()));
+            ctrl((alloc.new_object<RegionNode>(loc,
+                                               std::initializer_list<Node *>{nullptr, ctrl(), that->ctrl()}))->keep()));
 
     mem()->merge_(that->mem(), r);
     merge_(that, r);
@@ -284,7 +279,7 @@ RegionNode *ScopeNode::mergeScopes(ScopeNode *that, Lexer *loc) {
     return dynamic_cast<RegionNode *>(r->unkeep());
 }
 
-bool ScopeNode::outOfDefinition(ScopeMinNode::Var &) {
+bool ScopeNode::outOfFunction(ScopeMinNode::Var *v) {
     for (int i = lexSize.size() - 1; i >= 0 && v->idx_ < lexSize[i]; i--) {
         if (kinds_[i] == Kind::Function) return true;
     }
@@ -304,7 +299,7 @@ void ScopeNode::merge_(ScopeNode *that, RegionNode *r) {
             ScopeMinNode::Var *da = that->update(v, nullptr);
             Node *rhs = that->in(da);
             setDef(i, alloc.new_object<PhiNode>(v->name_, v->type(),
-                                                std::initializer_list < Node * > {r, lhs, rhs})->peephole());
+                                                std::initializer_list<Node *>{r, lhs, rhs})->peephole());
         }
     }
 }
@@ -349,12 +344,12 @@ void ScopeNode::addGuards(Node *ctrl, Node *pred, bool invert) {
 
 void ScopeNode::balanceIf(ScopeNode *scope) {
     for (int i = nIns(); i < scope->nIns(); i++) {
-        ScopeMinNode::Var *v = scope->vars[i];
+        ScopeMinNode::Var *n = scope->vars[i];
         if (n->isFref()) {
-            vars.add(n);
+            vars.push_back(n);
             addDef(scope->in(i));
         } else {
-            Parser::error("Cannot define a '" + v->name_ + "' one one arm of an if", v->loc_);
+            Parser::error("Cannot define a '" + n->name_ + "' one one arm of an if", n->loc_);
         }
     }
 }
@@ -393,7 +388,7 @@ void ScopeNode::kill() {
         if (!dynamic_cast<CFGNode *>(n)) n->unkill();
     }
     _guards.clear();
-    ScopeMinNode::kill();
+    MergeMemNode::kill();
 }
 
 void ScopeNode::endLoop(ScopeNode *back, ScopeNode *exit) {
@@ -448,8 +443,8 @@ ScopeNode *ScopeNode::dup(bool loop) {
     for (const auto &declaredType: lexSize) {
         dup->lexSize.push_back(declaredType);
     }
-    for (const auto &inCon: _inCons) {
-        dup->_inCons.push_back(inCon);
+    for (const auto &kind: kinds_) {
+        dup->kinds_.push_back(kind);
     }
     for (const auto &guard: _guards) {
         dup->_guards.push_back(guard);
@@ -464,7 +459,7 @@ ScopeNode *ScopeNode::dup(bool loop) {
 
     // Memory input is a shallow copy
     auto *memdup = alloc.new_object<ScopeMinNode>();
-    ScopeMinNode *mem1 = mem();
+    MergeMemNode *mem1 = mem();
     memdup->addDef(nullptr);
     memdup->addDef(loop ? this : mem1->in(1));
 

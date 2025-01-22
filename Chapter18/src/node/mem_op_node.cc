@@ -1,12 +1,14 @@
 #include "../../Include/node/mem_op_node.h"
 #include "../../Include/type/type_mem_ptr.h"
+#include "../../Include/parser.h"
 
 // Todo: Bug prone(follow what main implementation does)
-MemOpNode::MemOpNode(std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off) : Node(
-        {nullptr, mem, ptr, off}), name_(name), alias_(alias), declaredType(glb) {}
+MemOpNode::MemOpNode(Lexer *loc, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off) : Node(
+        {nullptr, mem, ptr, off}), name_(name), alias_(alias), declaredType(glb), loc_(loc) {}
 
-MemOpNode::MemOpNode(std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off, Node *val) : MemOpNode(
-        name, alias, glb, mem, ptr, off
+MemOpNode::MemOpNode(Lexer *loc, std::string name, int alias, Type *glb, Node *mem, Node *ptr, Node *off, Node *val)
+        : MemOpNode(
+        loc, name, alias, glb, mem, ptr, off
 ) {
     addDef(val);
 }

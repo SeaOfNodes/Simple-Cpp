@@ -114,7 +114,7 @@ Node *LoadNode::idealize() {
         if (profit(stm, 2) || (!dynamic_cast<LoopNode *>(stm->region()) && profit(stm, 1))) {
             Node *ld1 = ld(1);
             Node *ld2 = ld(2);
-            return new PhiNode(name_, declaredType, std::initializer_list < Node * > {stm->region(), ld1, ld2});
+            return new PhiNode(name_, declaredType, std::initializer_list<Node *>{stm->region(), ld1, ld2});
         }
     }
     // Push a Load up through a Phi, as long as it collapses on at least
@@ -175,7 +175,7 @@ Node *LoadNode::ld(int idx) {
     Node *mem1 = mem();
     Node *ptr1 = ptr();
     bool pt = dynamic_cast<PhiNode *>(ptr1) && ptr1->in(0) == mem1->in(0);
-    return alloc.new_object<LoadNode>(name_, alias_, declaredType, mem1->in(idx), pt ? ptr1->in(idx) : ptr1,
+    return alloc.new_object<LoadNode>(loc_, name_, alias_, declaredType, mem1->in(idx), pt ? ptr1->in(idx) : ptr1,
                                       off())->peephole();
 }
 

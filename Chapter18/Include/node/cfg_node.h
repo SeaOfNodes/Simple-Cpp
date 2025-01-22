@@ -5,11 +5,13 @@
 
 // forward-refs
 class CFGNode;
+
 class LoopNode;
+
 class FunNode;
 
 template<>
-struct Tomi::hash<CFGNode*> {
+struct Tomi::hash<CFGNode *> {
     unsigned long long operator()(CFGNode *val);
 };
 
@@ -17,14 +19,19 @@ struct Tomi::hash<CFGNode*> {
 class CFGNode : public Node {
 public:
     CFGNode() = default;
-    CFGNode(std::initializer_list<Node*> nodes);
-    explicit CFGNode(Tomi::Vector<Node*> nodes);
+
+    CFGNode(std::initializer_list<Node *> nodes);
+
+    explicit CFGNode(Tomi::Vector<Node *> nodes);
 
     CFGNode *cfg(int idx);
 
-    virtual CFGNode* uctrl();
+    virtual CFGNode *uctrl();
+
     // Block head is Start, Region, CProj, but not e.g. If, Return, Stop
     virtual bool blockHead();
+
+    bool skip(CFGNode *usecfg);
 
     // Should be exactly 1 tail from a block head
     CFGNode *blockTail();
@@ -42,26 +49,32 @@ public:
 
     // Return the immediate dominator of this Node and compute dom tree depth.
     virtual CFGNode *idom();
-    virtual CFGNode *idom(Node* dep);
+
+    virtual CFGNode *idom(Node *dep);
+
     // Return the LCA of two idoms
-    virtual CFGNode *idom(CFGNode *rhs, Node* dep);
+    virtual CFGNode *idom(CFGNode *rhs, Node *dep);
 
     int loopDepth_{};
 
-    LoopNode* loop();
+    LoopNode *loop();
+
     int loopDepth();
 
-    void buildLoopTree(StopNode* stop);
+    void buildLoopTree(StopNode *stop);
 
-    int bltWalk_(int pre,FunNode*fun, StopNode* stop, Tomi::BitArray<10>& post);
+    int bltWalk_(int pre, FunNode *fun, StopNode *stop, Tomi::BitArray<10> &post);
 
     class LoopTree {
     public:
-        LoopTree* par_;
-        LoopNode* head;
+        LoopTree *par_;
+        LoopNode *head;
         int depth_;
-        LoopTree(LoopNode* head);
+
+        LoopTree(LoopNode *head);
+
         std::string ToString();
+
         int depth();
     };
     // ------------------------------------------------------------------------
@@ -69,7 +82,7 @@ public:
     // also refer to *their* containing LoopNode, as well as have their depth.
     // Start is a LoopNode which contains all at depth 1.
 
-    LoopTree* ltree;
+    LoopTree *ltree;
     int pre_; // Pre-order numbers for loop tree finding
     // Anti-dependence field support
     int anti_{};   // Per-CFG field to help find anti-deps
